@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ost version="3.3">
+  <flow id="flow1" ostdatecreate="1265484909515">
+    <data>
+      <unit ref="im0/ch0" unitname="evobjectio" unitx="-92" unity="-112" />
+      <unit unitname="thresholdOtsu" unitx="-88" unity="-73" />
+      <conn fromUnit="0" toUnit="1" fromArg="out" toArg="image" />
+    </data>
+  </flow>
+  <imageset id="im0" ostdatecreate="1265481194000">
+    <data />
+    <_ostchild>
+      <channel id="ch0" ostdatecreate="1265484864014">
+        <data>
+          <tbu_Binning>1</tbu_Binning>
+          <comression>100</comression>
+          <resY>1.0</resY>
+          <resX>1.0</resX>
+          <resZ>1</resZ>
+          <dispX>0.0</dispX>
+          <dispY>0.0</dispY>
+          <dispZ>0</dispZ>
+          <frame frame="0">
+            <exposure>null</exposure>
+          </frame>
+        </data>
+      </channel>
+      <channel id="ch1" ostdatecreate="1265484864017">
+        <data>
+          <tbu_Binning>1</tbu_Binning>
+          <comression>100</comression>
+          <resY>1.0</resY>
+          <resX>1.0</resX>
+          <resZ>1</resZ>
+          <dispX>0.0</dispX>
+          <dispY>0.0</dispY>
+          <dispZ>0</dispZ>
+          <frame frame="0">
+            <exposure>null</exposure>
+          </frame>
+        </data>
+      </channel>
+      <channel id="ch2" ostdatecreate="1265484864018">
+        <data>
+          <tbu_Binning>1</tbu_Binning>
+          <comression>100</comression>
+          <resY>1.0</resY>
+          <resX>1.0</resX>
+          <resZ>1</resZ>
+          <dispX>0.0</dispX>
+          <dispY>0.0</dispY>
+          <dispZ>0</dispZ>
+          <frame frame="0">
+            <exposure>null</exposure>
+          </frame>
+        </data>
+      </channel>
+      <flow id="enlim0" ostdatecreate="1265485219277">
+        <data>
+          <unit ref="im0/ch0" unitname="evobjectio" unitx="-72" unity="-225" />
+          <unit unitname="morphologyBlackTophat2d" unitx="-24" unity="-152" />
+          <unit extent0="2" extent1="2" extent2="2" extent3="2" isBinary="false" unitname="constMorphKernel2D" unitx="-136" unity="-84">
+            <hit x="0" y="0" />
+            <hit x="1" y="0" />
+            <hit x="0" y="1" />
+            <hit x="-1" y="0" />
+            <hit x="0" y="-1" />
+          </unit>
+          <unit ref="im0/ch2" unitname="evobjectio" unitx="154" unity="-99" />
+          <conn fromUnit="0" toUnit="1" fromArg="out" toArg="image" />
+          <conn fromUnit="2" toUnit="1" fromArg="out" toArg="kernel" />
+          <conn fromUnit="1" toUnit="3" fromArg="out" toArg="in" />
+        </data>
+      </flow>
+    </_ostchild>
+  </imageset>
+</ost>
+

@@ -31,6 +31,7 @@ import endrov.flowBasic.logic.FlowUnitXor;
 import endrov.flowBasic.math.*;
 import endrov.flowBasic.misc.FlowUnitComments;
 import endrov.flowBasic.objects.*;
+import endrov.flowBasic.rasterizer.FlowUnitRasterizeTriangle;
 
 public class PLUGIN extends PluginDef
 	{
@@ -66,7 +67,7 @@ public class PLUGIN extends PluginDef
 		return new Class[]{
 				//Collection
 				FlowUnitConcat.class,FlowUnitHeadTail.class,FlowUnitMap.class,FlowUnitSize.class,
-				
+
 				//Constants
 				FlowUnitConstBoolean.class,FlowUnitConstDouble.class,FlowUnitConstInteger.class,
 				FlowUnitConstString.class,FlowUnitConstClass.class,FlowUnitConstEvDecimal.class,
@@ -110,7 +111,8 @@ public class PLUGIN extends PluginDef
 				FlowUnitGetObject.class,FlowUnitParent.class,FlowUnitObjectIO.class,FlowUnitThisData.class,FlowUnitThisFlow.class,
 				FlowUnitWrapInChannel.class,
 				
-				
+        //Rasterizer
+				FlowUnitRasterizeTriangle.class
 				
 				
 		};

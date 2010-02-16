@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ost version="3.3">
+  <flow id="flowjo" ostdatecreate="1266334005465">
+    <data>
+      <unit ref="im0/ch0" unitname="evobjectio" unitx="-240" unity="16" />
+      <unit ref="im0/chs" unitname="evobjectio" unitx="116" unity="62" />
+      <unit unitname="rasterizeTriangle" unitx="12" unity="-119" />
+      <unit value="5" unitname="constInteger" unitx="-330" unity="-261" />
+      <unit value="10" unitname="constInteger" unitx="-330" unity="-230" />
+      <unit value="200" unitname="constInteger" unitx="-330" unity="-178" />
+      <unit value="15" unitname="constInteger" unitx="-330" unity="-150" />
+      <unit value="100" unitname="constInteger" unitx="-331" unity="-96" />
+      <unit value="150" unitname="constInteger" unitx="-331" unity="-69" />
+      <unit unitname="channelConvertToVector2i" unitx="-236" unity="-245" />
+      <unit unitname="channelConvertToVector2i" unitx="-237" unity="-166" />
+      <unit unitname="channelConvertToVector2i" unitx="-240" unity="-81" />
+      <conn fromUnit="0" toUnit="2" fromArg="out" toArg="image" />
+      <conn fromUnit="9" toUnit="2" fromArg="out" toArg="side 3" />
+      <conn fromUnit="10" toUnit="2" fromArg="out" toArg="side 1" />
+      <conn fromUnit="11" toUnit="2" fromArg="out" toArg="side 2" />
+      <conn fromUnit="3" toUnit="9" fromArg="out" toArg="y" />
+      <conn fromUnit="4" toUnit="9" fromArg="out" toArg="x" />
+      <conn fromUnit="5" toUnit="10" fromArg="out" toArg="y" />
+      <conn fromUnit="6" toUnit="10" fromArg="out" toArg="x" />
+      <conn fromUnit="7" toUnit="11" fromArg="out" toArg="y" />
+      <conn fromUnit="8" toUnit="11" fromArg="out" toArg="x" />
+      <conn fromUnit="2" toUnit="1" fromArg="rasterized Area" toArg="in" />
+    </data>
+  </flow>
+  <imageset id="im0" ostdatecreate="1265916155000">
+    <data />
+    <_ostchild>
+      <channel id="ch0" ostdatecreate="1266333999858">
+        <data>
+          <tbu_Binning>1</tbu_Binning>
+          <comression>100</comression>
+          <resY>1.0</resY>
+          <resX>1.0</resX>
+          <resZ>1</resZ>
+          <dispX>0.0</dispX>
+          <dispY>0.0</dispY>
+          <dispZ>0</dispZ>
+          <frame frame="0">
+            <exposure>null</exposure>
+          </frame>
+        </data>
+      </channel>
+      <channel id="ch1" ostdatecreate="1266333999862">
+        <data>
+          <tbu_Binning>1</tbu_Binning>
+          <comression>100</comression>
+          <resY>1.0</resY>
+          <resX>1.0</resX>
+          <resZ>1</resZ>
+          <dispX>0.0</dispX>
+          <dispY>0.0</dispY>
+          <dispZ>0</dispZ>
+          <frame frame="0">
+            <exposure>null</exposure>
+          </frame>
+        </data>
+      </channel>
+      <channel id="ch2" ostdatecreate="1266333999862">
+        <data>
+          <tbu_Binning>1</tbu_Binning>
+          <comression>100</comression>
+          <resY>1.0</resY>
+          <resX>1.0</resX>
+          <resZ>1</resZ>
+          <dispX>0.0</dispX>
+          <dispY>0.0</dispY>
+          <dispZ>0</dispZ>
+          <frame frame="0">
+            <exposure>null</exposure>
+          </frame>
+        </data>
+      </channel>
+    </_ostchild>
+  </imageset>
+</ost>
+
