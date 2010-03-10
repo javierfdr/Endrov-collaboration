@@ -19,14 +19,10 @@ public class PolygonROI
 	 */
 	public ArrayList<Vector2d> contour=new ArrayList<Vector2d>(); 
 	
-	
-	
-	
 	public static class Tessellation
 		{
 		int[][] tris;
-		//Array of triples
-		
+		//Array of triples	
 		}
 	
 	private Tessellation userTessellation=null;

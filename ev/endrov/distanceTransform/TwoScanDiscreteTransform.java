@@ -12,19 +12,18 @@ import endrov.imageset.EvPixelsType;
 
 public abstract class TwoScanDiscreteTransform extends DistanceTransform
 	{
-	public int[] forwardArray;
-	public EvPixels backwardScanImage;
+	int[] forwardArray;
 	int[] backwardArray;
+	private EvPixels backwardScanImage;  
 	abstract int forwardDistance(int x, int y,int w, int h);
 	abstract int backwardDistance(int x, int y, int w, int h);
 	
 	public TwoScanDiscreteTransform(EvPixels input){
 		super(input);
-	
+
 		int w = binaryImage.getWidth();
 		int h = binaryImage.getHeight();
-		
-		System.out.println("W: "+w+"H "+h);
+
 		forwardArray = new int[w*h];
 		backwardScanImage = new EvPixels(EvPixelsType.INT,w,h);
 		backwardArray = backwardScanImage.getArrayInt();
@@ -40,21 +39,35 @@ public abstract class TwoScanDiscreteTransform extends DistanceTransform
 		{
 			int w = binaryImage.getWidth();
 			int h = binaryImage.getHeight();
-	
+			
 			//Forward Scan (left to right, top to bottom)			
+			double init = System.currentTimeMillis();
+		
+			int count = w+1;
 			for (int py = 1; py< h-1; py++){//The borders are supposed as background
-				for (int px = 1; px< w-1; px++){
-					forwardArray[py*w+px] = forwardDistance(px,py,w,h);					
+				for (int px = 1; px< w-1; px++){				
+					forwardArray[count] = forwardDistance(px,py,w,h);					
+					count++;
 				}
+				count+=2;
 			}
 			
+			double end = System.currentTimeMillis();
+			System.out.println("Forward Runtime: "+ (end - init));
+			
+			init = System.currentTimeMillis();
+			count = (h-2)*w+(w-2);
 			//backward Scan (right to left, bottom to top)
 			for (int py = h-2; py>0; py--){//The borders are supposed as background
 				for	(int px = w-2; px>0; px--){
-				backwardArray[py*w+px] = backwardDistance(px,py,w,h);
+					backwardArray[count] = backwardDistance(px,py,w,h);
+					count--;
 				}
-			}					
+				count-=2;
+			}
+			end = System.currentTimeMillis();
+			System.out.println("Backward Runtime: "+ (end - init));
+			
 		return backwardScanImage;
 		}
-	
 	}

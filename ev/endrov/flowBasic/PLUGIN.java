@@ -31,7 +31,8 @@ import endrov.flowBasic.logic.FlowUnitXor;
 import endrov.flowBasic.math.*;
 import endrov.flowBasic.misc.FlowUnitComments;
 import endrov.flowBasic.objects.*;
-import endrov.flowBasic.rasterizer.FlowUnitRasterizeTriangle;
+import endrov.flowBasic.rasterizer.FlowUnitTriangleRasterization;
+import endrov.flowBasic.testing.FlowUnitImageTester;
 
 public class PLUGIN extends PluginDef
 	{
@@ -112,8 +113,10 @@ public class PLUGIN extends PluginDef
 				FlowUnitWrapInChannel.class,
 				
         //Rasterizer
-				FlowUnitRasterizeTriangle.class
+				FlowUnitTriangleRasterization.class,
 				
+				//Tester
+				FlowUnitImageTester.class
 				
 		};
 		

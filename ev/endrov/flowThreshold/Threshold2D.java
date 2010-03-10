@@ -64,7 +64,7 @@ public abstract class Threshold2D extends EvOpSlice1
 						break;
 						}
 				arrOut[i]=decidedClass;
-				}
+				}			
 			return ret;
 			}
 		}

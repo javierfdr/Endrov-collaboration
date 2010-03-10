@@ -7,12 +7,12 @@ public class EuclideanTransform extends DistanceTransform
 	{
 	//relative coordinates vector: records the horizontal and vertical pixel
 	//distances between p and the closest background pixel
-	IntPair r[];
-	int width;
-	int height;
-	public int[] forwardArray;
-	public EvPixels backwardScanImage;
-	int[] backwardArray;
+	private IntPair r[];
+	private int width;
+	private int height;
+	private int[] forwardArray;
+	private EvPixels backwardScanImage;
+	private int[] backwardArray;
 	
 
 	
@@ -104,7 +104,8 @@ public class EuclideanTransform extends DistanceTransform
 		for (int py = 1; py< height-1; py++){//The borders are supposed as background
 			for (int px = 1; px< width-1; px++){
 				int min = java.lang.Integer.MAX_VALUE;
-				if (binaryArray[py*width+px] ==0) {continue;}
+				int pixelIndex = py*width+px;
+				if (binaryArray[pixelIndex] ==0) {continue;}
 				
 				int bestq = 0;
 				for (int qNum = 1; qNum<=4; qNum++){
@@ -121,8 +122,8 @@ public class EuclideanTransform extends DistanceTransform
 				if (bestq != 0){
 					IntPair rq = rValue(qFromP(new IntPair(px,py),bestq));
 					IntPair gq = relativeCoordinatesDifference(bestq);
-					r[py*width+px].x = rq.x + gq.x;
-					r[py*width+px].y = rq.y + gq.y;
+					r[pixelIndex].x = rq.x + gq.x;
+					r[pixelIndex].y = rq.y + gq.y;
 				}				
 			}
 		}
@@ -130,9 +131,10 @@ public class EuclideanTransform extends DistanceTransform
 		//Backward scan
 		for (int py = height-2; py>0; py--){//The borders are supposed as background
 			for	(int px = width-2; px>0; px--){
-
-			int min = binaryArray[py*width+px];
-			if (binaryArray[py*width+px] ==0) {continue;}
+			
+			int pixelIndex = py*width+px;
+			int min = binaryArray[pixelIndex];
+			if (min ==0) {continue;}
 			
 			int bestq = 0;
 			for (int qNum = 5; qNum<=8; qNum++){
@@ -144,7 +146,7 @@ public class EuclideanTransform extends DistanceTransform
 					bestq = qNum;
 				}
 			}
-			binaryArray[py*width+px] = min;
+			binaryArray[pixelIndex] = min;
 			
 			if (bestq != 0){
 				IntPair rq = rValue(qFromP(new IntPair(px,py),bestq));
@@ -152,7 +154,7 @@ public class EuclideanTransform extends DistanceTransform
 				r[py*width+px].x = rq.x + gq.x;
 				r[py*width+px].y = rq.y + gq.y;				
 			}			
-			backwardArray[py*width+px] = (int)Math.sqrt((double)min);
+			backwardArray[pixelIndex] = (int)Math.sqrt((double)min);
 		}
 	}
 		

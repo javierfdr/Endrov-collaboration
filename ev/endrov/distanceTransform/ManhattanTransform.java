@@ -4,43 +4,42 @@ import endrov.imageset.EvPixels;
 
 public class ManhattanTransform extends TwoScanDiscreteTransform
 	{
+		private int twoNeighbors[];
 	
 	public ManhattanTransform(EvPixels input){
 		super(input);
+		twoNeighbors = new int[2];
 	}
 	
 	@Override
 	int forwardDistance(int x, int y,int w, int h)
 		{
-		// TODO Auto-generated method stub
-		if (binaryArray[y*w+x] ==0) {return 0;}
-		int fourNeighbors[] = new int[2];
+		int pixelIndex = (y*w)+x;
+		if (binaryArray[pixelIndex] ==0) {return 0;}
 		
-		fourNeighbors[0] = forwardArray[y*w+ (x-1)] +1 ; //left
-		fourNeighbors[1] = forwardArray[(y-1)*w +x ]+1;  //up
-		
+		twoNeighbors[0] = forwardArray[pixelIndex -1] +1 ; //left y*w+(x-1)
+		twoNeighbors[1] = forwardArray[pixelIndex -w]+1;  //up (y-1)*w+x		
 		
 		//find minimum value and actualize forwardArray
-		int min = fourNeighbors[0];
-		min	= (min > fourNeighbors[1])? fourNeighbors[1]: min;
-		
+		int min = twoNeighbors[0];
+		if (min > twoNeighbors[1]) min = twoNeighbors[1];		
 		return min;	
 	}
 	
 	@Override
 	int backwardDistance(int x, int y,int w, int h)
 		{
-		// TODO Auto-generated method stub
-		int fourNeighbors[] = new int[2];
-		
-		fourNeighbors[0] = backwardArray[y*w+ (x+1)]+1; //left
-		fourNeighbors[1] = backwardArray[(y+1)*w +x]+1;  //up
+		int pixelIndex = (y*w)+x;
+		twoNeighbors[0] = backwardArray[pixelIndex+1]+1; //left y*w+ (x+1)
+		twoNeighbors[1] = backwardArray[pixelIndex+w]+1;  //up (y+1)*w +x]
 		
 		//find minimum value and actualize forwardScanImage
-		int min = fourNeighbors[0];
-		min	= (min > fourNeighbors[1])? fourNeighbors[1]: min;
+		int min = twoNeighbors[0];
+		if (min > twoNeighbors[1]) min = twoNeighbors[1];
 		
-		int minBackward = (forwardArray[(y*w)+x] < min)? forwardArray[(y*w)+x] : min;		
-		return minBackward;
+		int fvalue = forwardArray[pixelIndex];
+		if (fvalue < min) {return fvalue;}
+		return min; //else consequence
+
 		}
 	}

@@ -19,6 +19,7 @@ import endrov.flow.FlowType;
 import endrov.flow.FlowUnitBasic;
 import endrov.flow.FlowUnitDeclaration;
 import endrov.imageset.AnyEvImage;
+import endrov.imageset.EvPixels;
 
 /**
  * Flow unit: percentile threshold
@@ -65,7 +66,6 @@ public class FlowUnitThresholdPercentile2D extends FlowUnitBasic
 		Map<String,Object> lastOutput=exec.getLastOutputCleared(this);
 		AnyEvImage a=(AnyEvImage)flow.getInputValue(this, exec, "image");
 		Number percentile=(Number)flow.getInputValue(this, exec, "percentile");
-		
 		AnyEvImage out=new EvOpThresholdPercentile2D(Threshold2D.MASK,percentile.doubleValue()).exec1Untyped(a);
 		lastOutput.put("out", out);
 		}
