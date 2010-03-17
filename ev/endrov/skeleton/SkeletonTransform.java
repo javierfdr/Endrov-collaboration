@@ -1,5 +1,4 @@
 package endrov.skeleton;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
@@ -14,6 +13,9 @@ public abstract class SkeletonTransform
 
 	abstract Vector2i getMaxDirectionalNeighbor(int[] imageArray, int w,
 			int currentPixel, int previousPixel, int neighborMovement);
+	abstract ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
+			int currentPixel, int previousPixel, int neighborMovement);
+	abstract boolean nonConnectedPixel(boolean[] skeleton, int pixel);
 
 	/**
 	 * Calculates the skeleton associated to the input distance transform image
@@ -31,8 +33,8 @@ public abstract class SkeletonTransform
 		Vector<ArrayList<Integer>> baseApex = detectBaseApex(imageArray, w, h);
 		// ArrayList<Integer> skeleton_points =
 		// upDownHill(imageArray,base_apex.get(2));
-		ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
-
+		//ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
+		ArrayList<Integer> skPoints = upDownHill2(imageArray, w, baseApex.get(2));
 		// System.out.println("SIZE: "+ skPoints.size());
 		EvPixels skImage = buildImage(input, skPoints);
 		return skImage;
@@ -47,7 +49,7 @@ public abstract class SkeletonTransform
 		Vector<ArrayList<Integer>> baseApex = detectBaseApex(imageArray, w, h);
 		// ArrayList<Integer> skeleton_points =
 		// upDownHill(imageArray,base_apex.get(2));
-		// ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
+		ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
 
 		// System.out.println("SIZE: "+ skPoints.size());
 		EvPixels skImage = buildImage(input, baseApex.get(2));
@@ -176,11 +178,19 @@ public abstract class SkeletonTransform
 			generateUpHill(imageArray, width, pixelPos, pixelPos, -1, markedPoints,
 					evalPoints);
 			}
+		it = markedPoints.iterator();
+		while(it.hasNext()){
+		int pixelPos = (int) it.next();
+		generateDownHill(imageArray, width, pixelPos, pixelPos, -1, markedPoints,
+				evalPoints);
+		}
+		
 		for (int i = 0; i<imageArray.length; i++)
 			{
 			if (evalPoints[i])
-				skPoints.add(i);
+				skPoints.add(i);			
 			}
+
 		return skPoints;
 		}
 
@@ -211,93 +221,241 @@ public abstract class SkeletonTransform
 	 * @param evalPoints
 	 *          Skeleton points are true for they given position
 	 */
-	private void generateUpHill(int[] imageArray, int w, int currentPixel,
+  private void generateUpHill(int[] imageArray, int w, int currentPixel,
+      int previousPixel, int neighborMovement, ArrayList<Integer> markedPoints,
+      boolean[] evalPoints)
+{
+if (evalPoints[currentPixel])
+      return; // Check for the recursive call
+
+int neighbors[] = getNeighbors(currentPixel, w);
+int numMax = 0;
+int currentPixelValue = imageArray[currentPixel];
+int max = currentPixelValue;
+ArrayList<Vector2i> maxPixels = new ArrayList<Vector2i>(2);
+int maxNeighborPos = -1;
+
+// find max value in neighborhood and number of repetitions
+for (int i = 0; i<neighbors.length; i++)
+      {
+      if (max<imageArray[neighbors[i]])
+              {
+              max = imageArray[neighbors[i]];
+              numMax = 1;
+              maxNeighborPos = i;
+              maxPixels.clear();
+              maxPixels.add(new Vector2i(neighbors[i], i));
+              }
+      else if (max==imageArray[neighbors[i]])
+              {
+              numMax++;
+              maxNeighborPos = i;
+              maxPixels.add(new Vector2i(neighbors[i], i));
+              }
+      }
+evalPoints[currentPixel] = true; // Current pixel evaluated
+if (numMax==1)
+      { // There is just one skeleton successor pixel
+      generateUpHill(imageArray, w, neighbors[maxNeighborPos], currentPixel,
+                      maxNeighborPos, markedPoints, evalPoints);
+      }
+else if (numMax>1)
+      {
+      // Chose best following pixel in the 45 degrees directional pixels set
+      if (currentPixel!=previousPixel)
+              {
+              Vector2i maxDirectional = getMaxDirectionalNeighbor(imageArray, w,
+                  currentPixel, previousPixel, neighborMovement);
+              generateUpHill(imageArray, w, maxDirectional.x, currentPixel,
+                              maxDirectional.y, markedPoints, evalPoints);
+              }
+      else
+              {// Follow path for the best neighbor that has the same distance 
+              Iterator<Vector2i> it = maxPixels.iterator();
+              Vector2i v, maxDirectional;
+              int m = -1;
+              int mIndex = -1;
+              int maxMove = -1;
+              int previousP = -1;
+
+              while (it.hasNext())
+                      {
+                      // If the pixel has already been evaluated it will be in
+                      // generateUpHill
+                      v = (Vector2i) it.next();
+                      maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x,
+                          currentPixel, v.y);
+                      if (m<imageArray[maxDirectional.x])
+                              {
+                              m = imageArray[maxDirectional.x];
+                              mIndex = maxDirectional.x;
+                              maxMove = maxDirectional.y;
+                              previousP = v.x;
+                              }
+                      }
+              evalPoints[previousP] = true;
+              generateUpHill(imageArray, w, mIndex, previousP, maxMove, markedPoints,
+                              evalPoints);
+              }
+
+      }
+else
+        {
+        markedPoints.add(currentPixel);
+        }
+
+/*
+ * if (currentPixel = previousPixel & max = currentPixelValue){
+ * Iterator<Integer> it = maxPixels.iterator(); while (it.hasNext()){ int
+ * neighbor = (int) it.next(); } }
+ */
+}
+
+	private void generateDownHill(int[] imageArray, int w, int currentPixel,
 			int previousPixel, int neighborMovement, ArrayList<Integer> markedPoints,
-			boolean[] evalPoints)
-		{
-		if (evalPoints[currentPixel])
-			return; // Check for the recursive call
+			boolean[] evalPoints){
+			
+			if (evalPoints[currentPixel])
+				return; // Check for the recursive call
 
-		int neighbors[] = getNeighbors(currentPixel, w);
-		int numMax = 0;
-		int currentPixelValue = imageArray[currentPixel];
-		int max = currentPixelValue;
-		ArrayList<Vector2i> maxPixels = new ArrayList<Vector2i>(2);
-		int maxNeighborPos = -1;
+			int neighbors[] = getNeighbors(currentPixel, w);
+			int numMax = 0;
+			int currentPixelValue = imageArray[currentPixel];
+			int max = currentPixelValue;
+			ArrayList<Vector2i> maxPixels = new ArrayList<Vector2i>(2);
+			int maxNeighborPos = -1;
 
-		// find max value in neighborhood and number of repetitions
-		for (int i = 0; i<neighbors.length; i++)
-			{
-			if (max<imageArray[neighbors[i]])
+			// find max value in neighborhood and number of repetitions
+			for (int i = 0; i<neighbors.length; i++)
 				{
-				max = imageArray[neighbors[i]];
-				numMax = 1;
-				maxNeighborPos = i;
-				maxPixels.clear();
-				maxPixels.add(new Vector2i(neighbors[i], i));
-				}
-			else if (max==imageArray[neighbors[i]])
-				{
-				numMax++;
-				maxNeighborPos = i;
-				maxPixels.add(new Vector2i(neighbors[i], i));
-				}
-			}
-		evalPoints[currentPixel] = true; // Current pixel evaluated
-		if (numMax==1)
-			{ // There is just one skeleton successor pixel
-			generateUpHill(imageArray, w, neighbors[maxNeighborPos], currentPixel,
-					maxNeighborPos, markedPoints, evalPoints);
-			}
-		else if (numMax>1)
-			{
-			// Chose best following pixel in the 45 degrees directional pixels set
-			if (currentPixel!=previousPixel)
-				{
-				Vector2i maxDirectional = getMaxDirectionalNeighbor(imageArray, w,
-						currentPixel, previousPixel, neighborMovement);
-				generateUpHill(imageArray, w, maxDirectional.x, currentPixel,
-						maxDirectional.y, markedPoints, evalPoints);
-				}
-			else
-				{// Follow path for the best neighbor that has the same distance value
-				Iterator<Vector2i> it = maxPixels.iterator();
-				Vector2i v, maxDirectional;
-				int m = -1;
-				int mIndex = -1;
-				int maxMove = -1;
-				int previousP = -1;
-
-				while (it.hasNext())
+				if (max<imageArray[neighbors[i]])
 					{
-					// If the pixel has already been evaluated it will be ignored by
-					// generateUpHill
-					v = (Vector2i) it.next();
-					maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x,
-							currentPixel, v.y);
-					if (m<imageArray[maxDirectional.x])
-						{
-						m = imageArray[maxDirectional.x];
-						mIndex = maxDirectional.x;
-						maxMove = maxDirectional.y;
-						previousP = v.x;
-						}
+					max = imageArray[neighbors[i]];
+					numMax = 1;
+					maxNeighborPos = i;
+					maxPixels.clear();
+					maxPixels.add(new Vector2i(neighbors[i], i));
 					}
-				evalPoints[previousP] = true;
-				generateUpHill(imageArray, w, mIndex, previousP, maxMove, markedPoints,
-						evalPoints);
+				else if (max==imageArray[neighbors[i]])
+					{
+					numMax++;
+					maxNeighborPos = i;
+					maxPixels.add(new Vector2i(neighbors[i], i));
+					}
+				}
+			evalPoints[currentPixel] = true; // Current pixel evaluated
+
+				// Chose best following pixel in the 45 degrees directional pixels set
+				if (currentPixel!=previousPixel)
+					{
+					Vector2i maxDirectional = getMaxDirectionalNeighbor(imageArray, w,
+							currentPixel, previousPixel, neighborMovement);
+					if (!evalPoints[maxDirectional.x]){
+						generateDownHill(imageArray, w, maxDirectional.x, currentPixel,
+							maxDirectional.y, markedPoints, evalPoints);
+					}
+				}
+				else
+					{// Follow path for the best neighbor that has the same distance value
+					Iterator<Vector2i> it = maxPixels.iterator();
+					Vector2i v, maxDirectional;
+					int m = -1;
+					int mIndex = -1;
+					int maxMove = -1;
+					int previousP = -1;
+
+					while (it.hasNext())
+						{
+						// If the pixel has already been evaluated it will be ignored by
+						// generateUpHill
+						v = (Vector2i) it.next();
+						maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x,
+								currentPixel, v.y);
+						if (m<imageArray[maxDirectional.x])
+							{
+							m = imageArray[maxDirectional.x];
+							mIndex = maxDirectional.x;
+							maxMove = maxDirectional.y;
+							previousP = v.x;
+							}
+						}
+					evalPoints[previousP] = true;
+					if (!evalPoints[mIndex]){
+						generateDownHill(imageArray, w, mIndex, previousP, maxMove, markedPoints,
+							evalPoints);
+					}
 				}
 			}
-		else
-			{
-			markedPoints.add(currentPixel);
-			}
 
-		/*
-		 * if (currentPixel = previousPixel & max = currentPixelValue){
-		 * Iterator<Integer> it = maxPixels.iterator(); while (it.hasNext()){ int
-		 * neighbor = (int) it.next(); } }
-		 */
+	private void TwoStepHillConnection(int[] imageArray, int w, int currentPixel,
+			boolean[] skPoint)
+		{
+		int neighbors[] = getNeighbors(currentPixel, w);
+
+		// Evaluate for every diagonal neighbor
+		boolean foundLink = false;
+		for (int i = 4; i< neighbors.length && !foundLink; i++)
+			{
+			int n1 = neighbors[i];
+			if (skPoint[n1]) continue; //if Neighbor is skeleton -> skip
+			
+			Vector2i firstDir = getMaxDirectionalNeighbor(imageArray, w, n1,
+					currentPixel, i); // first step best neighbor
+			if (!skPoint[firstDir.x])
+				{
+				int maxDist= -1;
+				Vector2i bestPair = new Vector2i(-1,-1);
+				
+				ArrayList<Vector2i> directionals = getDirectionalNeighbors(imageArray, w,
+						firstDir.x, n1, firstDir.y); // first step best neighbor
+				Iterator<Vector2i> it = directionals.iterator();
+				Vector2i secondDir;//= getMaxDirectionalNeighbor(imageArray, w, firstDir.x,n1,firstDir.y);
+				while(it.hasNext()){
+					secondDir = it.next();
+					if (skPoint[secondDir.x] && nonConnectedPixel(skPoint,secondDir.x) 
+							&& imageArray[firstDir.x]>maxDist) /*picks the greatest directional that 
+							 																			reaches a skPoint (not the maxDirectional)
+							 																			*/
+						{ // record the best two-step pixels
+						maxDist = imageArray[firstDir.x];
+						bestPair = new Vector2i(n1,firstDir.x);					
+						break;
+						}					
+				}
+			if(maxDist>0){
+				skPoint[bestPair.x] = true;
+				skPoint[bestPair.y] = true;
+			}
+			}
+		}
+	}
+	
+	private ArrayList<Integer> upDownHill2(int[] imageArray, int width,
+			ArrayList<Integer> baseApexList)
+		{
+		boolean skPoint[] = new boolean[imageArray.length];
+		ArrayList<Integer> skeleton = new ArrayList<Integer>();
+		Iterator<Integer> it = baseApexList.iterator();
+		
+		while (it.hasNext())
+			{ // Fill current skeleton points
+			int pixelPos = (int) it.next();
+			skPoint[pixelPos] = true;
+			}
+		
+		it = baseApexList.iterator();
+		while (it.hasNext())
+			{
+			int pixelPos = (int) it.next();
+			TwoStepHillConnection(imageArray, width, pixelPos, skPoint);
+			}
+		
+		for (int i = 0; i<imageArray.length; i++)
+			{
+			if (skPoint[i])
+				skeleton.add(i);			
+			}
+		return skeleton;
 		}
 
 	private static EvPixels buildImage(EvPixels input, ArrayList<Integer> points)

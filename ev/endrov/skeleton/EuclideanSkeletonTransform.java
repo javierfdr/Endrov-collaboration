@@ -1,5 +1,8 @@
 package endrov.skeleton;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import endrov.util.Vector2i;
 
 public final class EuclideanSkeletonTransform extends SkeletonTransform
@@ -20,11 +23,7 @@ public final class EuclideanSkeletonTransform extends SkeletonTransform
 			return neighbors;
 			}
 	
-		/**
-		 * Returns the neighbor that corresponds to the maximum directional movement from
-		 * previousPixel to currentPixel, performing the movement neighborMovement.
-		 */
-		public Vector2i getMaxDirectionalNeighbor(int[] imageArray, int w,
+		public ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
 				int currentPixel, int previousPixel, int neighborMovement)
 			{
 				int nList[] = new int[6];
@@ -72,19 +71,44 @@ public final class EuclideanSkeletonTransform extends SkeletonTransform
 				nList[4] = currentPixel+w; nList[5] = 2;//down
 				break;
 			}
+		ArrayList<Vector2i> neighbors= new ArrayList<Vector2i>(3);
+		for (int i=0; i<6; i+=2){
+			Vector2i n = new Vector2i(nList[i],nList[i+1]);
+			neighbors.add(n);
+		}
+		return neighbors;			
+		}
 		
+		/**
+		 * Returns the neighbor that corresponds to the maximum directional movement from
+		 * previousPixel to currentPixel, performing the movement neighborMovement.
+		 */
+		public Vector2i getMaxDirectionalNeighbor(int[] imageArray, int w,
+				int currentPixel, int previousPixel, int neighborMovement)
+			{
+			ArrayList<Vector2i> neighbors= getDirectionalNeighbors(imageArray, w, currentPixel, previousPixel, neighborMovement);
 			//get the max directional neighbor and its direction
-			int max=imageArray[nList[0]];
-			int moveIndex=nList[1];
-			int maxIndex=0;
-			for (int i=2; i<6; i+=2){
-				if (imageArray[nList[i]] > max) {
-					max = imageArray[nList[i]];
-					moveIndex = nList[i+1];
-					maxIndex=i;
+
+			Vector2i maxVector = neighbors.get(0);
+			int max = imageArray[maxVector.x];
+			
+			Iterator<Vector2i> it = neighbors.iterator(); it.next();
+			Vector2i n;
+			while (it.hasNext()){
+				n= it.next();
+				if (imageArray[n.x] > max) {
+					max = imageArray[n.x];
+					maxVector = n;
 				}				
 			}
-			return new Vector2i(nList[maxIndex],moveIndex);				
+			return maxVector;	
+			}
+		/**
+		 * Checks whether pixel is a connected pixel in skeleton. A connected pixel is such that is in the
+		 * 
+		 * 
+		 */
+		public boolean nonConnectedPixel(boolean[] skeleton, int pixel){
+			return true;
 		}
 	}	
-

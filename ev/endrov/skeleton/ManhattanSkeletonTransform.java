@@ -1,5 +1,7 @@
 package endrov.skeleton;
 
+import java.util.ArrayList;
+
 import endrov.util.Vector2i;
 
 public final class ManhattanSkeletonTransform extends SkeletonTransform
@@ -21,5 +23,18 @@ public final class ManhattanSkeletonTransform extends SkeletonTransform
 		{
 		// TODO Auto-generated method stub
 		return null;
+		}
+	@Override
+	ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
+			int currentPixel, int previousPixel, int neighborMovement)
+		{
+		// TODO Auto-generated method stub
+		return null;
+		}
+	@Override
+	boolean nonConnectedPixel(boolean[] skeleton, int pixel)
+		{
+		// TODO Auto-generated method stub
+		return false;
 		}
 	}
