@@ -7,20 +7,14 @@ import endrov.util.Vector2i;
 
 public final class EuclideanSkeletonTransform extends SkeletonTransform
 	{
+		
 		@Override
+		/**
+		 * This method uses getCircularNeighbors implemented in SkeletonTransform
+		 */
 		int[] getNeighbors(int position, int w)
 			{
-			int neighbors[] = new int[8];
-			neighbors[0] = position-w; // Up
-			neighbors[1] = position+1; // Right
-			neighbors[2] = position+w; // Down
-			neighbors[3] = position-1; // Left
-			neighbors[4] = neighbors[0]-1; //Up-left
-			neighbors[5] = neighbors[0]+1; //Up-right
-			neighbors[6] = neighbors[2]-1;//Down-left
-			neighbors[7] = neighbors[2]+1; //down-right
-			
-			return neighbors;
+			return getCircularNeighbors(position, w);			
 			}
 	
 		public ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
@@ -104,11 +98,48 @@ public final class EuclideanSkeletonTransform extends SkeletonTransform
 			return maxVector;	
 			}
 		/**
-		 * Checks whether pixel is a connected pixel in skeleton. A connected pixel is such that is in the
-		 * 
+		 * True if the positions p1 and p2 are both true in the boolean array 'array' 
+		 */
+		public boolean bothTrue(boolean[] array,int p1,int p2){
+		if(p1<0 || p2<0) return false;
+		return (array[p1] && array[p2]);
+		}
+		
+		/**
+		 * Checks whether pixel is a connected pixel in skeleton. A connected pixel is such that exists
+		 * two neighbors of the pixel that connect in any direction. This is diagonal connection or
+		 * vertical/horizontal connection.
 		 * 
 		 */
-		public boolean nonConnectedPixel(boolean[] skeleton, int pixel){
-			return true;
+		public boolean nonConnectedPixel(boolean[] skeleton, int w, int pixel){
+			int neighbors[] = getNeighbors(pixel, w);
+			int length = neighbors.length;
+			for (int i=0; i<4; i++){
+				//Check the connection positions for every neighbor
+				int p2;
+				switch(i){
+				case 0://up
+				p2=5; if (bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//right
+				p2=4; if (bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//left
+				p2=1; if (bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down-right
+				p2=3; if (bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down-left
+				break;
+				case 1://right
+				p2=5; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//up
+				p2=7; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down
+				p2=2; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down-left
+				break;
+				case 2://down
+				p2=7; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//right
+				p2=6; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//left
+				p2=3; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//up-left
+				break;
+				case 3://left
+				p2=4; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//up
+				p2=6; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down
+				break;
+				}
+			}
+			return true;		
 		}
 	}	

@@ -6,6 +6,7 @@ import java.util.Vector;
 import endrov.imageset.EvPixels;
 import endrov.imageset.EvPixelsType;
 import endrov.util.Vector2i;
+import endrov.util.Vector3i;
 
 public abstract class SkeletonTransform
 	{
@@ -15,8 +16,8 @@ public abstract class SkeletonTransform
 			int currentPixel, int previousPixel, int neighborMovement);
 	abstract ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
 			int currentPixel, int previousPixel, int neighborMovement);
-	abstract boolean nonConnectedPixel(boolean[] skeleton, int pixel);
-
+	abstract public boolean nonConnectedPixel(boolean[] skeleton, int w, int pixel);
+	
 	/**
 	 * Calculates the skeleton associated to the input distance transform image
 	 * 
@@ -37,6 +38,7 @@ public abstract class SkeletonTransform
 		ArrayList<Integer> skPoints = upDownHill2(imageArray, w, baseApex.get(2));
 		// System.out.println("SIZE: "+ skPoints.size());
 		EvPixels skImage = buildImage(input, skPoints);
+		//EvPixels skImage = buildImage(input, baseApex.get(2));
 		return skImage;
 		}
 
@@ -49,13 +51,35 @@ public abstract class SkeletonTransform
 		Vector<ArrayList<Integer>> baseApex = detectBaseApex(imageArray, w, h);
 		// ArrayList<Integer> skeleton_points =
 		// upDownHill(imageArray,base_apex.get(2));
-		ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
+		//ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
 
 		// System.out.println("SIZE: "+ skPoints.size());
-		EvPixels skImage = buildImage(input, baseApex.get(2));
+		EvPixels skImage = buildImage(input, baseApex.get(0));
 		return skImage;
 		}
 
+	/**
+	 * Returns the surrounding pixels. This is all the pixels in the 
+	 * positions of the 3x3 matrix where position is the center.
+	 * 
+	 */
+	public int[] getCircularNeighbors(int position, int w)
+		{
+		int neighbors[] = new int[8];
+		neighbors[0] = position-w; // Up
+		neighbors[1] = position+1; // Right
+		neighbors[2] = position+w; // Down
+		neighbors[3] = position-1; // Left
+		neighbors[4] = neighbors[0]-1; //Up-left
+		neighbors[5] = neighbors[0]+1; //Up-right
+		neighbors[6] = neighbors[2]-1;//Down-left
+		neighbors[7] = neighbors[2]+1; //down-right
+		
+		return neighbors;
+		}
+
+	
+	
 	/**
 	 * Finds the base points and the apex points from the given distance image
 	 * array. The base points are those who are in the extremes or corners of the
@@ -75,7 +99,7 @@ public abstract class SkeletonTransform
 		ArrayList<Integer> basePoints = new ArrayList<Integer>();
 		ArrayList<Integer> apexPoints = new ArrayList<Integer>();
 		ArrayList<Integer> orderList = new ArrayList<Integer>();
-
+		
 		// Setting loop variables
 		int count = w+1;
 		int zeroCount = 0;
@@ -99,34 +123,25 @@ public abstract class SkeletonTransform
 
 				zeroCount = 0;
 				int neighbors[] = getNeighbors(count, w);
-				// Count number of zeros in neighborhood and find if pixelValue is the
-				// higher value
-				for (int n = 0; n<neighbors.length; n++)
+				int cNeighbors[] = getCircularNeighbors(count, w);
+				// Count number of zeros 3x3 surrounding neighborhood
+				for (int n = 0; n<cNeighbors.length; n++)
 					{
-					if (base&&imageArray[neighbors[n]]==0)
+					if (base&&imageArray[cNeighbors[n]]==0)
 						zeroCount++;
-					if (imageArray[neighbors[n]]>pixelValue)
-						apex = false;
 					}
-
 				if (base&&zeroCount>4)
 					{
 					basePoints.add(count);
 					addCount++;
 					}
+				// Find if pixelValue is the maximum value in the
+				// given neighborhood
+				for (int n = 0; n<neighbors.length; n++)
+					{
+					if (imageArray[neighbors[n]]>pixelValue) apex = false;
+					}
 
-				/*
-				 * else if(base && zeroCount ==4){ //MARGIN BUG:: If pixel is object
-				 * pixel is next to background //Check up-right-left-down neighbors for
-				 * object pixel followed by background if (imageArray[neighbors[0]] != 0
-				 * & imageArray[neighbors[0]-w] ==0){ basePoints.add(count); addCount++;
-				 * } else if(imageArray[neighbors[1]] != 0 & imageArray[neighbors[1]+1]
-				 * ==0){ basePoints.add(count); addCount++; } else
-				 * if(imageArray[neighbors[2]] != 0 & imageArray[neighbors[2]-1] ==0){
-				 * basePoints.add(count); addCount++; } else if(imageArray[neighbors[3]]
-				 * != 0 & imageArray[neighbors[3]+w] ==0){ basePoints.add(count);
-				 * addCount++; } }
-				 */
 				if (apex)
 					{
 					apexPoints.add(count);
@@ -387,21 +402,49 @@ else
 				}
 			}
 
+	/**
+	 * Sets in skPoint the pixels that belong to the skeleton of the image
+	 * represented on imageArray performing a two step hill processing over a
+	 * given base or apex point. The algorithm calculates the best path to follow
+	 * from the given skeleton point to find the next skeleton points. The search
+	 * is done in two steps. Both steps are applied for every neighbor of the
+	 * currentPixel. In the first step, the maximum directional neighbor is
+	 * calculated. In the second step the three directional neighbor of the pixel
+	 * obtained in the first step are calculated, and is taken then the one with
+	 * the greatest distance that is also an skeleton pixel. This allows to
+	 * connect the disconnected skeleton pixels with more than 4 pixels distance.
+	 * The remaining skeleton has more than 1-pixel width and is almost totally
+	 * connected. The remaining disconnections are no greater than 1 pixel long.
+	 * 
+	 * @param imageArray
+	 *          The distance transform image array
+	 * @param w
+	 *          width of the image represented in imageArray
+	 * @param currentPixel
+	 *          The current analyzed pixel
+	 * @param skPoint
+	 *          Skeleton points are true for they given position
+	 */
 	private void TwoStepHillConnection(int[] imageArray, int w, int currentPixel,
 			boolean[] skPoint)
 		{
-		int neighbors[] = getNeighbors(currentPixel, w);
-
-		// Evaluate for every diagonal neighbor
-		boolean foundLink = false;
-		for (int i = 4; i< neighbors.length && !foundLink; i++)
+		int neighbors[] = getNeighbors(currentPixel, w);		
+		
+		// Evaluate for every neighbor
+		for (int i = 0; i< neighbors.length; i++)
 			{
 			int n1 = neighbors[i];
 			if (skPoint[n1]) continue; //if Neighbor is skeleton -> skip
 			
 			Vector2i firstDir = getMaxDirectionalNeighbor(imageArray, w, n1,
 					currentPixel, i); // first step best neighbor
-			if (!skPoint[firstDir.x])
+			if (skPoint[firstDir.x]) 	{
+				if (nonConnectedPixel(skPoint,w,n1)){ 
+					skPoint[n1] = true;
+					continue;
+				}
+			}
+			else
 				{
 				int maxDist= -1;
 				Vector2i bestPair = new Vector2i(-1,-1);
@@ -409,27 +452,41 @@ else
 				ArrayList<Vector2i> directionals = getDirectionalNeighbors(imageArray, w,
 						firstDir.x, n1, firstDir.y); // first step best neighbor
 				Iterator<Vector2i> it = directionals.iterator();
-				Vector2i secondDir;//= getMaxDirectionalNeighbor(imageArray, w, firstDir.x,n1,firstDir.y);
+				Vector2i secondDir;
+				//Iterate over every directional neighbor of the first step pixel
 				while(it.hasNext()){
 					secondDir = it.next();
-					if (skPoint[secondDir.x] && nonConnectedPixel(skPoint,secondDir.x) 
-							&& imageArray[firstDir.x]>maxDist) /*picks the greatest directional that 
-							 																			reaches a skPoint (not the maxDirectional)
-							 																			*/
-						{ // record the best two-step pixels
+					if (skPoint[secondDir.x] && imageArray[firstDir.x]>maxDist) 
+						//picks the greatest directional that reaches a skPoint (not the maxDirectional)
+						{						
 						maxDist = imageArray[firstDir.x];
-						bestPair = new Vector2i(n1,firstDir.x);					
-						break;
+						bestPair = new Vector2i(n1,firstDir.x);		
 						}					
+					if (maxDist>0){
+						if (nonConnectedPixel(skPoint,w,bestPair.x)) 
+							skPoint[bestPair.x] = true;
+						if (nonConnectedPixel(skPoint,w,bestPair.y)) 
+							skPoint[bestPair.y] = true;
+					}
 				}
-			if(maxDist>0){
-				skPoint[bestPair.x] = true;
-				skPoint[bestPair.y] = true;
-			}
 			}
 		}
-	}
+		}
 	
+	/**
+	 * Generates the list of pixels representing the skeleton that is constructed
+	 * connecting the base and apex pixels passed as parameter with non-yet
+	 * skeleton pixels using two step hill connection
+	 * 
+	 * @param imageArray
+	 *          The distance transform image array
+	 * @param width
+	 *          width of the image represented in imageArray
+	 * @param baseApexList
+	 *          List of base and apex points in imageArray
+	 * @return List of skeleton pixels built with up and down hill processing over
+	 *         the base and apex points list.
+	 */
 	private ArrayList<Integer> upDownHill2(int[] imageArray, int width,
 			ArrayList<Integer> baseApexList)
 		{
@@ -443,13 +500,16 @@ else
 			skPoint[pixelPos] = true;
 			}
 		
+		// Connect the separated skeleton points applying two step hill connection
+		// on every base and apex pixel.
 		it = baseApexList.iterator();
 		while (it.hasNext())
 			{
 			int pixelPos = (int) it.next();
 			TwoStepHillConnection(imageArray, width, pixelPos, skPoint);
-			}
+		}
 		
+		//Add every point belonging to the skeleton to the skeleton pixel list
 		for (int i = 0; i<imageArray.length; i++)
 			{
 			if (skPoint[i])
