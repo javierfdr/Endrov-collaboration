@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
 
+import org.apache.poi.hssf.record.formula.functions.Concatenate;
+
 import endrov.imageset.EvPixels;
 import endrov.imageset.EvPixelsType;
 import endrov.util.Vector2i;
@@ -35,12 +37,33 @@ public abstract class SkeletonTransform
 		// ArrayList<Integer> skeleton_points =
 		// upDownHill(imageArray,base_apex.get(2));
 		//ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
-		ArrayList<Integer> skPoints = upDownHill2(imageArray, w, baseApex.get(2));
+		
+		boolean[] isSkeleton = listToMatrix(w*h, baseApex.get(2));
+		ArrayList<Integer> skPoints = upDownHill2(imageArray, w, baseApex.get(2),isSkeleton);
+		//skPoints = upDownHill2(imageArray, w, skPoints,isSkeleton);
+		skPoints = reduceSkeleton(imageArray, isSkeleton, w, skPoints);
+		
+		
 		// System.out.println("SIZE: "+ skPoints.size());
 		EvPixels skImage = buildImage(input, skPoints);
-		//EvPixels skImage = buildImage(input, baseApex.get(2));
+		//EvPixels skImage = buildImage(input, baseApex.get(1));
 		return skImage;
 		}
+	
+	/**
+	 * Returns an array of length 'size' setting true every position found in list. 
+	 */
+	public boolean[] listToMatrix(int size, ArrayList<Integer> list){
+	
+		boolean[] matrix = new boolean[size];
+		Iterator<Integer> it = list.iterator();
+		while (it.hasNext())
+		{
+			int pixelPos = (int) it.next();
+			matrix[pixelPos] = true;
+		}
+		return matrix;
+	}
 
 	public EvPixels getSkeleton2(EvPixels input)
 		{
@@ -51,10 +74,12 @@ public abstract class SkeletonTransform
 		Vector<ArrayList<Integer>> baseApex = detectBaseApex(imageArray, w, h);
 		// ArrayList<Integer> skeleton_points =
 		// upDownHill(imageArray,base_apex.get(2));
-		//ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
+		boolean[] isSkeleton = listToMatrix(w*h, baseApex.get(2));
+		ArrayList<Integer> skPoints = upDownHill2(imageArray, w, baseApex.get(2),isSkeleton);
 
 		// System.out.println("SIZE: "+ skPoints.size());
 		EvPixels skImage = buildImage(input, baseApex.get(0));
+		//EvPixels skImage = buildImage(input, skPoints);
 		return skImage;
 		}
 
@@ -77,8 +102,6 @@ public abstract class SkeletonTransform
 		
 		return neighbors;
 		}
-
-	
 	
 	/**
 	 * Finds the base points and the apex points from the given distance image
@@ -99,6 +122,9 @@ public abstract class SkeletonTransform
 		ArrayList<Integer> basePoints = new ArrayList<Integer>();
 		ArrayList<Integer> apexPoints = new ArrayList<Integer>();
 		ArrayList<Integer> orderList = new ArrayList<Integer>();
+		boolean[] isBase = new boolean[w*h]; //useful for remove wrong base points
+		boolean[] isApex = new boolean[w*h]; //useful for remove wrong apex points
+		boolean[] isBaseApex = new boolean[w*h];
 		
 		// Setting loop variables
 		int count = w+1;
@@ -133,7 +159,9 @@ public abstract class SkeletonTransform
 				if (base&&zeroCount>4)
 					{
 					basePoints.add(count);
-					addCount++;
+					isBase[count] = true;
+					isBaseApex[count] = true;
+					//addCount++;
 					}
 				// Find if pixelValue is the maximum value in the
 				// given neighborhood
@@ -145,15 +173,48 @@ public abstract class SkeletonTransform
 				if (apex)
 					{
 					apexPoints.add(count);
+					isApex[count] = true;
+					isBaseApex[count] = true;
 					addCount++;
 					}
 				if (addCount>0)
 					{
-					orderList.add(count);
-					addCount = 0;
+					//orderList.add(count);
+					//addCount = 0;
 					}
 				}
 			}
+
+		//remove base points that do not have neighbors
+		Iterator<Integer> baseIt = basePoints.iterator();
+		int neigh[];
+		boolean hasNeighbor;
+		while(baseIt.hasNext()){
+			Integer b = baseIt.next();
+			neigh = getCircularNeighbors((int)b, w);
+			
+			hasNeighbor = false;
+			for(int n =0; n<8; n++){
+				if (isBaseApex[neigh[n]]){
+					hasNeighbor = true;			
+				}
+			}
+			if (!hasNeighbor){
+	//			baseIt.remove();
+				if (isApex[b]){
+	//				apexPoints.remove(b);
+				}
+				continue;
+			}
+			orderList.add(b);
+		}
+		
+		baseIt = apexPoints.iterator();
+		while(baseIt.hasNext()){
+			orderList.add(baseIt.next());
+		}
+		
+		
 		Vector<ArrayList<Integer>> baseApex = new Vector<ArrayList<Integer>>(3);
 		baseApex.add(basePoints);
 		baseApex.add(apexPoints);
@@ -236,94 +297,89 @@ public abstract class SkeletonTransform
 	 * @param evalPoints
 	 *          Skeleton points are true for they given position
 	 */
-  private void generateUpHill(int[] imageArray, int w, int currentPixel,
-      int previousPixel, int neighborMovement, ArrayList<Integer> markedPoints,
-      boolean[] evalPoints)
-{
-if (evalPoints[currentPixel])
-      return; // Check for the recursive call
+	private void generateUpHill(int[] imageArray, int w, int currentPixel,
+			int previousPixel, int neighborMovement, ArrayList<Integer> markedPoints,
+			boolean[] evalPoints)
+		{
+		if (evalPoints[currentPixel])
+			return; // Check for the recursive call
 
-int neighbors[] = getNeighbors(currentPixel, w);
-int numMax = 0;
-int currentPixelValue = imageArray[currentPixel];
-int max = currentPixelValue;
-ArrayList<Vector2i> maxPixels = new ArrayList<Vector2i>(2);
-int maxNeighborPos = -1;
+		int neighbors[] = getNeighbors(currentPixel, w);
+		int numMax = 0;
+		int currentPixelValue = imageArray[currentPixel];
+		int max = currentPixelValue;
+		ArrayList<Vector2i> maxPixels = new ArrayList<Vector2i>(2);
+		int maxNeighborPos = -1;
 
-// find max value in neighborhood and number of repetitions
-for (int i = 0; i<neighbors.length; i++)
-      {
-      if (max<imageArray[neighbors[i]])
-              {
-              max = imageArray[neighbors[i]];
-              numMax = 1;
-              maxNeighborPos = i;
-              maxPixels.clear();
-              maxPixels.add(new Vector2i(neighbors[i], i));
-              }
-      else if (max==imageArray[neighbors[i]])
-              {
-              numMax++;
-              maxNeighborPos = i;
-              maxPixels.add(new Vector2i(neighbors[i], i));
-              }
-      }
-evalPoints[currentPixel] = true; // Current pixel evaluated
-if (numMax==1)
-      { // There is just one skeleton successor pixel
-      generateUpHill(imageArray, w, neighbors[maxNeighborPos], currentPixel,
-                      maxNeighborPos, markedPoints, evalPoints);
-      }
-else if (numMax>1)
-      {
-      // Chose best following pixel in the 45 degrees directional pixels set
-      if (currentPixel!=previousPixel)
-              {
-              Vector2i maxDirectional = getMaxDirectionalNeighbor(imageArray, w,
-                  currentPixel, previousPixel, neighborMovement);
-              generateUpHill(imageArray, w, maxDirectional.x, currentPixel,
-                              maxDirectional.y, markedPoints, evalPoints);
-              }
-      else
-              {// Follow path for the best neighbor that has the same distance 
-              Iterator<Vector2i> it = maxPixels.iterator();
-              Vector2i v, maxDirectional;
-              int m = -1;
-              int mIndex = -1;
-              int maxMove = -1;
-              int previousP = -1;
+		// find max value in neighborhood and number of repetitions
+		for (int i = 0; i<neighbors.length; i++)
+			{
+			if (max<imageArray[neighbors[i]])
+				{
+				max = imageArray[neighbors[i]];
+				numMax = 1;
+				maxNeighborPos = i;
+				maxPixels.clear();
+				maxPixels.add(new Vector2i(neighbors[i], i));
+				}
+			else if (max==imageArray[neighbors[i]])
+				{
+				numMax++;
+				maxNeighborPos = i;
+				maxPixels.add(new Vector2i(neighbors[i], i));
+				}
+			}
+		evalPoints[currentPixel] = true; // Current pixel evaluated
+		if (numMax==1)
+			{ // There is just one skeleton successor pixel
+			generateUpHill(imageArray, w, neighbors[maxNeighborPos], currentPixel,
+					maxNeighborPos, markedPoints, evalPoints);
+			}
+		else if (numMax>1)
+			{
+			// Chose best following pixel in the 45 degrees directional pixels set
+			if (currentPixel!=previousPixel)
+				{
+				Vector2i maxDirectional = getMaxDirectionalNeighbor(imageArray, w,
+						currentPixel, previousPixel, neighborMovement);
+				generateUpHill(imageArray, w, maxDirectional.x, currentPixel,
+						maxDirectional.y, markedPoints, evalPoints);
+				}
+			else
+				{// Follow path for the best neighbor that has the same distance
+				Iterator<Vector2i> it = maxPixels.iterator();
+				Vector2i v, maxDirectional;
+				int m = -1;
+				int mIndex = -1;
+				int maxMove = -1;
+				int previousP = -1;
 
-              while (it.hasNext())
-                      {
-                      // If the pixel has already been evaluated it will be in
-                      // generateUpHill
-                      v = (Vector2i) it.next();
-                      maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x,
-                          currentPixel, v.y);
-                      if (m<imageArray[maxDirectional.x])
-                              {
-                              m = imageArray[maxDirectional.x];
-                              mIndex = maxDirectional.x;
-                              maxMove = maxDirectional.y;
-                              previousP = v.x;
-                              }
-                      }
-              evalPoints[previousP] = true;
-              generateUpHill(imageArray, w, mIndex, previousP, maxMove, markedPoints,
-                              evalPoints);
-              }
+				while (it.hasNext())
+					{
+					// If the pixel has already been evaluated it will be in
+					// generateUpHill
+					v = (Vector2i) it.next();
+					maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x,
+							currentPixel, v.y);
+					if (m<imageArray[maxDirectional.x])
+						{
+						m = imageArray[maxDirectional.x];
+						mIndex = maxDirectional.x;
+						maxMove = maxDirectional.y;
+						previousP = v.x;
+						}
+					}
+				evalPoints[previousP] = true;
+				generateUpHill(imageArray, w, mIndex, previousP, maxMove, markedPoints,
+						evalPoints);
+				}
 
-      }
-else
-        {
-        markedPoints.add(currentPixel);
-        }
+			}
+		else
+			{
+			markedPoints.add(currentPixel);
+			}
 
-/*
- * if (currentPixel = previousPixel & max = currentPixelValue){
- * Iterator<Integer> it = maxPixels.iterator(); while (it.hasNext()){ int
- * neighbor = (int) it.next(); } }
- */
 }
 
 	private void generateDownHill(int[] imageArray, int w, int currentPixel,
@@ -338,7 +394,6 @@ else
 			int currentPixelValue = imageArray[currentPixel];
 			int max = currentPixelValue;
 			ArrayList<Vector2i> maxPixels = new ArrayList<Vector2i>(2);
-			int maxNeighborPos = -1;
 
 			// find max value in neighborhood and number of repetitions
 			for (int i = 0; i<neighbors.length; i++)
@@ -347,14 +402,12 @@ else
 					{
 					max = imageArray[neighbors[i]];
 					numMax = 1;
-					maxNeighborPos = i;
 					maxPixels.clear();
 					maxPixels.add(new Vector2i(neighbors[i], i));
 					}
 				else if (max==imageArray[neighbors[i]])
 					{
 					numMax++;
-					maxNeighborPos = i;
 					maxPixels.add(new Vector2i(neighbors[i], i));
 					}
 				}
@@ -431,52 +484,64 @@ else
 		int neighbors[] = getNeighbors(currentPixel, w);		
 		
 		// Evaluate for every neighbor
-		for (int i = 0; i< neighbors.length; i++)
+		for (int i = 0; i<neighbors.length; i++)
 			{
 			int n1 = neighbors[i];
-			if (skPoint[n1]) continue; //if Neighbor is skeleton -> skip
-			
+			if (skPoint[n1])
+				continue; // if Neighbor is skeleton -> skip
+
 			Vector2i firstDir = getMaxDirectionalNeighbor(imageArray, w, n1,
 					currentPixel, i); // first step best neighbor
-			if (skPoint[firstDir.x]) 	{
-				if (nonConnectedPixel(skPoint,w,n1)){ 
+			if (skPoint[firstDir.x])
+				{
+				if (nonConnectedPixel(skPoint, w, n1))
+					{
 					skPoint[n1] = true;
 					continue;
+					}
 				}
-			}
 			else
 				{
-				int maxDist= -1;
-				Vector2i bestPair = new Vector2i(-1,-1);
-				
-				ArrayList<Vector2i> directionals = getDirectionalNeighbors(imageArray, w,
-						firstDir.x, n1, firstDir.y); // first step best neighbor
+				int maxDist = -1;
+				Vector2i bestPair = new Vector2i(-1, -1);
+
+				ArrayList<Vector2i> directionals = getDirectionalNeighbors(imageArray,
+						w, firstDir.x, n1, firstDir.y); // first step best neighbor
 				Iterator<Vector2i> it = directionals.iterator();
 				Vector2i secondDir;
-				//Iterate over every directional neighbor of the first step pixel
-				while(it.hasNext()){
+				// Iterate over every directional neighbor of the first step pixel
+				while (it.hasNext())
+					{
 					secondDir = it.next();
-					if (skPoint[secondDir.x] && imageArray[firstDir.x]>maxDist) 
-						//picks the greatest directional that reaches a skPoint (not the maxDirectional)
-						{						
+					if (skPoint[secondDir.x]&&imageArray[firstDir.x]>maxDist)
+					// picks the greatest directional that reaches a skPoint (not the
+					// maxDirectional)
+						{
 						maxDist = imageArray[firstDir.x];
-						bestPair = new Vector2i(n1,firstDir.x);		
-						}					
-					if (maxDist>0){
-						if (nonConnectedPixel(skPoint,w,bestPair.x)) 
+						bestPair = new Vector2i(n1, firstDir.x);
+						}
+					if (maxDist>0)
+						{
+						if (nonConnectedPixel(skPoint, w, bestPair.x))
+							{
 							skPoint[bestPair.x] = true;
-						if (nonConnectedPixel(skPoint,w,bestPair.y)) 
+							}
+						if (nonConnectedPixel(skPoint, w, bestPair.y))
+							{
 							skPoint[bestPair.y] = true;
+							}
+						}
 					}
 				}
 			}
-		}
+
 		}
 	
 	/**
 	 * Generates the list of pixels representing the skeleton that is constructed
 	 * connecting the base and apex pixels passed as parameter with non-yet
-	 * skeleton pixels using two step hill connection
+	 * skeleton pixels using two step hill connection. Also sets the boolean array
+	 * isSkeleton with the skeleton points position as true
 	 * 
 	 * @param imageArray
 	 *          The distance transform image array
@@ -484,47 +549,44 @@ else
 	 *          width of the image represented in imageArray
 	 * @param baseApexList
 	 *          List of base and apex points in imageArray
+	 * @param boolean array of the size of imageArray that will be set up with the 
+	 *        skeleton points
 	 * @return List of skeleton pixels built with up and down hill processing over
 	 *         the base and apex points list.
 	 */
 	private ArrayList<Integer> upDownHill2(int[] imageArray, int width,
-			ArrayList<Integer> baseApexList)
-		{
-		boolean skPoint[] = new boolean[imageArray.length];
+			ArrayList<Integer> baseApexList,boolean[] isSkeleton)
+		{		
 		ArrayList<Integer> skeleton = new ArrayList<Integer>();
 		Iterator<Integer> it = baseApexList.iterator();
-		
-		while (it.hasNext())
-			{ // Fill current skeleton points
-			int pixelPos = (int) it.next();
-			skPoint[pixelPos] = true;
-			}
-		
+
 		// Connect the separated skeleton points applying two step hill connection
 		// on every base and apex pixel.
-		it = baseApexList.iterator();
 		while (it.hasNext())
 			{
 			int pixelPos = (int) it.next();
-			TwoStepHillConnection(imageArray, width, pixelPos, skPoint);
+			TwoStepHillConnection(imageArray, width, pixelPos, isSkeleton);
 		}
-		
+	
 		//Add every point belonging to the skeleton to the skeleton pixel list
 		for (int i = 0; i<imageArray.length; i++)
 			{
-			if (skPoint[i])
+			if (isSkeleton[i])
 				skeleton.add(i);			
 			}
+
 		return skeleton;
 		}
-
+/**
+ * Creates and EvPixels image setting to 1 the positions in the list points.
+ */
+	
 	private static EvPixels buildImage(EvPixels input, ArrayList<Integer> points)
 		{
 		EvPixels skImage = new EvPixels(EvPixelsType.INT, input.getWidth(), input
 				.getHeight());
 		int[] skArray = skImage.getArrayInt();
 
-		int i = 0;
 		Iterator<Integer> it = points.iterator();
 		while (it.hasNext())
 			{
@@ -532,5 +594,72 @@ else
 			skArray[pos] = 1;
 			}
 		return skImage;
+		}
+	
+	private ArrayList<Integer> reduceSkeleton(int[] imageArray, boolean[] isSkeleton, int width,
+			ArrayList<Integer> skeletonPoints){
+			boolean[] isThinSkeleton = new boolean[isSkeleton.length];
+			boolean[] isBanned = new boolean[isSkeleton.length]; //faster than delete from ArrayList
+			ArrayList<Integer> thinSkeletonPoints = new ArrayList<Integer>();
+			ArrayList<Vector2i> neighbors;
+			Iterator<Vector2i> neighIt;
+			Vector2i n;
+			
+			int countScan = 0;
+			int initPoints = 0;
+
+			Iterator<Integer> it = skeletonPoints.iterator();
+			while (it.hasNext())
+			{
+			int pixel = it.next();
+			// The pixel has already been evaluated or the skeleton is already
+			// connected
+			if (isThinSkeleton[pixel]||isBanned[pixel])
+				continue;
+			// if (isThinSkeleton[pixel] || !nonConnectedPixel(isThinSkeleton, width,
+			// pixel)) continue;
+			isThinSkeleton[pixel] = true;
+			thinSkeletonPoints.add(pixel);
+			initPoints++;
+
+			int firstN[] = getCircularNeighbors(pixel, width);
+			for (int i=0; i<8; i++){			
+				boolean scanSkeleton = true;
+				int previous = pixel;
+				int prevMove = i; 
+				pixel = firstN[i];
+				isThinSkeleton[pixel] = true;
+				
+				//Start scanning skeleton from pixel
+				while (scanSkeleton)
+				{
+					scanSkeleton = false;
+					neighbors = getDirectionalNeighbors(imageArray, width, pixel, previous,
+							prevMove);
+					neighIt = neighbors.iterator();
+					while (neighIt.hasNext())
+					{
+						n = neighIt.next();
+						// set the new pixel and continue scanning
+						if (!scanSkeleton&&isSkeleton[n.x]&&!isBanned[n.x])
+						{
+							thinSkeletonPoints.add(n.x);
+							isThinSkeleton[n.x] = true;
+							previous = pixel;
+							pixel = n.x;
+							prevMove = n.y;
+							scanSkeleton = true; // keep scanning
+							countScan++;
+						}
+						//Ban any other directional neighbor
+						else if (scanSkeleton)
+						{
+							isBanned[n.x] = true;
+						}
+					}
+				}
+			}
+			}
+			return thinSkeletonPoints;
 		}
 	}
