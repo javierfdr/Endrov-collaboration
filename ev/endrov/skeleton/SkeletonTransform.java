@@ -15,9 +15,9 @@ public abstract class SkeletonTransform
 	abstract int[] getNeighbors(int pixelPosition, int w);
 
 	abstract Vector2i getMaxDirectionalNeighbor(int[] imageArray, int w,
-			int currentPixel, int previousPixel, int neighborMovement);
+			int currentPixel, int neighborMovement);
 	abstract ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
-			int currentPixel, int previousPixel, int neighborMovement);
+			int currentPixel, int neighborMovement);
 	abstract public boolean nonConnectedPixel(boolean[] skeleton, int w, int pixel);
 	
 	/**
@@ -41,12 +41,14 @@ public abstract class SkeletonTransform
 		boolean[] isSkeleton = listToMatrix(w*h, baseApex.get(2));
 		ArrayList<Integer> skPoints = upDownHill2(imageArray, w, baseApex.get(2),isSkeleton);
 		//skPoints = upDownHill2(imageArray, w, skPoints,isSkeleton);
-		skPoints = reduceSkeleton(imageArray, isSkeleton, w, skPoints);
-		
+		refineBasePoints(isSkeleton,baseApex.get(0), w);
+		//System.out.println("Start Redyce");
+		//skPoints = reduceSkeleton(imageArray, isSkeleton, w, skPoints);
+		//System.out.println("End Redyce");
 		
 		// System.out.println("SIZE: "+ skPoints.size());
 		EvPixels skImage = buildImage(input, skPoints);
-		//EvPixels skImage = buildImage(input, baseApex.get(1));
+		//EvPixels skImage = buildImage(input, baseApex.get(2));
 		return skImage;
 		}
 	
@@ -73,10 +75,12 @@ public abstract class SkeletonTransform
 
 		Vector<ArrayList<Integer>> baseApex = detectBaseApex(imageArray, w, h);
 		// ArrayList<Integer> skeleton_points =
-		// upDownHill(imageArray,base_apex.get(2));
+		//upDownHill(imageArray,base_apex.get(2));
 		boolean[] isSkeleton = listToMatrix(w*h, baseApex.get(2));
 		ArrayList<Integer> skPoints = upDownHill2(imageArray, w, baseApex.get(2),isSkeleton);
-
+		refineBasePoints(isSkeleton,baseApex.get(0), w);
+		
+		
 		// System.out.println("SIZE: "+ skPoints.size());
 		EvPixels skImage = buildImage(input, baseApex.get(0));
 		//EvPixels skImage = buildImage(input, skPoints);
@@ -102,6 +106,18 @@ public abstract class SkeletonTransform
 		
 		return neighbors;
 		}
+	/**
+	 * True if neighbor is a circular neighbor of position in a image of width w
+	 */
+	public boolean isCircularNeighbor(int neighbor, int position,int w){
+		int diff = neighbor-position;
+		int[] neigh = {w,-w,1,-1,w-1,w+1,-w-1,-w+1};
+		
+		for (int i=0;i<8;i++){
+			if (diff==neigh[i]) return true;
+		}
+		return false;
+	}
 	
 	/**
 	 * Finds the base points and the apex points from the given distance image
@@ -157,11 +173,10 @@ public abstract class SkeletonTransform
 						zeroCount++;
 					}
 				if (base&&zeroCount>4)
-					{
+					{//Base points
 					basePoints.add(count);
 					isBase[count] = true;
 					isBaseApex[count] = true;
-					//addCount++;
 					}
 				// Find if pixelValue is the maximum value in the
 				// given neighborhood
@@ -223,6 +238,35 @@ public abstract class SkeletonTransform
 		return baseApex;
 		}
 
+	public void refineBasePoints(boolean skPoint[], ArrayList<Integer> basePoints,int w){
+		Iterator<Integer> it = basePoints.iterator();
+		ArrayList<Integer> wrongBase = new ArrayList<Integer>();
+		int neighbors[];
+		int b;
+		int numSk;
+		while(it.hasNext()){
+			b = it.next();
+			neighbors = getCircularNeighbors(b, w);
+
+			numSk=0;
+			for (int n=0;n<8;n++)
+				{ //Count number of skeleton neighbors
+					if (skPoint[neighbors[n]]){
+						numSk++;
+					}
+				}
+			if (numSk==0){ 
+				wrongBase.add(((Integer)b));
+				skPoint[b] = false;
+			}
+		}
+		//Delete every wrong base point
+		it = wrongBase.iterator();
+		while(it.hasNext()){
+			basePoints.remove(it.next());
+		}
+	}
+	
 	/**
 	 * Generates the list of pixels representing the skeleton that is constructed
 	 * connecting the base and apex pixels passed as parameter with non-yet
@@ -341,7 +385,7 @@ public abstract class SkeletonTransform
 			if (currentPixel!=previousPixel)
 				{
 				Vector2i maxDirectional = getMaxDirectionalNeighbor(imageArray, w,
-						currentPixel, previousPixel, neighborMovement);
+						currentPixel, neighborMovement);
 				generateUpHill(imageArray, w, maxDirectional.x, currentPixel,
 						maxDirectional.y, markedPoints, evalPoints);
 				}
@@ -359,8 +403,7 @@ public abstract class SkeletonTransform
 					// If the pixel has already been evaluated it will be in
 					// generateUpHill
 					v = (Vector2i) it.next();
-					maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x,
-							currentPixel, v.y);
+					maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x,v.y);
 					if (m<imageArray[maxDirectional.x])
 						{
 						m = imageArray[maxDirectional.x];
@@ -417,7 +460,7 @@ public abstract class SkeletonTransform
 				if (currentPixel!=previousPixel)
 					{
 					Vector2i maxDirectional = getMaxDirectionalNeighbor(imageArray, w,
-							currentPixel, previousPixel, neighborMovement);
+							currentPixel, neighborMovement);
 					if (!evalPoints[maxDirectional.x]){
 						generateDownHill(imageArray, w, maxDirectional.x, currentPixel,
 							maxDirectional.y, markedPoints, evalPoints);
@@ -437,8 +480,7 @@ public abstract class SkeletonTransform
 						// If the pixel has already been evaluated it will be ignored by
 						// generateUpHill
 						v = (Vector2i) it.next();
-						maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x,
-								currentPixel, v.y);
+						maxDirectional = getMaxDirectionalNeighbor(imageArray, w, v.x, v.y);
 						if (m<imageArray[maxDirectional.x])
 							{
 							m = imageArray[maxDirectional.x];
@@ -482,7 +524,8 @@ public abstract class SkeletonTransform
 			boolean[] skPoint)
 		{
 		int neighbors[] = getNeighbors(currentPixel, w);		
-		
+		ArrayList<Vector2i>  connectionN; //Neighbors for checking connections
+		Iterator<Vector2i> cit;
 		// Evaluate for every neighbor
 		for (int i = 0; i<neighbors.length; i++)
 			{
@@ -490,23 +533,35 @@ public abstract class SkeletonTransform
 			if (skPoint[n1])
 				continue; // if Neighbor is skeleton -> skip
 
-			Vector2i firstDir = getMaxDirectionalNeighbor(imageArray, w, n1,
-					currentPixel, i); // first step best neighbor
+			Vector2i firstDir = getMaxDirectionalNeighbor(imageArray, w, n1,i); // first step best neighbor
 			if (skPoint[firstDir.x])
 				{
-				if (nonConnectedPixel(skPoint, w, n1))
-					{
-					skPoint[n1] = true;
-					continue;
+				boolean connect = true;
+				//Check if one of the directional neighbors from currenPixel in the direction i
+				//already connects pixel with firstDir
+				connectionN= getDirectionalNeighbors(imageArray, w, currentPixel, i);
+				cit = connectionN.iterator();
+				while(cit.hasNext()){
+					Vector2i cNeighbor = cit.next();
+					if (cNeighbor.x != n1 && isCircularNeighbor(cNeighbor.x,firstDir.x,w) && 
+								skPoint[cNeighbor.x])
+						{			
+						connect = false;
+						break;
 					}
 				}
+				if (connect){					
+					skPoint[n1] = true;
+					continue;
+				}
+			}
 			else
 				{
 				int maxDist = -1;
 				Vector2i bestPair = new Vector2i(-1, -1);
 
 				ArrayList<Vector2i> directionals = getDirectionalNeighbors(imageArray,
-						w, firstDir.x, n1, firstDir.y); // first step best neighbor
+						w, firstDir.x, firstDir.y); // first step best neighbor
 				Iterator<Vector2i> it = directionals.iterator();
 				Vector2i secondDir;
 				// Iterate over every directional neighbor of the first step pixel
@@ -534,7 +589,6 @@ public abstract class SkeletonTransform
 					}
 				}
 			}
-
 		}
 	
 	/**
@@ -623,25 +677,27 @@ public abstract class SkeletonTransform
 			initPoints++;
 
 			int firstN[] = getCircularNeighbors(pixel, width);
+			int initPixel; //For circle checking
 			for (int i=0; i<8; i++){			
 				boolean scanSkeleton = true;
 				int previous = pixel;
 				int prevMove = i; 
 				pixel = firstN[i];
-				isThinSkeleton[pixel] = true;
-				
+				initPixel = pixel;
 				//Start scanning skeleton from pixel
 				while (scanSkeleton)
 				{
 					scanSkeleton = false;
-					neighbors = getDirectionalNeighbors(imageArray, width, pixel, previous,
+					neighbors = getDirectionalNeighbors(imageArray, width, pixel,
 							prevMove);
 					neighIt = neighbors.iterator();
 					while (neighIt.hasNext())
-					{
+					{						
 						n = neighIt.next();
+						if (n.x==initPixel) {scanSkeleton=false;break;} //Breaking circles
+						
 						// set the new pixel and continue scanning
-						if (!scanSkeleton&&isSkeleton[n.x]&&!isBanned[n.x])
+						if (!scanSkeleton && isSkeleton[n.x] && !isBanned[n.x])
 						{
 							thinSkeletonPoints.add(n.x);
 							isThinSkeleton[n.x] = true;

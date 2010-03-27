@@ -18,7 +18,7 @@ public final class EuclideanSkeletonTransform extends SkeletonTransform
 			}
 	
 		public ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
-				int currentPixel, int previousPixel, int neighborMovement)
+				int currentPixel, int neighborMovement)
 			{
 				int nList[] = new int[6];
 								
@@ -78,9 +78,9 @@ public final class EuclideanSkeletonTransform extends SkeletonTransform
 		 * previousPixel to currentPixel, performing the movement neighborMovement.
 		 */
 		public Vector2i getMaxDirectionalNeighbor(int[] imageArray, int w,
-				int currentPixel, int previousPixel, int neighborMovement)
+				int currentPixel,int neighborMovement)
 			{
-			ArrayList<Vector2i> neighbors= getDirectionalNeighbors(imageArray, w, currentPixel, previousPixel, neighborMovement);
+			ArrayList<Vector2i> neighbors= getDirectionalNeighbors(imageArray, w, currentPixel, neighborMovement);
 			//get the max directional neighbor and its direction
 
 			Vector2i maxVector = neighbors.get(0);
