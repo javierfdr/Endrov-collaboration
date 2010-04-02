@@ -239,9 +239,9 @@ public abstract class SkeletonTransform
 	 * Explores the connected path starting from pixel and following every
 	 * neighbor indexing the matching with isoCount.
 	 * 
-	 * @param matching matrix-like array that contains the isolation index
-	 * 	for each pixel. The current pixel will be modified once in each 
-	 * 	call
+	 * @param matching
+	 *          matrix-like array that contains the isolation index for each
+	 *          pixel. The current pixel will be modified once in each call
 	 * @param isBase
 	 *          Matrix-like array, true for every pixel that is base point
 	 * @param isSkeleton

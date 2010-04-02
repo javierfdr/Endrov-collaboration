@@ -81,14 +81,21 @@ public class Thinning
 	public static boolean thinContour(int[] dtImage, boolean[] isShape, int w, int h, 
 			ArrayList<Integer> shapePoints,  int contourIndex){
 
-				boolean isThinner= false;
+				boolean[] isThinner= new boolean[1];
+				isThinner[0] = false;
 				int count;
 				int n[];
 				int a,b;
 				Iterator<Integer> it = shapePoints.iterator();
+				ThinContourSE tcse = new ThinContourSE(isShape, dtImage,shapePoints,
+						contourIndex,w,isThinner);				
+				tcse.run();				
+				ThinContourNW tcnw = new ThinContourNW(isShape, dtImage,shapePoints,
+						contourIndex,w,isThinner);				
+				tcnw.run();
 				//First iteration: remove south-east boundary points and the north-west
 				//corner point
-				while(it.hasNext()){
+				/*while(it.hasNext()){
 						count = it.next();
 						if (dtImage[count]!=contourIndex) continue;
 						//Check the four conditions
@@ -109,8 +116,8 @@ public class Thinning
 						isShape[count] = false;
 						it.remove();
 						isThinner=true;
-					}				
-				it = shapePoints.iterator();
+					}			*/	
+			/*	it = shapePoints.iterator();
 				//Second iteration: remove the north-west boundary points and the south-east 
 				//corner points
 				while(it.hasNext()){
@@ -127,9 +134,9 @@ public class Thinning
 						
 						isShape[count] = false;	
 						it.remove();
-						isThinner=true;
-					}			
-				return isThinner;
+						isThinner[0]=true;
+					}	*/		
+				return isThinner[0];
 		}
 	/**
 	 * Applies T.Y. Zhang and C.Y. Suen thinning algorithm iteratively calling the 
