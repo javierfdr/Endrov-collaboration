@@ -14,7 +14,7 @@ public final class EuclideanSkeletonTransform extends SkeletonTransform
 		 */
 		int[] getNeighbors(int position, int w)
 			{
-			return getCircularNeighbors(position, w);			
+			return SkeletonUtils.getCircularNeighbors(position, w);			
 			}
 	
 		public ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
