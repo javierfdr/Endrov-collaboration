@@ -119,24 +119,24 @@ public final class EuclideanSkeletonTransform extends SkeletonTransform
 				int p2;
 				switch(i){
 				case 0://up
-				p2=5; if (bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//right
-				p2=4; if (bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//left
-				p2=1; if (bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down-right
-				p2=3; if (bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down-left
+				p2=5; if (bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//right
+				p2=4; if (bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//left
+				p2=1; if (bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//down-right
+				p2=3; if (bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//down-left
 				break;
 				case 1://right
-				p2=5; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//up
-				p2=7; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down
-				p2=2; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down-left
+				p2=5; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//up
+				p2=7; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//down
+				p2=2; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//down-left
 				break;
 				case 2://down
-				p2=7; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//right
-				p2=6; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//left
-				p2=3; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//up-left
+				p2=7; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//right
+				p2=6; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//left
+				p2=3; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//up-left
 				break;
 				case 3://left
-				p2=4; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//up
-				p2=6; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2])){return false;}//down
+				p2=4; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2]))return false;//up
+				p2=6; if (p2<length && p2>=0 && bothTrue(skeleton,neighbors[i],neighbors[p2]))//down
 				break;
 				}
 			}

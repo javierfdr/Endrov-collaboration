@@ -8,16 +8,19 @@ import endrov.util.Vector2i;
 public abstract class SkeletonTransform
 	{
 	abstract int[] getNeighbors(int pixelPosition, int w);
+
 	/**
-	* Returns the neighbor that corresponds to the maximum directional movement from
-	* previousPixel to currentPixel, performing the movement neighborMovement.
-	*/
+	 * Returns the neighbor that corresponds to the maximum directional movement
+	 * from previousPixel to currentPixel, performing the movement
+	 * neighborMovement.
+	 */
 	abstract Vector2i getMaxDirectionalNeighbor(int[] imageArray, int w,
 			int currentPixel, int neighborMovement);
-/**
- * Returns all the neighbors obtained performing the movement neighborMovement
- * from previousPixel to currentPixel
- */
+
+	/**
+	 * Returns all the neighbors obtained performing the movement neighborMovement
+	 * from previousPixel to currentPixel
+	 */
 	abstract ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
 			int currentPixel, int neighborMovement);
 
@@ -78,7 +81,8 @@ public abstract class SkeletonTransform
 		}
 
 	/**
-	 * Calculates the skeleton associated to the input distance transform image
+	 * Calculates the skeleton associated with the input distance transform image
+	 * and returns the skeleton image
 	 * 
 	 * @param input
 	 *          Distance transformed image where background pixels are 0's
@@ -89,112 +93,84 @@ public abstract class SkeletonTransform
 		int w = input.getWidth();
 		int h = input.getHeight();
 		int[] imageArray = input.getArrayInt();
-
-		// Vector<ArrayList<Integer>> baseApex = detectBaseApex(imageArray, w, h);
-		// ArrayList<Integer> skeleton_points =
-		// upDownHill(imageArray,base_apex.get(2));
-		// ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
 		ArrayList<Integer> skPoints = new ArrayList<Integer>();
+		boolean isSkeleton[] = new boolean[w*h];
+
 		for (int i = 0; i<imageArray.length; i++)
 			{
 			if (imageArray[i]>0)
+				{
 				skPoints.add(i);
+				isSkeleton[i] = true;
+				}
+			else
+				isSkeleton[i] = false;
 			}
-		boolean[] isSkeleton = listToMatrix(w*h, skPoints);
 
-		// boolean[] isSkeleton = listToMatrix(w*h, baseApex.get(2));
-		// ArrayList<Integer> skPoints = upDownHill2(imageArray, w,
-		// baseApex.get(2),isSkeleton);
-		// skPoints = upDownHill2(imageArray, w, skPoints,isSkeleton);
-		// refineBasePoints(isSkeleton,baseApex, w);
-		// System.out.println("Start Redyce");
-		// skPoints = reduceSkeleton(imageArray, isSkeleton, w, skPoints);
-		// skPoints = reduceSkeleton(imageArray, isSkeleton, w, baseApex.get(0));
-		// System.out.println("End Redyce");
+		Thinning.thinToOnePixel(imageArray, isSkeleton, w, h, skPoints);
+		EvPixels skImage = SkeletonUtils.buildImage(w, h, isSkeleton);
 
-		Thinning.thinToOnePixel(imageArray, isSkeleton, w, h, skPoints); // EYE
-		// skPoints
-		// are not
-		// right
-		// here
-		ArrayList<Integer> basePoints = detectBasePoints(isSkeleton, w, skPoints);
-		// Vector<ArrayList<Integer>> baseApex = detectBaseApex(imageArray, w, h);
-		int[] matching = isolate(basePoints, isSkeleton, w, h);
-
-		// System.out.println("SIZE: "+ skPoints.size());
-		EvPixels skImage = SkeletonUtils.buildImage(input, matching);
-		// EvPixels skImage = buildImage(input, baseApex.get(0));
 		return skImage;
 		}
 
 	/**
-	 * Returns an array of length 'size' setting true every position found in
-	 * list.
+	 * Calculates the general skeleton associated with distance transform image
+	 * (dt) taken from image and returns a list containing the isolated Worm
+	 * skeletons that appear clustered or overlapped.
+	 * 
+	 * @param image
+	 *          The initial image from which the distance transformation is taken
+	 * @param dt
+	 *          The distance transformation of the initial image
 	 */
-	public static boolean[] listToMatrix(int size, ArrayList<Integer> list)
+
+	public ArrayList<WormClusterSkeleton> getWormClusterSkeletons(EvPixels image,
+			EvPixels dt)
 		{
-
-		boolean[] matrix = new boolean[size];
-		Iterator<Integer> it = list.iterator();
-		while (it.hasNext())
-			{
-			int pixelPos = (int) it.next();
-			matrix[pixelPos] = true;
-			}
-		return matrix;
-		}
-
-	public static ArrayList<Integer> matrixToList(int[] matrix)
-		{
-		ArrayList<Integer> list = new ArrayList<Integer>();
-		for (int i = 0; i<matrix.length; i++)
-			{
-			if (matrix[i]>0)
-				list.add(i);
-			}
-		return list;
-		}
-
-	public EvPixels getSkeleton2(EvPixels input)
-		{
-		int w = input.getWidth();
-		int h = input.getHeight();
-		int[] imageArray = input.getArrayInt();
-
-		// ArrayList<Integer> skeleton_points =
-		// upDownHill(imageArray,base_apex.get(2));
-		// ArrayList<Integer> skPoints = upDownHill(imageArray, w, baseApex.get(2));
+		int w = dt.getWidth();
+		int h = dt.getHeight();
+		int[] dtArray = dt.getArrayInt();
 		ArrayList<Integer> skPoints = new ArrayList<Integer>();
-		for (int i = 0; i<imageArray.length; i++)
+		ArrayList<Integer> basePoints;
+		ArrayList<ArrayList<Integer>> isolatedPoints = new ArrayList<ArrayList<Integer>>();
+		ArrayList<ArrayList<Integer>> isolatedBases = new ArrayList<ArrayList<Integer>>();
+		ArrayList<WormClusterSkeleton> wcList = new ArrayList<WormClusterSkeleton>();
+		boolean isSkeleton[] = new boolean[w*h];
+
+		for (int i = 0; i<dtArray.length; i++)
 			{
-			if (imageArray[i]>0)
+			if (dtArray[i]>0)
+				{
 				skPoints.add(i);
+				isSkeleton[i] = true;
+				}
+			else
+				isSkeleton[i] = false;
 			}
-		boolean[] isSkeleton = listToMatrix(w*h, skPoints);
 
-		// boolean[] isSkeleton = listToMatrix(w*h, baseApex.get(2));
-		// ArrayList<Integer> skPoints = upDownHill2(imageArray, w,
-		// baseApex.get(2),isSkeleton);
-		// skPoints = upDownHill2(imageArray, w, skPoints,isSkeleton);
-		// refineBasePoints(isSkeleton,baseApex, w);
-		// System.out.println("Start Redyce");
-		// skPoints = reduceSkeleton(imageArray, isSkeleton, w, skPoints);
-		// skPoints = reduceSkeleton(imageArray, isSkeleton, w, baseApex.get(0));
-		// System.out.println("End Redyce");
+		// reduce, detect base points and isolate
+		Thinning.thinToOnePixel(dtArray, isSkeleton, w, h, skPoints);
+		basePoints = detectBasePoints(isSkeleton, w, skPoints);
+		isolate(basePoints, isSkeleton, w, h, isolatedPoints, isolatedBases);
 
-		Thinning.thinToOnePixel(imageArray, isSkeleton, w, h, skPoints); // EYE
-		// skPoints
-		// are not
-		// right
-		// here
-		ArrayList<Integer> basePoints = detectBasePoints(isSkeleton, w, skPoints);
-		// Vector<ArrayList<Integer>> baseApex = detectBaseApex(imageArray, w, h);
-		// int[] matching = isolate(basePoints, isSkeleton,w,h);
-		// System.out.println("SIZE: "+ skPoints.size());
-		// EvPixels skImage = SkeletonUtils.buildImage(input, matching);
-		EvPixels skImage = SkeletonUtils.buildImage(input, basePoints);
-		return skImage;
+		boolean[] isBase = SkeletonUtils.listToMatrix(w*h, basePoints);
 
+		// Create a worm cluster skeleton using the obtained isolated points and
+		// their corresponding bases
+		Iterator<ArrayList<Integer>> ip = isolatedPoints.iterator();
+		Iterator<ArrayList<Integer>> ib = isolatedBases.iterator();
+		ArrayList<Integer> currentPointList;
+		ArrayList<Integer> currentBaseList;
+		while (ip.hasNext())
+			{
+			currentPointList = ip.next();
+			currentBaseList = ib.next();
+			WormClusterSkeleton wcs = new WormClusterSkeleton(image, dtArray, w, h,
+					currentBaseList, currentPointList, isBase, isSkeleton);
+			wcList.add(wcs);
+			}
+
+		return wcList;
 		}
 
 	/**
@@ -213,14 +189,14 @@ public abstract class SkeletonTransform
 	 *          Width of the image matrix represented in isSkeleton
 	 * @param h
 	 *          Height of the image matrix represented in isSkeleton
-	 * @return
 	 */
-	public int[] isolate(ArrayList<Integer> basePoints, boolean[] isSkeleton,
-			int w, int h)
+	private int[] isolate(ArrayList<Integer> basePoints, boolean[] isSkeleton,
+			int w, int h, ArrayList<ArrayList<Integer>> isolatedPoints,
+			ArrayList<ArrayList<Integer>> isolatedBases)
 		{
 		int[] matching = new int[w*h];
-		boolean[] isBase = listToMatrix(w*h, basePoints);
-		int isoCount = 20;
+		boolean[] isBase = SkeletonUtils.listToMatrix(w*h, basePoints);
+		int isoCount = 1;
 		int base;
 		Iterator<Integer> bIt = basePoints.iterator();
 		while (bIt.hasNext())
@@ -228,8 +204,15 @@ public abstract class SkeletonTransform
 			base = bIt.next();
 			if (matching[base]==0)
 				{
-				pathToBase(matching, isBase, isSkeleton, w, base, isoCount);
-				isoCount = (int) (Math.random()*245)+10;
+				ArrayList<Integer> currentSkPoints = new ArrayList<Integer>();
+				ArrayList<Integer> currentBasePoints = new ArrayList<Integer>();
+				isolatedPoints.add(currentSkPoints);
+				isolatedBases.add(currentBasePoints);
+				currentBasePoints.add(base);
+
+				pathToBase(matching, isBase, isSkeleton, w, base, isoCount,
+						currentSkPoints, currentBasePoints);
+				isoCount += 1;
 				}
 			}
 		return matching;
@@ -255,18 +238,24 @@ public abstract class SkeletonTransform
 	 *          isolation index corresponding to pixel
 	 */
 	private void pathToBase(int[] matching, boolean[] isBase,
-			boolean[] isSkeleton, int w, int pixel, int isoCount)
+			boolean[] isSkeleton, int w, int pixel, int isoCount,
+			ArrayList<Integer> currentSkPoints, ArrayList<Integer> currentBasePoints)
 		{
 		int[] neighbors;
 		if (matching[pixel]!=0) // the pixel has already been checked
 			return;
 		matching[pixel] = isoCount;
+		currentSkPoints.add(pixel);
+		if (isBase[pixel])
+			currentBasePoints.add(pixel);
+
 		neighbors = SkeletonUtils.getCircularNeighbors(pixel, w);
 		for (int i = 0; i<8; i++)
 			{
 			if (isSkeleton[neighbors[i]])
 				{// Follow every path recursively
-				pathToBase(matching, isBase, isSkeleton, w, neighbors[i], isoCount);
+				pathToBase(matching, isBase, isSkeleton, w, neighbors[i], isoCount,
+						currentSkPoints, currentBasePoints);
 				}
 			}
 		}
