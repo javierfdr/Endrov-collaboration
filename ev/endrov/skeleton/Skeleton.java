@@ -4,9 +4,9 @@ import endrov.imageset.EvPixels;
 
 public abstract class Skeleton
 	{
-	EvPixels image;
-	int[] dt; // distance transformation of image
-	int w, h; // width and height of image
+	private EvPixels image;
+	private int[] dt; // distance transformation of image
+	private int w, h; // width and height of image
 
 	/**
 	 * General abstraction for a Skeleton. Contains an initial image and a

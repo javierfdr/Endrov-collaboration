@@ -6,11 +6,11 @@ import endrov.imageset.EvPixels;
 
 public final class WormClusterSkeleton extends Skeleton
 	{
-	ArrayList<Integer> basePoints;
-	ArrayList<Integer> skPoints;
-	boolean[] isBasePoint; // added for efficient check
-	boolean[] isSkPoint; // added for efficient check
-	int numWorms;
+	private ArrayList<Integer> basePoints;
+	private ArrayList<Integer> skPoints;
+	private boolean[] isBasePoint; // added for efficient check
+	private boolean[] isSkPoint; // added for efficient check
+	private int numWorms;
 
 	/**
 	 * Creates a instance of worm cluster skeleton, that is a skeleton of an image
