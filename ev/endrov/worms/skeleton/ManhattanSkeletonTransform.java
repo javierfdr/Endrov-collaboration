@@ -1,4 +1,4 @@
-package endrov.skeleton;
+package endrov.worms.skeleton;
 
 import java.util.ArrayList;
 import java.util.Iterator;

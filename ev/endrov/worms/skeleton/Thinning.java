@@ -1,9 +1,9 @@
-package endrov.skeleton;
+package endrov.worms.skeleton;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import endrov.skeleton.SkeletonTransform;
+import endrov.worms.skeleton.SkeletonTransform;
 
 public class Thinning
 	{
@@ -108,19 +108,21 @@ public class Thinning
 		int n[];
 		int a, b;
 		Iterator<Integer> it = shapePoints.iterator();
-
+		double init;
+		double total=0;
+		
 		// First iteration: remove south-east boundary points and the north-west
 		// corner point
 		while (it.hasNext())
 			{
-			count = it.next();
-			if (dtImage[count]!=contourIndex)
+			count = it.next();			
+			if (dtImage[count]>contourIndex)				
 				continue;
 			// Check the four conditions
 			n = Thinning.getCircularNeighbors(count, w);
 			b = Thinning.nonZeroNeighbors(isShape, n);
 			a = Thinning.circular01Patterns(isShape, n);
-
+			
 			if (b==0)
 				{ // Remove isolated pixel
 				isShape[count] = false;
@@ -134,7 +136,7 @@ public class Thinning
 				continue;
 			if (isShape[n[2]]&&isShape[n[4]]&&isShape[n[6]])
 				continue;
-
+     			
 			isShape[count] = false;
 			it.remove();
 			isThinner = true;
@@ -145,13 +147,12 @@ public class Thinning
 		while (it.hasNext())
 			{
 			count = it.next();
-			if (dtImage[count]!=contourIndex)
+			if (dtImage[count]>contourIndex)
 				continue;
 			// Check the four conditions
 			n = Thinning.getCircularNeighbors(count, w);
 			b = Thinning.nonZeroNeighbors(isShape, n);
 			a = Thinning.circular01Patterns(isShape, n);
-
 			if (!((b>=2&&b<=6)&a==1))
 				continue;
 			if (isShape[n[0]]&&isShape[n[2]]&&isShape[n[6]])

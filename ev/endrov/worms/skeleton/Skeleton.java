@@ -1,12 +1,12 @@
-package endrov.skeleton;
+package endrov.worms.skeleton;
 
 import endrov.imageset.EvPixels;
 
 public abstract class Skeleton
 	{
-	private EvPixels image;
-	private int[] dt; // distance transformation of image
-	private int w, h; // width and height of image
+	public EvPixels image;
+	public int[] dt; // distance transformation of image
+	public int w, h; // width and height of image
 
 	/**
 	 * General abstraction for a Skeleton. Contains an initial image and a
@@ -23,10 +23,11 @@ public abstract class Skeleton
 	 */
 	public Skeleton(EvPixels image, int[] dt, int w, int h)
 		{
-		this.image = image;
-		this.dt = dt;
+		this.image = image;		
 		this.w = w;
 		this.h = h;
+		this.dt = new int[dt.length];
+		for(int i=0;i<dt.length;i++) this.dt[i] = dt[i];
 		}
 
 	/**
@@ -41,9 +42,10 @@ public abstract class Skeleton
 	public Skeleton(EvPixels image, int[] dt)
 		{
 		this.image = image;
-		this.dt = dt;
 		this.w = image.getWidth();
 		this.h = image.getHeight();
+		this.dt = new int[dt.length];
+		for(int i=0;i<dt.length;i++) this.dt[i] = dt[i];
 		}
 
 	}
