@@ -2,72 +2,78 @@ package endrov.worms;
 
 import endrov.util.Vector2i;
 import endrov.util.curves.EvCardinalSpline;
+import endrov.util.curves.WrongParameterSplineException;
 import endrov.worms.skeleton.WormSkeleton;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import com.graphbuilder.curve.Point;
 
-public class WormDescriptor{
-	
+public class WormDescriptor
+	{
+
 	WormPixelMatcher pixelMatcher;
 	EvCardinalSpline cs;
-	
-	public WormDescriptor(WormPixelMatcher wm){
-			this.pixelMatcher = wm;
-	}
-	
-		public static void getShapeSpline(WormSkeleton ws, double alpha){
 
-		}
-	
-		public Point pixelToPoint(int pixel){		
-			Vector2i pixel2D = pixelMatcher.getPixelPos(pixel);
-			return (new PointFactory()).createPoint(pixel2D.x,pixel2D.y);
-		}
-		
-		
-		/**
-		 * Returns a list of Point transforming each integer point
-		 * in the given integer list points
-		 * 
-		 * @param points List of integer points
-		 */
-		public ArrayList<Point> pixelListToPoint(ArrayList<Integer> points){
-			ArrayList<Point> pointList = new ArrayList<Point>(points.size());
-			Iterator<Integer> pIt = points.iterator();
-			while(pIt.hasNext()){
-				pointList.add(pixelToPoint(pIt.next()));
-			}			
-			return pointList;
-		}
-		
-		/**
-		 * Returns an array of int transforming each Point from points
-		 * list to the corresponding integer matrix value
-		 * @param points
-		 * @return
-		 */
-		
-		public int[] pointListToPixel(ArrayList<Point> points){
-			int[] pixels = new int[points.size()];		
-			Iterator<Point> it = points.iterator();
-			Point p;
-			int count=0;
-			while(it.hasNext()){
-				pixels[count] = pixelMatcher.pointToPixel(it.next());
-				count++;				       	
+	/**
+	 * Creates a new worm descriptor given a WormPixelMatcher object that
+	 * represents the current worm as an Endrov image, and Worm skeleton from
+	 * which the corresponding spline curve is calculated. This constructor uses
+	 * the default values 1.0 for the percentage of control points used and 0.5 as
+	 * alpha value.
+	 * 
+	 * @param wm
+	 *          Representation of the worm as Endrov image
+	 * @param ws
+	 *          The skeleton of the worm
+	 */
+	public WormDescriptor(WormPixelMatcher wm, WormSkeleton ws)
+		{
+		this.pixelMatcher = wm;
+		try
+			{
+			this.cs = getShapeSpline(wm, ws, 1.0, 0.5);
+
 			}
-			return pixels;
+		catch (WrongParameterSplineException e)
+			{
+			System.out
+					.println("Wrong attributes on WormSkeleton object 'ws' to calculate Cardinal Spline ");
+			e.printStackTrace();
+			}
 		}
-		
-		public ArrayList<Point> baseToPoint(int[] basePoints){
-			if (basePoints.length !=2) return null;
-			ArrayList<Point> pl = new ArrayList<Point>(2);
-			pl.add(pixelToPoint(basePoints[0]));
-			pl.add(pixelToPoint(basePoints[1]));
-			
-			return pl;
+
+	public WormDescriptor(WormPixelMatcher wm, WormSkeleton ws,
+			int numPointsPercentage, double alpha)
+		{
+		this.pixelMatcher = wm;
+		try
+			{
+			this.cs = getShapeSpline(wm, ws, alpha, numPointsPercentage);
+			}
+		catch (WrongParameterSplineException e)
+			{
+			System.out
+					.println("Wrong attributes on WormSkeleton object 'ws' to calculate Cardinal Spline ");
+			e.printStackTrace();
+			}
 		}
-		
+
+	private EvCardinalSpline getShapeSpline(WormPixelMatcher wpm,
+			WormSkeleton ws, double alpha, double numPointsPercentage)
+			throws WrongParameterSplineException
+		{
+		return new EvCardinalSpline(wpm.baseToPoint(ws.getBasePoints()), wpm
+				.pixelListToPoint(ws.getSkPoints()), alpha, numPointsPercentage);
+		}
+
+	public void setWormDescriptor(WormPixelMatcher wpm, WormSkeleton ws,
+			double alpha, double numPointsPercentage)
+			throws WrongParameterSplineException
+		{
+		this.pixelMatcher = wpm;
+		this.cs = new EvCardinalSpline(wpm.baseToPoint(ws.getBasePoints()), wpm
+				.pixelListToPoint(ws.getSkPoints()), alpha, numPointsPercentage);
+		}
+
 	}

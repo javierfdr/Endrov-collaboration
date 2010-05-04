@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Vector;
 
 import endrov.imageset.EvPixels;
+import endrov.imageset.EvPixelsType;
 import endrov.util.Vector2i;
 
 public abstract class SkeletonTransform
@@ -603,4 +605,5 @@ public abstract class SkeletonTransform
 					}break;			
 				}
 		}
+	
 	}

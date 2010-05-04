@@ -2,7 +2,6 @@ package endrov.util.curves;
 
 import java.awt.geom.PathIterator;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 
 import endrov.util.Vector2i;
@@ -75,13 +74,14 @@ public class EvCardinalSpline
 		{
 
 		int length = points.size();
-		int numPoints = (int) (((double)length)*numPointsPercentage);
+		int numPoints = (int) (((double) length)*numPointsPercentage);
 		if (numPoints<2)
 			return null;
 		int step = length/(numPoints-1);
 		int stepCount;
 		Iterator<Point> it = points.iterator();
 		ControlPath cp = new ControlPath();
+		Point nextPixel = null;
 
 		// Adding skeleton points to ControlPath. Note that
 		// the base points are added twice, manually and belonging
@@ -89,15 +89,18 @@ public class EvCardinalSpline
 		cp.addPoint(basePoints.get(0));
 		while (it.hasNext()&&numPoints>0)
 			{
-			cp.addPoint(it.next());
+			nextPixel = it.next();
+			cp.addPoint(nextPixel);
 			stepCount = 0;
-			while (stepCount<step-1 && it.hasNext())
+			while (stepCount<step-1&&it.hasNext())
 				{
 				it.next();
 				stepCount++;
 				}
 			numPoints--;
 			}
+		if (nextPixel!=basePoints.get(1))
+			cp.addPoint(basePoints.get(1));
 		cp.addPoint(basePoints.get(1));
 		CardinalSpline cs = new CardinalSpline(cp, new GroupIterator("0:n-1", cp
 				.numPoints()));
@@ -105,70 +108,94 @@ public class EvCardinalSpline
 
 		return cs;
 		}
-/**
- * Returns a list containing numPoints points evenly separated that belong to
- * the cs cardinal spline path. If numPoints is bigger than the number of 
- * points generated or if equals 0, then all the points are returned 
- */
-	public ArrayList<Point> getCardinalPoints(int numPoints){
-		return getCardinalPoints(this.cs,numPoints);
-	}
-	
+
 	/**
 	 * Returns a list containing numPoints points evenly separated that belong to
-	 * the cs cardinal spline path. If numPoints is bigger than the number of 
-	 * points generated or if equals 0, all the points are returned 
+	 * the cs cardinal spline path. If numPoints is bigger than the number of
+	 * points generated or if equals 0, then all the points are returned
+	 */
+	public ArrayList<Point> getCardinalPoints(int numPoints)
+		{
+		return getCardinalPoints(this.cs, numPoints);
+		}
+
+	/**
+	 * Returns a list containing numPoints points evenly separated that belong to
+	 * the cs cardinal spline path. If numPoints is bigger than the number of
+	 * points generated or if equals 0, all the points are returned
 	 * 
 	 * @param cs
 	 *          A cardinal spline object
 	 * @param numPoints
-	 *          the number of points evenly separated to return
+	 *          the number of points evenly separated to return. The two extremes
+	 *          are always included.
 	 */
-	public static ArrayList<Point> getCardinalPoints(CardinalSpline cs, int numPoints)
+	public static ArrayList<Point> getCardinalPoints(CardinalSpline cs,
+			int numPoints)
 		{
 		ShapeMultiPath mp = new ShapeMultiPath();
 		cs.appendTo(mp); // Computing and adding to multipath
-		
+
 		Vector2i[] points = new Vector2i[mp.getCapacity()];
 		PathIterator pi = mp.getPathIterator(null);
 		float coords[] = new float[2];
-		int index=0;
+		int index = 0;
 		while (!pi.isDone())
 			{
 			pi.currentSegment(coords);
-			points[index]=new Vector2i((int) coords[0],(int) coords[1]);
+			points[index] = new Vector2i((int) coords[0], (int) coords[1]);
 			pi.next();
 			index++;
 			}
+		if (index<1)
+			return new ArrayList<Point>();
+
 		System.out.println("Number of spline points: "+index);
-		if (numPoints>index || numPoints==0) numPoints=index;
-		if (numPoints<0) return null;
-		
-		int count = 0;
+		if (numPoints>index||numPoints==0)
+			numPoints = index;
+		if (numPoints<0)
+			return null;
+
+		index = index-2; // Excluding extremes (bases)
 		int step = index/(numPoints-1);
+		int count = step; // Exclude first extreme (base)
 		Vector2i temp;
 		ArrayList<Point> cardinalPoints = new ArrayList<Point>(index);
-		while(count<index){
+
+		// Adding first extreme
+		temp = points[0]; // last extreme (base)
+		cardinalPoints.add(new PointFactory().createPoint(temp.x, temp.y));
+
+		// Adding inner points
+		int addCount = numPoints-2;
+		while (count<index-1&&addCount>0&&step>0)
+			{
 			temp = points[count];
-			cardinalPoints.add(new PointFactory().createPoint(temp.x,temp.y));
-			count+=step;
-		}
+			cardinalPoints.add(new PointFactory().createPoint(temp.x, temp.y));
+			count += step;
+			addCount -= 1;
+			}
+		// Adding second extreme
+		temp = points[index-1]; // second extreme (base)
+		cardinalPoints.add(new PointFactory().createPoint(temp.x, temp.y));
+
 		return cardinalPoints;
-	}
+		}
 
 	/**
-	 * Sets imageArray to true in every spline points position contained
-	 * in points
+	 * Sets imageArray to true in every spline points position contained in points
+	 * 
 	 * @param points
 	 * @param imageArray
 	 */
 	public static void drawCardinalSpline(int[] points, int[] imageArray)
 		{
-			int count=0;
-			while(count<points.length){
-				imageArray[points[count]] = 1;
-				count++;
+		int count = 0;
+		while (count<points.length)
+			{
+			imageArray[points[count]] = 1;
+			count++;
 			}
 		}
-	
+
 	}
