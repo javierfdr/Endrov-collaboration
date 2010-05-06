@@ -33,6 +33,10 @@ public class WormPixelMatcher
 			}
 		}
 
+	public int posToPixel(Vector2i pos){
+		return ((pos.x)+pos.y*w);
+	}
+	
 	/**
 	 * Returns 2-dimensional position corresponding to pixel position
 	 */
@@ -40,7 +44,14 @@ public class WormPixelMatcher
 		{
 		return matchMatrix[pixel];
 		}
-
+	
+	/**
+	 * Returns 2-dimensional position corresponding to pixel position
+	 */
+	public Vector2i getPixelPos(Point p){
+		return matchMatrix[pointToPixel(p)];
+	}
+	
 	public int pointToPixel(Point p)
 		{
 		double[] xy = p.getLocation();
@@ -78,6 +89,36 @@ public class WormPixelMatcher
 		return pointList;
 		}
 
+	public Vector2i[] pixelListToVector2i(ArrayList<Integer> points)
+		{
+		Vector2i vList[] = new Vector2i[points.size()];
+		Iterator<Integer> pIt = points.iterator();
+		int count = 0;
+		while (pIt.hasNext())
+			{
+			vList[count] = getPixelPos(pIt.next());
+			count++;
+			}
+		return vList;
+		}
+
+	public float[][] pixelListTo2DArray(ArrayList<Integer> points)
+		{
+		float vArray[][] = new float[points.size()][2];
+		Iterator<Integer> pIt = points.iterator();
+		Vector2i temp;
+		int count = 0;
+		while (pIt.hasNext())
+			{
+			temp = getPixelPos(pIt.next());
+			vArray[count][0] = temp.x;
+			vArray[count][1] = temp.y;
+			count++;
+			}
+		return vArray;
+		}
+	
+	
 	/**
 	 * Returns an array of int transforming each Point from points list to the
 	 * corresponding integer matrix value
@@ -96,7 +137,7 @@ public class WormPixelMatcher
 			}
 		return pixels;
 		}
-
+	
 	/**
 	 * Transform a int array containing the two base points
 	 * into a Point array

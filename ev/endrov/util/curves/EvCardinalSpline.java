@@ -2,6 +2,7 @@ package endrov.util.curves;
 
 import java.awt.geom.PathIterator;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import endrov.util.Vector2i;
@@ -137,16 +138,23 @@ public class EvCardinalSpline
 		cs.appendTo(mp); // Computing and adding to multipath
 
 		Vector2i[] points = new Vector2i[mp.getCapacity()];
+		//HashSet<Vector2i> hashPoints = new HashSet<Vector2i>();
 		PathIterator pi = mp.getPathIterator(null);
 		float coords[] = new float[2];
 		int index = 0;
 		while (!pi.isDone())
 			{
 			pi.currentSegment(coords);
+			//hashPoints.add(new Vector2i((int) coords[0], (int) coords[1]));
 			points[index] = new Vector2i((int) coords[0], (int) coords[1]);
 			pi.next();
 			index++;
 			}
+		//int index = hashPoints.size();
+		System.out.println("index "+index);
+		//Vector2i[] points = new Vector2i[index];
+		//points = hashPoints.toArray(points);
+		
 		if (index<1)
 			return new ArrayList<Point>();
 
@@ -156,8 +164,11 @@ public class EvCardinalSpline
 		if (numPoints<0)
 			return null;
 
+		int step;
 		index = index-2; // Excluding extremes (bases)
-		int step = index/(numPoints-1);
+		if (numPoints==index+2) step = 1;
+		else step = index/(numPoints-1);
+				
 		int count = step; // Exclude first extreme (base)
 		Vector2i temp;
 		ArrayList<Point> cardinalPoints = new ArrayList<Point>(index);
@@ -168,7 +179,7 @@ public class EvCardinalSpline
 
 		// Adding inner points
 		int addCount = numPoints-2;
-		while (count<index-1&&addCount>0&&step>0)
+		while (count<index-1 && addCount>0 && step>0)
 			{
 			temp = points[count];
 			cardinalPoints.add(new PointFactory().createPoint(temp.x, temp.y));
