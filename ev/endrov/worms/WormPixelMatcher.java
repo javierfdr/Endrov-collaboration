@@ -3,6 +3,8 @@ package endrov.worms;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.vecmath.Vector2d;
+
 import com.graphbuilder.curve.Point;
 
 import endrov.util.Vector2i;
@@ -35,6 +37,10 @@ public class WormPixelMatcher
 
 	public int posToPixel(Vector2i pos){
 		return ((pos.x)+pos.y*w);
+	}
+	
+	public int posToPixel(Vector2d pos){
+		return (((int)pos.x)+((int)pos.y)*w);	
 	}
 	
 	/**
@@ -89,18 +95,32 @@ public class WormPixelMatcher
 		return pointList;
 		}
 
-	public Vector2i[] pixelListToVector2i(ArrayList<Integer> points)
+	public ArrayList<Vector2i> pixelListToVector2i(ArrayList<Integer> points)
 		{
-		Vector2i vList[] = new Vector2i[points.size()];
+		ArrayList<Vector2i> vList = new ArrayList<Vector2i>(points.size()); 
 		Iterator<Integer> pIt = points.iterator();
 		int count = 0;
 		while (pIt.hasNext())
 			{
-			vList[count] = getPixelPos(pIt.next());
+			vList.add(getPixelPos(pIt.next()));
 			count++;
 			}
 		return vList;
 		}
+	
+	public ArrayList<Vector2d> pixelListToVector2d(ArrayList<Integer> points)
+	{
+	ArrayList<Vector2d> vList = new ArrayList<Vector2d>(points.size()); 
+	Iterator<Integer> pIt = points.iterator();
+	Vector2i n;
+	while (pIt.hasNext())
+	{	
+		n=getPixelPos(pIt.next());
+		vList.add(new Vector2d(n.x,n.y));
+		}
+	return vList;
+	}
+
 
 	public float[][] pixelListTo2DArray(ArrayList<Integer> points)
 		{

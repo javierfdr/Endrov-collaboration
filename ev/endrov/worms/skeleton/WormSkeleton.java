@@ -5,6 +5,10 @@ import java.util.Iterator;
 
 import endrov.worms.skeleton.NotWormException;
 
+/**
+ * Class representing a 1 worm skeleton, conformed by its base points,
+ * and skeleton points *
+ */
 public class WormSkeleton
 	{
 	int[] basePoints;

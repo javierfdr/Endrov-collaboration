@@ -177,7 +177,12 @@ public abstract class SkeletonTransform
 
 		return wcList;
 		}
-
+/**
+ * Calculates the contour of a worm given its skeleton. The method finds the
+ * closest contour pixel and follows it until no more contour pixel
+ * exist
+ * 
+ */
 	public static ArrayList<Integer> getShapeContour(WormClusterSkeleton wc){
 		//Just for fixed Skeletons
 		if (wc.basePoints.size()!=2) return null;
@@ -223,7 +228,12 @@ public abstract class SkeletonTransform
 		return contour;
 	}
 	
-	public static void followContourPath(WormClusterSkeleton wc,int firstContour,boolean[] isContour, 
+	/**
+	 * Follows recursively the contour of the given worm skeleton 'wc'. First contour
+	 * is supposed as contour element. The next non-contour neighbor is found
+	 * until no more contour pixel exists
+	 */
+	private static void followContourPath(WormClusterSkeleton wc,int firstContour,boolean[] isContour, 
 			ArrayList<Integer> contour){
 		int neigh[];
 		contour.add(firstContour);

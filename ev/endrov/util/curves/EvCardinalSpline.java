@@ -137,28 +137,33 @@ public class EvCardinalSpline
 		ShapeMultiPath mp = new ShapeMultiPath();
 		cs.appendTo(mp); // Computing and adding to multipath
 
-		Vector2i[] points = new Vector2i[mp.getCapacity()];
-		//HashSet<Vector2i> hashPoints = new HashSet<Vector2i>();
+		//Vector2i[] points = new Vector2i[mp.getCapacity()];
+		HashSet<Vector2i> hashPoints = new HashSet<Vector2i>();
+		ArrayList<Vector2i> pointsList = new ArrayList<Vector2i>();
+
 		PathIterator pi = mp.getPathIterator(null);
 		float coords[] = new float[2];
+		boolean add;
+		Vector2i ni;
 		int index = 0;
 		while (!pi.isDone())
 			{
 			pi.currentSegment(coords);
-			//hashPoints.add(new Vector2i((int) coords[0], (int) coords[1]));
-			points[index] = new Vector2i((int) coords[0], (int) coords[1]);
+			ni = new Vector2i((int) coords[0], (int) coords[1]);
+			add = hashPoints.add(ni);
+			if (add)
+				{ // needed to preserve order
+				pointsList.add(ni);
+				index++;
+				}
 			pi.next();
-			index++;
 			}
-		//int index = hashPoints.size();
-		System.out.println("index "+index);
-		//Vector2i[] points = new Vector2i[index];
-		//points = hashPoints.toArray(points);
+
+		Vector2i[] points = pointsList.toArray(new Vector2i[0]);
 		
 		if (index<1)
 			return new ArrayList<Point>();
-
-		System.out.println("Number of spline points: "+index);
+		
 		if (numPoints>index||numPoints==0)
 			numPoints = index;
 		if (numPoints<0)
