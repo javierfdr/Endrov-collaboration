@@ -8,6 +8,8 @@ import java.util.Iterator;
 import endrov.util.Vector2i;
 import endrov.util.curves.WrongParameterSplineException;
 import endrov.worms.PointFactory;
+import endrov.worms.WormPixelMatcher;
+import endrov.worms.skeleton.WormSkeleton;
 
 import com.graphbuilder.curve.CardinalSpline;
 import com.graphbuilder.curve.ControlPath;
@@ -56,7 +58,26 @@ public class EvCardinalSpline
 
 	/**
 	 * Calculates a cardinal spline that starts in one base point and ends in the
-	 * other one, passing through the points defined at points, and constructs
+	 * other one, passing through the points defined at the points given in the worm Skeleton
+	 * 
+	 * 
+	 * @param alpha
+	 *          slack value
+	 * @param numPointsPercentage
+	 *          Number of points from 'points' that want to be consider as control
+	 *          points
+	 * @return
+	 */
+	public static CardinalSpline getShapeSpline(WormSkeleton ws, double alpha, double numPointsPercentage)
+		{
+			ArrayList<Point> bases = ws.getPixelMatcher().baseToPoint(ws.getBasePoints());
+			ArrayList<Point> points = ws.getPixelMatcher().pixelListToPoint(ws.getSkPoints());
+			return getShapeSpline(bases,points,alpha,numPointsPercentage);
+		}
+	
+	/**
+	 * Calculates a cardinal spline that starts in one base point and ends in the
+	 * other one, passing through the points defined at points
 	 * 
 	 * @param basePoints
 	 *          List of size 2 that contains the starting and ending point of the
@@ -158,9 +179,8 @@ public class EvCardinalSpline
 				}
 			pi.next();
 			}
-
-		Vector2i[] points = pointsList.toArray(new Vector2i[0]);
 		
+		Vector2i[] points = pointsList.toArray(new Vector2i[0]);		
 		if (index<1)
 			return new ArrayList<Point>();
 		
@@ -169,31 +189,30 @@ public class EvCardinalSpline
 		if (numPoints<0)
 			return null;
 
-		int step;
-		index = index-2; // Excluding extremes (bases)
-		if (numPoints==index+2) step = 1;
-		else step = index/(numPoints-1);
-				
-		int count = step; // Exclude first extreme (base)
+		double realStep;
+		if (numPoints==index) realStep = 1.0;
+		else realStep = ((double)index/(double)(numPoints-1));
+					
+		double count = 0;
+		
 		Vector2i temp;
-		ArrayList<Point> cardinalPoints = new ArrayList<Point>(index);
-
-		// Adding first extreme
-		temp = points[0]; // last extreme (base)
-		cardinalPoints.add(new PointFactory().createPoint(temp.x, temp.y));
-
+		ArrayList<Point> cardinalPoints = new ArrayList<Point>(numPoints);
+		
 		// Adding inner points
-		int addCount = numPoints-2;
-		while (count<index-1 && addCount>0 && step>0)
+		int addCount = 0;
+		while (count<(double)index && addCount<numPoints)
 			{
-			temp = points[count];
+			temp = points[(int)Math.floor(count)];
 			cardinalPoints.add(new PointFactory().createPoint(temp.x, temp.y));
-			count += step;
-			addCount -= 1;
+			count += realStep;
+			addCount += 1;
 			}
-		// Adding second extreme
-		temp = points[index-1]; // second extreme (base)
-		cardinalPoints.add(new PointFactory().createPoint(temp.x, temp.y));
+		if(addCount<numPoints){ //guarantee second extreme
+			// Adding second extreme
+			temp = points[index-1]; // second extreme (base)
+			cardinalPoints.add(new PointFactory().createPoint(temp.x, temp.y));
+			addCount++;
+		}
 
 		return cardinalPoints;
 		}

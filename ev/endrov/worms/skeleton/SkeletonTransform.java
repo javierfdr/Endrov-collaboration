@@ -10,8 +10,11 @@ import endrov.imageset.EvPixels;
 import endrov.imageset.EvPixelsType;
 import endrov.util.Vector2i;
 
+
+
 public abstract class SkeletonTransform
 	{
+	final static int[] diagDic = {-1,0,-1,4,-1,4,-1,0};//complete cross
 	abstract int[] getNeighbors(int pixelPosition, int w);
 
 	/**
@@ -48,7 +51,7 @@ public abstract class SkeletonTransform
 	 *          List of the pixels that belong to the shape represented in isShape
 	 * @return
 	 */
-	private ArrayList<Integer> detectBasePoints(boolean[] isShape, int w,
+	private static ArrayList<Integer> detectBasePoints(boolean[] isShape, int w,
 			ArrayList<Integer> shapePoints)
 		{
 		ArrayList<Integer> basePoints = new ArrayList<Integer>();
@@ -85,6 +88,113 @@ public abstract class SkeletonTransform
 		return basePoints;
 		}
 
+	/**
+	 * Expands the skeleton extremes (which are not the worm extreme points) to
+	 * match the worm extremes
+	 */
+	private static void expandToWormBase(int[] dtArray, int w,
+			boolean[] isSkPoint, ArrayList<Integer> skPoints,
+			ArrayList<Integer> basePoints)
+		{
+		int current;
+		int previous;
+		int move;
+		Vector2i next;
+		int len;
+		int[] neigh;
+		int pIndex = -1;
+		ArrayList<Integer> newBases = new ArrayList<Integer>(basePoints.size());
+		int[] dic =
+			{ 4, 6, 0, 2 };// opposite direction
+		int extra;
+
+		// Procedure: Follow Max directional neighbor until a
+		// 1-value pixel is found or until the neighbor is out of the
+		// shape (picking the last one)
+
+		Iterator<Integer> bIt = basePoints.iterator();
+		previous = -1;
+		while (bIt.hasNext())
+			{			
+			current = bIt.next();
+			// Already border pixel
+			if (dtArray[current]==1)
+				{
+				newBases.add(current);
+				continue;
+				}			
+			// Find previous skeleton pixel
+			neigh = SkeletonUtils.getCrossNeighbors(current, w);
+			for (int i = 0; i<4; i++)
+				{
+				if (isSkPoint[neigh[i]])
+					{
+					previous = neigh[i];
+					pIndex = i;
+					}
+				}
+			if (previous==-1)
+				{
+				newBases.add(current);
+				continue;
+				}
+			move = dic[pIndex];
+
+			// Follow best neighbor until background or border pixel is found
+			while (true)
+				{
+				next = SkeletonUtils.getMaxDirectionalNeighbor(dtArray, w, current,
+						move);
+				previous = current;
+				current = next.x;
+				move = next.y;
+
+				if (dtArray[current]==1)
+					{
+					newBases.add(current);
+					skPoints.add(current);
+					isSkPoint[current] = true;
+
+					if (diagDic[move]!=-1)
+						{
+						extra = SkeletonUtils.getNeighbor(previous, diagDic[move], w);
+						skPoints.add(extra);
+						isSkPoint[extra] = true;
+						}
+					break;
+					}
+				else if (dtArray[current]==0)
+					{
+					newBases.add(previous);
+					skPoints.add(previous);
+					isSkPoint[previous] = true;
+					break;
+					}
+				// Add Path
+				skPoints.add(current);
+				isSkPoint[current] = true;
+
+				if (diagDic[move]!=-1)
+					{
+					extra = SkeletonUtils.getNeighbor(previous, diagDic[move], w);
+					skPoints.add(extra);
+					isSkPoint[extra] = true;
+					}
+				}
+			}
+		// Set new bases points
+		int b = 0;
+		int base;
+		bIt = newBases.iterator();
+		while (bIt.hasNext())
+			{
+			base = bIt.next();
+			isSkPoint[base] = true;
+			basePoints.set(b, base);
+			b++;
+			}
+		}
+	
 	/**
 	 * Calculates the skeleton associated with the input distance transform image
 	 * and returns the skeleton image
@@ -130,11 +240,11 @@ public abstract class SkeletonTransform
 	 */
 
 	public ArrayList<WormClusterSkeleton> getWormClusterSkeletons(EvPixels image,
-			EvPixels dt)
+			int[] dtArray)
 		{
-		int w = dt.getWidth();
-		int h = dt.getHeight();
-		int[] dtArray = dt.getArrayInt();
+		int w = image.getWidth();
+		int h = image.getHeight();
+		//int[] dtArray = dt.getArrayInt();
 		ArrayList<Integer> skPoints = new ArrayList<Integer>();
 		ArrayList<Integer> basePoints;
 		ArrayList<ArrayList<Integer>> isolatedPoints = new ArrayList<ArrayList<Integer>>();
@@ -156,9 +266,8 @@ public abstract class SkeletonTransform
 		// reduce, detect base points and isolate
 		Thinning.thinToOnePixel(dtArray, isSkeleton, w, h, skPoints);
 		basePoints = detectBasePoints(isSkeleton, w, skPoints);
+		expandToWormBase(dtArray, w, isSkeleton, skPoints, basePoints);
 		isolate(basePoints, isSkeleton, w, h, isolatedPoints, isolatedBases);
-
-		boolean[] isBase = SkeletonUtils.listToMatrix(w*h, basePoints);
 
 		// Create a worm cluster skeleton using the obtained isolated points and
 		// their corresponding bases
@@ -177,13 +286,30 @@ public abstract class SkeletonTransform
 
 		return wcList;
 		}
-/**
+
+	/**
+	 * Calculates the shape of the worm skeleton if the number of 
+	 * skeleton points are equal or bigger than minLength
+	 *
+	 * @param minLength minimum number of points for the worm skeleton
+	 * 	if equals 0 then the skeleton can have any length
+	 */
+	public static ArrayList<Integer> getShapeContour(WormClusterSkeleton wc, int minLength){
+		if ((minLength > 0 && minLength<= wc.skPoints.size()) || minLength==0){
+		System.out.println(wc.skPoints.size());
+		return getShapeContour(wc);
+		}
+		return null;
+		
+	}
+	
+	/**
  * Calculates the contour of a worm given its skeleton. The method finds the
  * closest contour pixel and follows it until no more contour pixel
  * exist
  * 
  */
-	public static ArrayList<Integer> getShapeContour(WormClusterSkeleton wc){
+	private static ArrayList<Integer> getShapeContour(WormClusterSkeleton wc){
 		//Just for fixed Skeletons
 		if (wc.basePoints.size()!=2) return null;
 		ArrayList<Integer> contour = new ArrayList<Integer>();
@@ -373,7 +499,6 @@ public abstract class SkeletonTransform
 	public static void traceBestPath(WormClusterSkeleton wc, int base, int nSteps, 
 			ArrayList<ArrayList<Integer>> wormPaths,ArrayList<Integer> checkedBase){
 			ArrayList<Integer> currentPath = new ArrayList<Integer>();
-
 			int[] directions = new int[4];
 			int[] diagonalDirections = new int[4];
 			int neigh[];

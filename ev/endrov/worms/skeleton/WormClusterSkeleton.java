@@ -8,11 +8,11 @@ import endrov.util.Vector2i;
 
 public final class WormClusterSkeleton extends Skeleton
 	{
-	public ArrayList<Integer> basePoints;
-	public ArrayList<Integer> skPoints;
-	public boolean[] isBasePoint; // added for efficient check
-	public boolean[] isSkPoint; // added for efficient check
-	public int numWorms;
+	ArrayList<Integer> basePoints;
+	ArrayList<Integer> skPoints;
+	boolean[] isBasePoint; // added for efficient check
+	boolean[] isSkPoint; // added for efficient check
+	int numWorms;
 
 	/**
 	 * Creates a instance of worm cluster skeleton, that is a skeleton of an image
@@ -86,6 +86,31 @@ public final class WormClusterSkeleton extends Skeleton
 		// unnecessary
 		this.isSkPoint = SkeletonUtils.listToMatrix(w*h, skPoints);
 		numWorms = basePoints.size()/2;
+		}
+
+	public ArrayList<Integer> getBasePoints()
+		{
+		return basePoints;
+		}
+
+	public ArrayList<Integer> getSkPoints()
+		{
+		return skPoints;
+		}
+
+	public boolean[] getIsBasePoint()
+		{
+		return isBasePoint;
+		}
+
+	public boolean[] getIsSkPoint()
+		{
+		return isSkPoint;
+		}
+
+	public int getNumWorms()
+		{
+		return numWorms;
 		}
 
 	/**

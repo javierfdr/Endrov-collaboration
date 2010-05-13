@@ -28,7 +28,25 @@ public class SkeletonUtils
 
 		return neighbors;
 		}
-
+/**
+ * Return the value of the circular neighbor in the corresponding position
+ * neigh to pixel
+ */
+	public static int getNeighbor(int pixel,int neigh,int w){
+			switch(neigh){
+			case 0: return pixel-w;
+			case 1: return pixel-w+1;
+			case 2: return pixel+1;
+			case 3: return pixel+w+1;
+			case 4: return pixel+w;
+			case 5: return pixel+w-1;
+			case 6: return pixel-1;
+			case 7: return pixel-w-1;
+			default: return -1;
+			}
+	
+	}
+	
 	/**
 	 * Returns the surrounding pixels. This is all the pixels in the positions of
 	 * the 3x3 matrix where position is the center.
@@ -76,6 +94,15 @@ public class SkeletonUtils
 		return false;
 		}
 
+	public static int calculateMovement(int current, int previous,int w){
+		int[] circ = getCircularNeighbors(previous, w);
+		for(int count=0;count<circ.length;count++){
+			if (circ[count]==current) return count;
+		}
+		
+		return -1;
+	}
+	
 	/**
 	 * Creates and EvPixels image setting to 1 the positions in the list points.
 	 */
@@ -146,6 +173,25 @@ public class SkeletonUtils
 			}
 		return matrix;
 		}
+	
+	/**
+	 * Returns an array of length 'size' setting every position found in list to
+	 * the corresponding value in valueMatrix
+	 */
+	public static int[] listToMatrix(int size, ArrayList<Integer> list,
+			int[] valueMatrix)
+		{
+
+		int[] matrix = new int[size];
+		Iterator<Integer> it = list.iterator();
+		while (it.hasNext())
+			{
+			int pixelPos = (int) it.next();
+			matrix[pixelPos] = valueMatrix[pixelPos];
+			}
+		return matrix;
+		}
+
 /**
  * Returns the position of the points that are higher than 0 in the given matrix
  */
@@ -237,6 +283,8 @@ public class SkeletonUtils
 	/**
 	 * Returns the neighbor that corresponds to the maximum directional movement from
 	 * previousPixel to currentPixel, performing the movement neighborMovement.
+	 * The max directional neighbor has to belong to the image skeleton given by
+	 * isSkPoint
 	 */
 	public static Vector2i getMaxDirectionalNeighbor(int[] imageArray,boolean[] isSkPoint, int w,
 			int currentPixel,int neighborMovement)
@@ -267,4 +315,84 @@ public class SkeletonUtils
 		}
 		return maxVector;	
 		}	
+		
+	/**
+	 * Returns the neighbor that corresponds to the maximum directional movement from
+	 * previousPixel to currentPixel, performing the movement neighborMovement.
+	 * 
+	 */
+	public static Vector2i getMaxDirectionalNeighbor(int[] imageArray,int w,
+			int currentPixel,int neighborMovement)
+		{
+		ArrayList<Vector2i> neighbors= SkeletonUtils.getDirectionalNeighbors(imageArray, w, currentPixel, neighborMovement);
+		//get the max directional neighbor and its direction
+
+		Vector2i maxVector= new Vector2i(-1,-1);
+		int max = Integer.MAX_VALUE;
+		
+		//Set first neighbor as max
+		//maxVector = neighbors.get(0);
+		max = maxVector.x;	
+				
+		Iterator<Vector2i> it = neighbors.iterator(); it.next();
+		Vector2i n;
+		while (it.hasNext()){
+			n= it.next();
+			if (imageArray[n.x] > max) {
+				max = imageArray[n.x];
+				maxVector = n;
+			}				
+		}
+		return maxVector;	
+		}	
+	/**
+	 * Sort the worm skeleton given by ws in consecutive pixel order
+	 */
+	public static void makeConsecutive(WormSkeleton ws)
+		{
+		int[] base = ws.getBasePoints();
+		boolean[] isSkPoint = ws.getIsSkPoint();
+		ArrayList<Integer> conscSkPoints = new ArrayList<Integer>();
+
+		// Construct ordered list;
+		int next = base[0];
+		int previous = next;
+		int[] neigh;
+		while (next!=base[1])
+			{
+			conscSkPoints.add(next);
+			neigh = SkeletonUtils
+					.getCrossNeighbors(next, ws.getPixelMatcher().getW());
+			// Find next neighbor that is skeleton point (there will be just one or
+			// none)
+			for (int i = 0; i<4; i++)
+				{
+				if (isSkPoint[neigh[i]] && neigh[i]!=previous)
+					{
+					previous = next;
+					next = neigh[i];
+					break;
+					}
+				}
+			if (previous==next){ //Did not find in cross neighbor
+				neigh = SkeletonUtils.getCircularNeighbors(next, ws.getPixelMatcher().getW());
+				for (int i = 1; i<8; i+=2)
+					{
+					if (isSkPoint[neigh[i]] && neigh[i]!=previous)
+						{
+						previous = next;
+						next = neigh[i];
+						break;
+						}
+					}			
+			}
+			if (previous==next) break; // not found
+			}
+
+		if (next==base[1])
+			conscSkPoints.add(next);
+		
+		ws.setSkPoints(conscSkPoints);
+		}
+
 	}

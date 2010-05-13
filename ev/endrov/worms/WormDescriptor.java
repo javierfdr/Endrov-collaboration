@@ -13,7 +13,7 @@ public class WormDescriptor
 	{
 
 	WormPixelMatcher pixelMatcher;
-	EvCardinalSpline cs;
+	//EvCardinalSpline cs;
 
 	/**
 	 * Creates a new worm descriptor given a WormPixelMatcher object that
@@ -27,27 +27,26 @@ public class WormDescriptor
 	 * @param ws
 	 *          The skeleton of the worm
 	 */
-	public WormDescriptor(WormPixelMatcher wm, WormSkeleton ws)
+	public WormDescriptor(WormPixelMatcher wpm)
 		{
-		this.pixelMatcher = wm;
-		try
+		this.pixelMatcher = wpm;
+	/*	try
 			{
-			this.cs = getShapeSpline(wm, ws, 1.0, 0.5);
-
+			//this.cs = getShapeSpline(wm, ws, 1.0, 0.5);
 			}
 		catch (WrongParameterSplineException e)
 			{
 			System.out
 					.println("Wrong attributes on WormSkeleton object 'ws' to calculate Cardinal Spline ");
 			e.printStackTrace();
-			}
+			}*/
 		}
 
-	public WormDescriptor(WormPixelMatcher wm, WormSkeleton ws,
-			int numPointsPercentage, double alpha)
+	public WormDescriptor(WormPixelMatcher wpm,int numPointsPercentage, 
+			double alpha)
 		{
-		this.pixelMatcher = wm;
-		try
+		this.pixelMatcher = wpm;
+		/*try
 			{
 			this.cs = getShapeSpline(wm, ws, alpha, numPointsPercentage);
 			}
@@ -56,17 +55,17 @@ public class WormDescriptor
 			System.out
 					.println("Wrong attributes on WormSkeleton object 'ws' to calculate Cardinal Spline ");
 			e.printStackTrace();
-			}
+			}*/
 		}
 
-	private EvCardinalSpline getShapeSpline(WormPixelMatcher wpm,
+	private EvCardinalSpline getSkeletonSpline(WormPixelMatcher wpm,
 			WormSkeleton ws, double alpha, double numPointsPercentage)
 			throws WrongParameterSplineException
 		{
 		return new EvCardinalSpline(wpm.baseToPoint(ws.getBasePoints()), wpm
 				.pixelListToPoint(ws.getSkPoints()), alpha, numPointsPercentage);
 		}
-
+/*
 	public void setWormDescriptor(WormPixelMatcher wpm, WormSkeleton ws,
 			double alpha, double numPointsPercentage)
 			throws WrongParameterSplineException
@@ -75,5 +74,5 @@ public class WormDescriptor
 		this.cs = new EvCardinalSpline(wpm.baseToPoint(ws.getBasePoints()), wpm
 				.pixelListToPoint(ws.getSkPoints()), alpha, numPointsPercentage);
 		}
-
+*/
 	}

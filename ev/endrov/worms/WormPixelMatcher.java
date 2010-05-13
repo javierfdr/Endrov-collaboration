@@ -35,6 +35,13 @@ public class WormPixelMatcher
 			}
 		}
 
+	public int getH(){
+		return h;
+	}
+	public int getW(){
+		return w;
+	}
+	
 	public int posToPixel(Vector2i pos){
 		return ((pos.x)+pos.y*w);
 	}
