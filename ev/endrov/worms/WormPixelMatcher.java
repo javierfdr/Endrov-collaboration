@@ -155,7 +155,6 @@ public class WormPixelMatcher
 		{
 		int[] pixels = new int[points.size()];
 		Iterator<Point> it = points.iterator();
-		Point p;
 		int count = 0;
 		while (it.hasNext())
 			{
@@ -164,6 +163,16 @@ public class WormPixelMatcher
 			}
 		return pixels;
 		}
+	
+	public ArrayList<Integer> pointListToPixelList(ArrayList<Point> points){
+		ArrayList<Integer> pixels = new ArrayList<Integer>(points.size());
+		Iterator<Point> it = points.iterator();
+		while (it.hasNext())
+			{
+			pixels.add(pointToPixel(it.next()));
+			}
+		return pixels;
+	}
 	
 	/**
 	 * Transform a int array containing the two base points

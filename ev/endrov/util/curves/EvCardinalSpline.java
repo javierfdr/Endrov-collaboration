@@ -170,7 +170,7 @@ public class EvCardinalSpline
 		while (!pi.isDone())
 			{
 			pi.currentSegment(coords);
-			ni = new Vector2i((int) coords[0], (int) coords[1]);
+			ni = new Vector2i((int)Math.round(coords[0]), (int)Math.round(coords[1]));
 			add = hashPoints.add(ni);
 			if (add)
 				{ // needed to preserve order
@@ -183,7 +183,6 @@ public class EvCardinalSpline
 		Vector2i[] points = pointsList.toArray(new Vector2i[0]);		
 		if (index<1)
 			return new ArrayList<Point>();
-		
 		if (numPoints>index||numPoints==0)
 			numPoints = index;
 		if (numPoints<0)

@@ -3,6 +3,7 @@ package endrov.worms.skeleton;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import endrov.imageset.EvPixels;
 import endrov.worms.WormPixelMatcher;
 import endrov.worms.skeleton.NotWormException;
 
@@ -10,16 +11,17 @@ import endrov.worms.skeleton.NotWormException;
  * Class representing a 1 worm skeleton, conformed by its base points,
  * and skeleton points *
  */
-public class WormSkeleton
+public class WormSkeleton extends Skeleton
 	{
 	int[] basePoints;
 	ArrayList<Integer> skPoints;
 	boolean[] isSkPoint;
 	WormPixelMatcher wpm;
 
-	public WormSkeleton(ArrayList<Integer> basePoints,
+	public WormSkeleton(EvPixels image, int[] dt, int w, int h,ArrayList<Integer> basePoints,
 			ArrayList<Integer> skPoints, WormPixelMatcher wpm) throws NotWormException
 		{
+		super(image, dt, w, h);
 		if (basePoints.size()!=2)
 			throw new NotWormException(
 					"Wrong amount of base points. Must be exactly two");
@@ -36,6 +38,7 @@ public class WormSkeleton
 
 	public WormSkeleton(WormClusterSkeleton wcs, WormPixelMatcher wpm) throws NotWormException
 		{
+		super(wcs.image,wcs.dt,wcs.w,wcs.h);
 		if (wcs.getBasePoints().size()!=2)
 			throw new NotWormException(
 					"Wrong amount of base points. Must be exactly two");
@@ -50,6 +53,13 @@ public class WormSkeleton
 		this.isSkPoint = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(), wcs.getSkPoints());
 		this.wpm = wpm;
 		}
+	
+	public WormClusterSkeleton toWormClusterSkeleton(){
+		ArrayList<Integer> base = new ArrayList<Integer>();
+		base.add(basePoints[0]);
+		base.add(basePoints[1]);
+		return new WormClusterSkeleton(image, dt, w, h, base, skPoints,wpm);
+	}
 	
 	public int[] getBasePoints()
 		{

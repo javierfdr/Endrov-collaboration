@@ -9,6 +9,7 @@ import java.util.Vector;
 import endrov.imageset.EvPixels;
 import endrov.imageset.EvPixelsType;
 import endrov.util.Vector2i;
+import endrov.worms.WormPixelMatcher;
 
 
 
@@ -233,6 +234,9 @@ public abstract class SkeletonTransform
 	 * (dt) taken from image and returns a list containing the isolated Worm
 	 * skeletons that appear clustered or overlapped.
 	 * 
+	 * This function calls the getWormClusterSkeletons(EvPixels,int[],int)
+	 * given the input parameters and setting minPixels as 60
+	 *
 	 * @param image
 	 *          The initial image from which the distance transformation is taken
 	 * @param dt
@@ -240,10 +244,32 @@ public abstract class SkeletonTransform
 	 */
 
 	public ArrayList<WormClusterSkeleton> getWormClusterSkeletons(EvPixels image,
-			int[] dtArray)
+			int[] dtArray,WormPixelMatcher wpm)
 		{
-		int w = image.getWidth();
-		int h = image.getHeight();
+			return getWormClusterSkeletons(image,dtArray,wpm,60);		
+		}
+	
+	/**
+	 * Calculates the general skeleton associated with distance transform image
+	 * (dt) taken from image and returns a list containing the isolated Worm
+	 * skeletons that appear clustered or overlapped.
+	 * 
+	 * Any skeleton that contains less than minPixels number of pixels will be 
+	 * discarded.
+	 *
+	 * @param image
+	 *          The initial image from which the distance transformation is taken
+	 * @param dt
+	 *          The distance transformation of the initial image
+	 * @param minPixels
+	 * 					The minimum number of pixels to be considered worm skeleton
+	 */
+
+	public ArrayList<WormClusterSkeleton> getWormClusterSkeletons(EvPixels image,
+			int[] dtArray,WormPixelMatcher wpm, int minPixels)
+		{
+		int w = wpm.getW();
+		int h = wpm.getH();
 		//int[] dtArray = dt.getArrayInt();
 		ArrayList<Integer> skPoints = new ArrayList<Integer>();
 		ArrayList<Integer> basePoints;
@@ -279,8 +305,9 @@ public abstract class SkeletonTransform
 			{
 			currentPointList = ip.next();
 			currentBaseList = ib.next();
+			if(currentPointList.size() + currentBaseList.size() < minPixels) continue;
 			WormClusterSkeleton wcs = new WormClusterSkeleton(image, dtArray, w, h,
-					currentBaseList, currentPointList);
+					currentBaseList, currentPointList,wpm);
 			wcList.add(wcs);
 			}
 
@@ -295,12 +322,11 @@ public abstract class SkeletonTransform
 	 * 	if equals 0 then the skeleton can have any length
 	 */
 	public static ArrayList<Integer> getShapeContour(WormClusterSkeleton wc, int minLength){
-		if ((minLength > 0 && minLength<= wc.skPoints.size()) || minLength==0){
-		System.out.println(wc.skPoints.size());
+	if ((minLength > 0 && minLength<= wc.skPoints.size()) || minLength==0){
+		System.out.println("Working contour");
 		return getShapeContour(wc);
 		}
-		return null;
-		
+		return null;		
 	}
 	
 	/**
@@ -312,6 +338,7 @@ public abstract class SkeletonTransform
 	private static ArrayList<Integer> getShapeContour(WormClusterSkeleton wc){
 		//Just for fixed Skeletons
 		if (wc.basePoints.size()!=2) return null;
+		System.out.println("Really shaping");
 		ArrayList<Integer> contour = new ArrayList<Integer>();
 		int init = wc.basePoints.get(0);
 		int firstContour = -1;

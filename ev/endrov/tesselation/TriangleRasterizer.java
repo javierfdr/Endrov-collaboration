@@ -2,58 +2,11 @@ package endrov.tesselation;
 
 import java.util.ArrayList;
 import endrov.util.Vector2i;
-
+import endrov.tesselation.utils.Line;
 
 public class TriangleRasterizer
 	{
 		final int BG_COLOR = 0;
-
-		/**
-		 * Class representing a triangle side as a line
-		 */
-		public static class TriangleSide
-			{
-			private Vector2i p1;
-			private Vector2i p2;
-			private boolean vertical;
-			private double slope;
-			private int yLength;
-
-			private TriangleSide(Vector2i p1, Vector2i p2)
-				{
-				this.p1 = p1;
-				this.p2 = p2;
-				if (p2.x-p1.x == 0){ 
-					this.vertical = true;
-					this.slope = Integer.MAX_VALUE;
-				}
-				else if(p2.y-p1.y == 0){
-					this.slope = 0;
-				}
-				else {
-					this.slope = ((double)p2.y-p1.y)/((double)p2.x-p1.x);
-				}
-				this.yLength = Math.abs((p2.y-p1.y)); // Length in y axis			
-			}
-			
-			/*
-			 * Returns the Y coordinate given a X coordinate solving the line equation
-			 */
-		/*	private int getYGivenX(int x)
-				{
-					if (vertical) return Integer.MAX_VALUE; //no answer
-					return (int)Math.round(p1.y + slope*(x-p1.x));
-				}*/
-		/*
-		 * Returns the X coordinate given a Y coordinate solving the line equation
-		 */
-		private int getXGivenY(int y)
-			{
-				if (vertical) return p1.x;
-				if (slope==0) return -1;
-				return (int)((double)(y-p1.y + slope*(p1.x))/slope);
-			}
-		}
 
 		public static Vector2i[] createVerticesArray(Vector2i p1, Vector2i p2, Vector2i p3){
 			Vector2i vertices[] = {p1,p2,p3};
@@ -91,10 +44,10 @@ public class TriangleRasterizer
 			//ArrayList<Integer> rasterArea = new ArrayList<Integer>(20);
 			
 			//Set edges
-			TriangleSide[] edges = new TriangleSide[3];
-			edges[0] = new TriangleSide(vertices[0],vertices[1]);
-			edges[1] = new TriangleSide(vertices[0],vertices[2]);
-			edges[2] = new TriangleSide(vertices[1],vertices[2]);
+			Line[] edges = new Line[3];
+			edges[0] = new Line(vertices[0],vertices[1]);
+			edges[1] = new Line(vertices[0],vertices[2]);
+			edges[2] = new Line(vertices[1],vertices[2]);
 			int shortEdge1 =-1;
 			int shortEdge2 =-1;
 			
@@ -126,7 +79,7 @@ public class TriangleRasterizer
 		 * Add to rasterArea the pixels of array that are within the inner area between
 		 * the lines longSide and shortSisde tracing horizontal lines
 		 */
-		private static void rasterizeArea(TriangleSide longSide, TriangleSide shortSide,
+		private static void rasterizeArea(Line longSide, Line shortSide,
 				int width, int height,ArrayList<Integer> rasterArea)
 			{
 
