@@ -1,7 +1,9 @@
 package endrov.worms;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import javax.vecmath.Vector2d;
@@ -22,12 +24,12 @@ import endrov.worms.skeleton.WormSkeleton;
 public class WormProfile
 	{
 		public WormPixelMatcher wpm;	
-		public int[] thickness;
+		public double[] thickness;
 				
 		public WormProfile(ArrayList<WormSkeleton> worms,boolean consecPts,int numPoints,int[] dtArray){
 			WormProfile tempProf;
 			int numWorms = worms.size();
-			int[][] thicknessList = new int[numWorms][numPoints];
+			double[][] thicknessList = new double[numWorms][numPoints];
 			Iterator<WormSkeleton> wit = worms.iterator();
 			int count=0;
 			while(wit.hasNext()){
@@ -36,14 +38,14 @@ public class WormProfile
 				count++;
 			}
 			wpm = worms.get(0).getPixelMatcher();
-			thickness= new int[numPoints];
+			thickness= new double[numPoints];
 			//Set the average thickness for each control point
-			for(int i=1;i<numPoints-2;i++){
+			for(int i=1;i<numPoints-1;i++){
 				int average = 0;
 				for(int j=0;j<numWorms;j++){
 					average+= thicknessList[j][i];
 				}
-				thickness[i] = (int)(Math.round((double)average/(double)numWorms));
+				thickness[i] = (average/(double)numWorms);
 			}		
 		}
 		
@@ -55,7 +57,7 @@ public class WormProfile
 			//ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(wPath);
 			//ArrayList<Integer> rastShape = PolygonRasterizer.rasterize(ws.w,ws.h,tpv);
 			//int[] wormDT = SkeletonUtils.listToMatrix(ws.w*ws.h, rastShape,ws.dt);			
-			int[] thickness = getThickness(dtArray,ws, consecPts, numPoints);					
+			double[] thickness = getThickness(dtArray,ws, consecPts, numPoints);					
 			this.thickness = thickness;	
 		}
 		
@@ -70,7 +72,7 @@ public class WormProfile
 		 * @param consecPts The points in the skeleton points array are
 		 * 	consecutive
 		 */
-		public static int[] getThickness(int[] wormDT,WormSkeleton ws, 
+		public static double[] getThickness(int[] wormDT,WormSkeleton ws, 
 				boolean consecPts, int numPoints){
 				
 				if(!consecPts){
@@ -87,16 +89,16 @@ public class WormProfile
 				ArrayList<Integer> contourPoints = new ArrayList<Integer>();
 				double d1,d2;
 				
-				int[] thickness = new int[numPoints];
+				double[] thickness = new double[numPoints];
 
 				//Calculate average distance to contour points and add to thickness
 				for(int i=1;i<profPts.length -1;i++){								
-					Vector2i[] extremes =bisectVector(wpm.getPixelPos(profPts[i-1]),wpm.getPixelPos(profPts[i]), wpm.getPixelPos(profPts[i+1]),wormDT[profPts[i]]);								
+					Vector2i[] extremes =getExtremes(wormDT,wpm,wpm.getPixelPos(profPts[i-1]),wpm.getPixelPos(profPts[i]), wpm.getPixelPos(profPts[i+1]),wormDT[profPts[i]]);								
 					l1 = new Line(wpm.getPixelPos(profPts[i]),extremes[0]);
 					d1=distBestLinePoint(wormDT, wpm, l1, contourPoints);
 					l1 = new Line(wpm.getPixelPos(profPts[i]),extremes[1]);
 					d2=distBestLinePoint(wormDT, wpm, l1, contourPoints);									
-					thickness[i]=(int)Math.ceil((d1+d2)/2);
+					thickness[i]=(d1+d2)/2;
 				}				
 				return thickness;
 		}
@@ -106,49 +108,105 @@ public class WormProfile
 		 * calling object thickness. The size of controlPoints must be the same
 		 * as the thickness variable, and must be ordered consecutively. 
 		 */
-		public static ArrayList<Integer> getContourPoints(int[] controlPoints,WormProfile wp){
-			ArrayList<Integer> shapePoints = new ArrayList<Integer>(controlPoints.length*2);
+		public static ArrayList<ArrayList<Integer>> getContourPoints(int[] controlPoints,WormProfile wp,int[] wormDT){
+			ArrayList<Integer> shapePointsNorth = new ArrayList<Integer>(controlPoints.length);
+			ArrayList<Integer> shapePointsSouth = new ArrayList<Integer>(controlPoints.length);
+			ArrayList<ArrayList<Integer>> spoints = new ArrayList<ArrayList<Integer>>();
+			spoints.add(shapePointsNorth);
+			spoints.add(shapePointsSouth);
 			int[][] extremePixels = new int[controlPoints.length*2][2];
 			
 			//calculate extremes pixels
 			for(int i=1;i<controlPoints.length -1;i++){											
-				Vector2i[] extremes =bisectVector(wp.wpm.getPixelPos(controlPoints[i-1]),wp.wpm.getPixelPos(controlPoints[i]), wp.wpm.getPixelPos(controlPoints[i+1]),wp.thickness[i]);								
-				System.out.print("CP1: "+wp.wpm.getPixelPos(controlPoints[i-1]));
-				System.out.print(" CP2: "+wp.wpm.getPixelPos(controlPoints[i]));
-				System.out.print(" CP3: "+wp.wpm.getPixelPos(controlPoints[i+1]));
-				System.out.print(" THICK: "+wp.thickness[i]);
-				System.out.println("Extremes " + extremes[0]+ " "+extremes[1]);
+				Vector2i[] extremes =getExtremes(wormDT,wp.wpm,wp.wpm.getPixelPos(controlPoints[i-1]),wp.wpm.getPixelPos(controlPoints[i]), wp.wpm.getPixelPos(controlPoints[i+1]),wp.thickness[i]);								
+				//System.out.print("CP1: "+wp.wpm.getPixelPos(controlPoints[i-1]));
+				//System.out.print(" CP2: "+wp.wpm.getPixelPos(controlPoints[i]));
+				//System.out.print(" CP3: "+wp.wpm.getPixelPos(controlPoints[i+1]));
+				//System.out.print(" THICK: "+wp.thickness[i]);
+				//System.out.println("Extremes " + extremes[0]+ " "+extremes[1]);
 				
 				extremePixels[i][0] = wp.wpm.posToPixel(extremes[0]);
 				extremePixels[i][1] = wp.wpm.posToPixel(extremes[1]);
 			}				
 			
 			//Add shape contour in counter-clockwise order
-			shapePoints.add(controlPoints[0]);
+			shapePointsNorth.add(controlPoints[0]);
 			for(int i=1;i<controlPoints.length-1; i++){
-				shapePoints.add(extremePixels[i][0]);
+				shapePointsNorth.add(extremePixels[i][0]);
 			}
-			shapePoints.add(controlPoints[controlPoints.length-1]);
+			shapePointsNorth.add(controlPoints[controlPoints.length-1]);
+			shapePointsSouth.add(controlPoints[controlPoints.length-1]);
 			for(int i=controlPoints.length-2;i>0; i--){
-				shapePoints.add(extremePixels[i][1]);
-			}				
-			return shapePoints;
+				shapePointsSouth.add(extremePixels[i][1]);
+			}
+			shapePointsSouth.add(controlPoints[0]);
+			return spoints;
 		}
-		
+
 		/**
 		 * Calculates the worm shape contour points over the given control points based on the
 		 * worm profile thickness. The size of controlPoints must be the same
 		 * as the thickness variable, and must be ordered consecutively. 
 		 */
-		public static ArrayList<Integer> constructShape(int[] controlPoints, WormProfile wp,int numPoints){
-			int[] baseA = {controlPoints[0],controlPoints[0]};
-			ArrayList<Point> base = wp.wpm.baseToPoint(baseA);
-			ArrayList<Integer> contourP = getContourPoints(controlPoints,wp);			
-			return contourP;
-			//CardinalSpline skSpline = EvCardinalSpline.getShapeSpline(base,wp.wpm.pixelListToPoint(contourP),0.5,1);
-			//ArrayList<Integer> shapePoints = wp.wpm.pointListToPixelList(EvCardinalSpline.getCardinalPoints(skSpline, numPoints));
-			//return shapePoints;
+		public static ArrayList<Integer> constructShape(int[] controlPoints, WormProfile wp,int numPoints,int[] wormDT){
+						
+			ArrayList<Point> base;
+			int[] baseA = new int[2];
+			ArrayList<ArrayList<Integer>> contourP = getContourPoints(controlPoints,wp,wormDT);						
+			ArrayList<Integer> shapePoints= new ArrayList<Integer>();
+			ArrayList<Integer> sidePoints;
+			CardinalSpline skSpline;
+			HashSet<Integer> hash = new HashSet<Integer>();
+			Iterator<Integer> it;
+			int next;
+			boolean newAdded;
+
+			//North Spline		
+			baseA[0] =controlPoints[0];
+			baseA[1] = controlPoints[controlPoints.length-1];
+			base = wp.wpm.baseToPoint(baseA);
+			skSpline = EvCardinalSpline.getShapeSpline(base,wp.wpm.pixelListToPoint(contourP.get(0)),0.5,0.9);
+			sidePoints = wp.wpm.pointListToPixelList(EvCardinalSpline.getCardinalPoints(skSpline, numPoints));			
+			
+			it=sidePoints.iterator();
+			//it=contourP.get(0).iterator();
+			while(it.hasNext()){
+				next= it.next();
+				newAdded = hash.add(next);
+				if(newAdded){
+					shapePoints.add(next);
+				}				
+			}			
+			
+			//South Spline			
+			baseA[0]=controlPoints[controlPoints.length-1];
+			baseA[1]=controlPoints[0];
+			base = wp.wpm.baseToPoint(baseA);
+			skSpline = EvCardinalSpline.getShapeSpline(base,wp.wpm.pixelListToPoint(contourP.get(1)),0.5,0.9);
+			sidePoints = wp.wpm.pointListToPixelList(EvCardinalSpline.getCardinalPoints(skSpline, numPoints));			
+			
+			it=sidePoints.iterator();
+			//it=contourP.get(1).iterator();
+			while(it.hasNext()){
+				next= it.next();
+				newAdded = hash.add(next);
+				if(newAdded){
+					shapePoints.add(next);
+				}				
+			}										
+			return shapePoints;
 		}
+		
+		public static ArrayList<Integer> constructShape2(int[] controlPoints, WormProfile wp,int numPoints,int[] wormDT){
+		int[] baseA = {controlPoints[0],controlPoints[controlPoints.length-1]};
+		ArrayList<Point> base = wp.wpm.baseToPoint(baseA);
+		ArrayList<ArrayList<Integer>> contourP = getContourPoints(controlPoints,wp,wormDT);			
+		HashSet<Integer> h = new HashSet<Integer>();
+		h.addAll(contourP.get(0));
+		h.addAll(contourP.get(1));
+		
+		return new ArrayList<Integer>(h);
+	}
 		
 		public static ArrayList getEx(int[] wormDT,WormSkeleton ws, 
 				boolean consecPts, int numPoints){
@@ -160,21 +218,21 @@ public class WormProfile
 				//create skeleton spline  and take numPoints
 				ArrayList<Point> base = wpm.baseToPoint(ws.getBasePoints());
 				ArrayList<Point> points = wpm.pixelListToPoint(ws.getSkPoints());
-				CardinalSpline skSpline = EvCardinalSpline.getShapeSpline(base,points,0.5,0.09);
+				CardinalSpline skSpline = EvCardinalSpline.getShapeSpline(base,points,0.5,0.2);
 				int[] profPts = wpm.pointListToPixel(EvCardinalSpline.getCardinalPoints(skSpline, numPoints));
 				Line l1;
 				ArrayList<Integer> contourPoints = new ArrayList<Integer>();
 				double d1,d2;				
-				int[] thickness = new int[numPoints];
+				double[] thickness = new double[numPoints];
 
 				//Calculate average distance to contour points and add to thickness
 				for(int i=1;i<profPts.length -1;i++){								
-					Vector2i[] extremes =bisectVector(wpm.getPixelPos(profPts[i-1]),wpm.getPixelPos(profPts[i]), wpm.getPixelPos(profPts[i+1]),wormDT[profPts[i]]);								
+					Vector2i[] extremes =getExtremes(wormDT,wpm,wpm.getPixelPos(profPts[i-1]),wpm.getPixelPos(profPts[i]), wpm.getPixelPos(profPts[i+1]),wormDT[profPts[i]]);								
 					l1 = new Line(wpm.getPixelPos(profPts[i]),extremes[0]);
 					d1=distBestLinePoint(wormDT, wpm, l1, contourPoints);
 					l1 = new Line(wpm.getPixelPos(profPts[i]),extremes[1]);
 					d2=distBestLinePoint(wormDT, wpm, l1, contourPoints);									
-					thickness[i]=(int)Math.ceil((d1+d2)/2);
+					thickness[i]=(d1+d2)/2;
 				}				
 				return contourPoints;
 		}
@@ -192,7 +250,7 @@ public class WormProfile
 		while (lit.hasNext())
 			{
 			next = lit.next();
-			if (wormDT[next]!=0 && wormDT[next]<=bestDT)
+			if (wormDT[next]>1 && wormDT[next]<=bestDT)
 				{
 				bestPixel = next;
 				bestDT = wormDT[next];
@@ -202,19 +260,26 @@ public class WormProfile
 		// assign last pixel if not dt found (case for non-steep slopes)
 		if (bestPixel==-1)
 			{
-			//Look for surrounding pixel, if not assign opposite
 			bestPixel = linePoints.get(linePoints.size()-1);
 			if(wormDT[bestPixel]==0) bestDT = Integer.MAX_VALUE;
 			else bestDT = wormDT[bestPixel];
 			}
 		//Check if there is a better pixel around
-		int[] neigh = SkeletonUtils.getCircularNeighbors(bestPixel, wpm.w);
-		for(int i=0;i<neigh.length;i++){
-			if(wormDT[neigh[i]]<bestDT && wormDT[neigh[i]]!=0){
-				bestDT=wormDT[neigh[i]];
-				bestPixel = neigh[i];
+		boolean newpixel=true;
+		while (newpixel)
+			{
+			int[] neigh = SkeletonUtils.getCircularNeighbors(bestPixel, wpm.w);
+			newpixel = false;
+			for (int i = 0; i<neigh.length; i++)
+				{
+				if (wormDT[neigh[i]]<bestDT&&wormDT[neigh[i]]!=0)
+					{
+					bestDT = wormDT[neigh[i]];
+					bestPixel = neigh[i];
+					newpixel = true;
+					}
+				}
 			}
-		}
 		contourPoints.add(bestPixel);
 		Vector2i bp = wpm.getPixelPos(bestPixel);
 		//Calculate distance 
@@ -222,36 +287,79 @@ public class WormProfile
 		
 		}
 		
+		public static Vector2i[] getExtremes(int[] dtArray,WormPixelMatcher wpm,Vector2i p1, Vector2i p2, Vector2i p3,double length){
+			Vector2i[] bisection = bisectVector(p1,p2,p3,length);
+			
+			//Look for best neighboring pixel starting from bisection points			
+			//bisection[0] = wpm.getPixelPos(bestPixel(dtArray,wpm.w,wpm.posToPixel(bisection[0])));
+			//bisection[1] = wpm.getPixelPos(bestPixel(dtArray,wpm.w,wpm.posToPixel(bisection[1])));			
+			return bisection;
+		}
+	
+		private static int bestPixel(int[] dtArray,int w,int pixel){
+		int bestDT = dtArray[pixel];
+		int bestPixel = pixel;
+		boolean newpixel=true;
+			while (newpixel)
+			{
+			int[] neigh = SkeletonUtils.getCircularNeighbors(bestPixel, w);
+			newpixel = false;
+			for (int i = 0; i<neigh.length; i++)
+				{
+				if (dtArray[neigh[i]]<bestDT && dtArray[neigh[i]]!=0)
+					{
+					bestDT = dtArray[neigh[i]];
+					bestPixel = neigh[i];
+					newpixel = true;
+					}
+				}
+			}
+			return bestPixel;
+		}
+
 		/**
 		 * Receives three image points, creates 2 vectors and calculates
 		 * the resulting vector that bisects the angle between them. Returns the 
 		 * the two opposite extreme point of the bisection vector that starts on p2 
 		 */
-		private static Vector2i[] bisectVector(Vector2i p1, Vector2i p2, Vector2i p3,int length){
+		private static Vector2i[] bisectVector(Vector2i p1, Vector2i p2, Vector2i p3,double length){
 			//Vector p2->p1
 			ImVector2 v1 = new ImVector2((double)(p1.x-p2.x),(double)(p1.y-p2.y));
 			//Vector p2->p3
 			ImVector2 v2 = new ImVector2((double)(p3.x-p2.x),(double)(p3.y-p2.y));
-			
 			//Calculate bisection vector angle
-			double acosParam = (v1.dot(v2))/(v1.length()*v2.length());
+			ImVector2 v2Copy = new ImVector2(v2.x,v2.y);
+			
+			v1=v1.normalize();
+			v2=v2.normalize();			
+			
+			double acosParam = (v1.dot(v2));///(v1.length()*v2.length());
 			if (acosParam<-1.0) acosParam = -1.0;
 			else if(acosParam > 1.0) acosParam = 1.0;					
 			double angle = Math.acos(acosParam);
-			double degrees = Math.toDegrees(angle);
-			degrees = degrees/2;
+			angle=angle/2;
 			
-			//Calculate bisection vector
-			angle = Math.toRadians(degrees);
-			v1= v1.rotate(angle);
-			v2 = v1.rotate(Math.toRadians(180));
+			v2 = v1.rotate(-angle);
+			v1 = v1.rotate(angle);
+
+			//find close angle rotation
+			double dist1 = Math.sqrt(Math.pow((v1.x-v2Copy.x),2) + Math.pow((v1.y-v2Copy.y),2));
+			double dist2 = Math.sqrt(Math.pow((v2.x-v2Copy.x),2) + Math.pow((v2.y-v2Copy.y),2));			
+		
+			if(dist1<dist2){
+				v2 = v1.rotate(Math.toRadians(180));
+			}
+			else{
+				v1=v2.rotate(Math.toRadians(180));
+			}
+
 			v1=v1.normalize().mul((double)length);
 			v2=v2.normalize().mul((double)length);
 			
 			//Return the bisection extreme point translating to original
 			Vector2i[] extremes = new Vector2i[2];
-			extremes[0] = new Vector2i((int)Math.ceil(v1.x+p2.x),(int)Math.ceil(v1.y+p2.y));
-			extremes[1] = new Vector2i((int)Math.ceil(v2.x+p2.x),(int)Math.ceil(v2.y+p2.y));
+			extremes[0] = new Vector2i((int)Math.round(v1.x+p2.x),(int)Math.round(v1.y+p2.y));
+			extremes[1] = new Vector2i((int)Math.round(v2.x+p2.x),(int)Math.round(v2.y+p2.y));
 			
 			return extremes;
 		}

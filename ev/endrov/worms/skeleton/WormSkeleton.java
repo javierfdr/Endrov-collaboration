@@ -35,6 +35,12 @@ public class WormSkeleton extends Skeleton
 		this.isSkPoint = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(), skPoints);
 		this.wpm = wpm;
 		}
+	
+	public void replaceSkPoint(int position,int point){
+		isSkPoint[skPoints.get(position)] = false;		
+		skPoints.set(position,point);
+		isSkPoint[point] = true;
+	}
 
 	public WormSkeleton(WormClusterSkeleton wcs, WormPixelMatcher wpm) throws NotWormException
 		{
