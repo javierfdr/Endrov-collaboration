@@ -48,12 +48,11 @@ public class SkeletonUtils
 	}
 	
 	/**
-	 * Returns the surrounding pixels. This is all the pixels in the positions of
-	 * the 3x3 matrix where position is the center.
+	 * Returns the 4 surrounding pixels, placed at the cardinal points.
 	 */
 	public static int[] getCrossNeighbors(int position, int w)
 		{
-		int neighbors[] = new int[8];
+		int neighbors[] = new int[4];
 		neighbors[0] = position-w; // Up
 		neighbors[1] = position+1; // right;
 		neighbors[2] = position+w; // down

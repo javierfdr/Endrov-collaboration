@@ -17,7 +17,7 @@ import javax.vecmath.Vector2d;
 import com.graphbuilder.curve.CardinalSpline;
 import com.graphbuilder.curve.Point;
 
-public class WormDescriptor
+public class WormDescriptor implements Cloneable
 	{
 
 	WormPixelMatcher wpm;
@@ -43,18 +43,19 @@ public class WormDescriptor
 	 * @param ws
 	 *          The skeleton of the worm
 	 */
+	
 	public WormDescriptor(WormProfile wprof, WormSkeleton ws, int dtArray[],
-			int numPoints,double bendingLength)
+			int numPoints, double bendingLength)
 		{
 		this.wpm = wprof.wpm;
 		this.wprof = wprof;
 		this.dtArray = dtArray.clone();
 		this.angleNorthVector = new ImVector2[wprof.thickness.length];
-		this.angleSouthVector = new ImVector2[wprof.thickness.length];		
+		this.angleSouthVector = new ImVector2[wprof.thickness.length];
 		this.angleNorthLine = new int[wprof.thickness.length][];
 		this.angleSouthLine = new int[wprof.thickness.length][];
-		this.numPoints=numPoints;	
-		
+		this.numPoints = numPoints;
+
 		CardinalSpline cs = EvCardinalSpline.getShapeSpline(ws, 0.5, 0.09);
 		ArrayList<Point> cPoints = EvCardinalSpline
 				.getCardinalPoints(cs, numPoints);
@@ -67,56 +68,68 @@ public class WormDescriptor
 		for (int i = 1; i<this.controlPoints.length-1; i++)
 			{
 			Vector2i[] extremes = WormProfile
-					.getExtremes(dtArray, this.wpm, 
-								wpm.getPixelPos(this.controlPoints[i-1]), 
-								wpm.getPixelPos(this.controlPoints[i]), 
-								wpm.getPixelPos(this.controlPoints[i+1]),
-								dtArray[this.controlPoints[i]]);
-			//cp->extreme[0]
+					.getExtremes(dtArray, this.wpm, wpm
+							.getPixelPos(this.controlPoints[i-1]), wpm
+							.getPixelPos(this.controlPoints[i]), wpm
+							.getPixelPos(this.controlPoints[i+1]),
+							dtArray[this.controlPoints[i]]);
+			// cp->extreme[0]
 			pos1 = wpm.getPixelPos(this.controlPoints[i]);
 			pos2 = extremes[0];
-			ImVector2 v1 = new ImVector2((double)pos2.x-pos1.x,(double)pos2.y-pos1.y);
+			ImVector2 v1 = new ImVector2((double) pos2.x-pos1.x, (double) pos2.y
+					-pos1.y);
 			v1 = v1.normalize();
 			this.angleNorthVector[i] = v1;
-			v1=v1.mul(bendingLength);
-			
-			//cp->extreme[1]
+			v1 = v1.mul(bendingLength);
+
+			// cp->extreme[1]
 			pos2 = extremes[1];
-			ImVector2 v2 = new ImVector2((double)pos2.x-pos1.x,(double)pos2.y-pos1.y);
-			v2 = v2.normalize();		
-			this.angleSouthVector[i] = v2;		
-			v2=v2.mul(bendingLength);
-			
-			Line l1 = new Line(pos1,new Vector2i((int)Math.round(v1.x+pos1.x),(int)Math.round(v1.y+pos1.y)));
-			Line l2 = new Line(pos1,new Vector2i((int)Math.round(v2.x+pos1.x),(int)Math.round(v2.y+pos1.y)));
-			
+			ImVector2 v2 = new ImVector2((double) pos2.x-pos1.x, (double) pos2.y
+					-pos1.y);
+			v2 = v2.normalize();
+			this.angleSouthVector[i] = v2;
+			v2 = v2.mul(bendingLength);
+
+			Line l1 = new Line(pos1, new Vector2i((int) Math.round(v1.x+pos1.x),
+					(int) Math.round(v1.y+pos1.y)));
+			Line l2 = new Line(pos1, new Vector2i((int) Math.round(v2.x+pos1.x),
+					(int) Math.round(v2.y+pos1.y)));
+
 			ArrayList<Integer> linePoints = l1.getLinePoints(wpm);
 			Iterator<Integer> lit = linePoints.iterator();
 
 			int[] intL = new int[linePoints.size()];
 			int count = 0;
-			while(lit.hasNext()){
+			while (lit.hasNext())
+				{
 				intL[count] = lit.next();
 				count++;
-			}
+				}
 			this.angleNorthLine[i] = intL;
 
 			linePoints = l2.getLinePoints(wpm);
 			lit = linePoints.iterator();
 			intL = new int[linePoints.size()];
 			count = 0;
-			while(lit.hasNext()){
+			while (lit.hasNext())
+				{
 				intL[count] = lit.next();
 				count++;
-			}			
-			this.angleSouthLine[i] = intL;;						
-
+				}
+			this.angleSouthLine[i] = intL;;
 			}
-		
+
 		}
-	
+
 	public ArrayList<Integer> rasterizeWorm(){
 		ArrayList<Integer> skp = WormProfile.constructShape(controlPoints, wprof, 0, dtArray);
+		//return skp;
+		ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(skp);
+		return PolygonRasterizer.rasterize(wpm.w,wpm.h,tpv);
+	}
+	
+	public ArrayList<Integer> fitAndRasterizeWorm(){
+		ArrayList<Integer> skp = WormProfile.expandingConstructShape(controlPoints, wprof, 0, dtArray);
 		//return skp;
 		ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(skp);
 		return PolygonRasterizer.rasterize(wpm.w,wpm.h,tpv);

@@ -323,7 +323,6 @@ public abstract class SkeletonTransform
 	 */
 	public static ArrayList<Integer> getShapeContour(WormClusterSkeleton wc, int minLength){
 	if ((minLength > 0 && minLength<= wc.skPoints.size()) || minLength==0){
-		System.out.println("Working contour");
 		return getShapeContour(wc);
 		}
 		return null;		
@@ -338,7 +337,7 @@ public abstract class SkeletonTransform
 	private static ArrayList<Integer> getShapeContour(WormClusterSkeleton wc){
 		//Just for fixed Skeletons
 		if (wc.basePoints.size()!=2) return null;
-		System.out.println("Really shaping");
+		System.out.println("Tracing contour of isolated worm");
 		ArrayList<Integer> contour = new ArrayList<Integer>();
 		int init = wc.basePoints.get(0);
 		int firstContour = -1;
@@ -487,6 +486,34 @@ public abstract class SkeletonTransform
 			}
 		}
 
+	public static ArrayList<WormSkeleton> wormsFromPaths(EvPixels image,
+			int[] dt, WormPixelMatcher wpm, ArrayList<ArrayList<Integer>> guessPaths)
+		{
+		ArrayList<WormSkeleton> wlist = new ArrayList<WormSkeleton>();
+		Iterator<ArrayList<Integer>> wPaths = guessPaths.iterator();
+		while (wPaths.hasNext())
+			{
+			ArrayList<Integer> wormPath = wPaths.next();
+			ArrayList<Integer> baseP = new ArrayList<Integer>(2);
+			baseP.add(wormPath.get(0));
+			baseP.add(wormPath.get(wormPath.size()-1));
+
+			WormSkeleton ws = null;
+			try
+				{
+				ws = new WormSkeleton(image, dt, wpm.getW(), wpm.getH(), baseP,
+						wormPath, wpm);
+				}
+			catch (NotWormException e)
+				{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				}
+			wlist.add(ws);
+			}
+		return wlist;
+		}
+	
 	/**
 	 * Calculates the best path to follow starting from extreme or base points on the 
 	 * worm cluster wc and reaching another extreme or base point

@@ -116,7 +116,7 @@ public class Thinning
 		while (it.hasNext())
 			{
 			count = it.next();			
-			if (dtImage[count]>contourIndex)				
+			if (dtImage[count]> contourIndex)				
 				continue;
 			// Check the four conditions
 			n = Thinning.getCircularNeighbors(count, w);
@@ -195,6 +195,10 @@ public class Thinning
 					contourIndex);
 			contourIndex++;
 			}
+		contourIndex = Integer.MAX_VALUE;
+		
+		Thinning.thinContour(dtImage, isShape, w, h, shapePoints,
+				contourIndex);
 		}
 
 	}
