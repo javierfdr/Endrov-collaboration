@@ -1,6 +1,7 @@
 package endrov.worms;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -567,10 +568,42 @@ public class WormProfile
 		}
 		
 		private static WormSkeleton ensureCounterClockwise(WormSkeleton ws){
-				int[] bases = ws.getBasePoints();
-				
-				
+				int[] bases = ws.getBasePoints();							
 				return ws;
 		}	
+		
+		/**
+		 * Calculate the average length for the WormSkeleton objects in the list.
+		 * The length of a WormSkeleton is the number of pixels that composes
+		 * the skeleton.
+		 * @param singleWormList List of isolated worms. 
+		 */
+		public static int calculateWormLength(ArrayList<WormSkeleton> singleWormList){
+			int average =0;
+			Iterator<WormSkeleton> it = singleWormList.iterator();
+			ArrayList<Integer> lengthList = new ArrayList<Integer>();
+			while(it.hasNext()){
+				lengthList.add(it.next().getSkPoints().size());				
+			}		
+			//sort and delete the 20% of higher and lower values
+			Collections.sort(lengthList);
+			int numDelete = (int)((lengthList.size()*0.35)/2);
+			
+			for(int index=0;index<numDelete;index++){
+				lengthList.remove(0);
+				lengthList.remove(lengthList.size()-1);
+			}
+			
+			Iterator<Integer> lit = lengthList.iterator();
+			while(lit.hasNext()){
+				int l = lit.next();
+				average+=l;
+			}
+					
+			System.out.println();
+			return (average/lengthList.size());
+		}
+		
+		
 		
 	}

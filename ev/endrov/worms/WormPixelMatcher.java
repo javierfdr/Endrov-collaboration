@@ -190,5 +190,12 @@ public class WormPixelMatcher
 
 		return pl;
 		}
+	
+	public static double calculatePixelDistance(int p1,int p2,WormPixelMatcher wpm){
+		Vector2i p1c = wpm.getPixelPos(p1);
+		Vector2i p2c = wpm.getPixelPos(p2);
+		double distance = Math.sqrt(Math.pow(p1c.x-p2c.x, 2)+Math.pow(p1c.y-p2c.y,2));
+		return distance;			
+	}
 
 	}

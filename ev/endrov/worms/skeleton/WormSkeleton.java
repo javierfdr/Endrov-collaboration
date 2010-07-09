@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import endrov.imageset.EvPixels;
+import endrov.util.Vector2i;
 import endrov.worms.WormPixelMatcher;
 import endrov.worms.skeleton.NotWormException;
 
@@ -87,6 +88,10 @@ public class WormSkeleton extends Skeleton
 	
 	public void setSkPoints(ArrayList<Integer> skPoints){
 		this.skPoints = new ArrayList<Integer>(skPoints);	
+	}
+	
+	public static Vector2i getMinMaxLength(int wormLength){
+		return new Vector2i((int)(wormLength*0.70),(int)(wormLength*1.3));
 	}
 	
 	}

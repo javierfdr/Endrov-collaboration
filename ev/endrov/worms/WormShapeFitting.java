@@ -39,9 +39,9 @@ public class WormShapeFitting
 		return count*1.0;
 		}
 
-	public static void wormClusterOptimization(WormClusterSkeleton wc)
+	public static void wormClusterOptimization(WormClusterSkeleton wc,WormPixelMatcher wpm,int wormLength)
 		{
-		SkeletonTransform.guessWormPaths(wc, 15);
+		SkeletonTransform.guessWormPaths(wc, 15,wpm,WormSkeleton.getMinMaxLength(wormLength));
 		}
 
 	public static WormDescriptor bestNeighborOptimization(WormDescriptor wd)
@@ -246,13 +246,14 @@ public class WormShapeFitting
 
 	}
 	
-	public static ArrayList<ArrayList<Integer>> fitWormCluster(WormClusterSkeleton wc,WormProfile wprof, int[] dtArray,EvPixels inputImage){
+	public static ArrayList<ArrayList<Integer>> fitWormCluster(WormClusterSkeleton wc,WormProfile wprof, 
+			int[] dtArray,EvPixels inputImage,int wormLength){
 	
 	ArrayList<ArrayList<Integer>> shapeList = new ArrayList<ArrayList<Integer>>();
 	WormPixelMatcher wpm = wprof.wpm;
 	System.out.println("Guessing Worm Path");
 	ArrayList<WormSkeleton> skList = SkeletonTransform.wormsFromPaths(
-			inputImage, dtArray, wpm, SkeletonTransform.guessWormPaths(wc, 15));
+			inputImage, dtArray, wpm, SkeletonTransform.guessWormPaths(wc, 15,wpm,WormSkeleton.getMinMaxLength(wormLength)));
 	System.out.println("Finished Guessing");
 	
 	Iterator<WormSkeleton> wit = skList.iterator();
