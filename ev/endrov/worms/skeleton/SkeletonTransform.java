@@ -11,6 +11,7 @@ import endrov.imageset.EvPixels;
 import endrov.imageset.EvPixelsType;
 import endrov.util.Vector2i;
 import endrov.worms.WormPixelMatcher;
+import endrov.worms.WormShape;
 
 public abstract class SkeletonTransform
 	{
@@ -501,28 +502,128 @@ public abstract class SkeletonTransform
 			}
 		}
 
-	public static ArrayList<ArrayList<Integer>> getAllPaths(WormClusterSkeleton wc){
+	public static ArrayList<ArrayList<Integer>> getAllPaths(
+			WormClusterSkeleton wc, int wormLength)
+		{
 		ArrayList<ArrayList<Integer>> allPaths = new ArrayList<ArrayList<Integer>>();
-		ArrayList<Integer> newPath = new ArrayList<Integer>();
-		allPaths.add(newPath);
+
+		//Calculate all paths from every base point
+		Iterator<Integer> bit = wc.basePoints.iterator();
+		int base;
+		while(bit.hasNext())
+		{
+			base = bit.next();
+			int[] matching = new int[wc.h*wc.w];		
+			ArrayList<Integer> newPath = new ArrayList<Integer>();
+			allPaths.add(newPath);
+			newPath.add(base);
+			pathBranching(matching, wc.isBasePoint, wc.isSkPoint, wc.w, base, allPaths,
+					newPath);
+		}
 		
-		int[] matching  = new int[wc.h*wc.w];
-		int base = wc.basePoints.get(0);
-		newPath.add(base);
-						
-		pathBranching(matching,wc.isBasePoint,wc.isSkPoint,wc.w,base,allPaths,newPath);		
+		//Delete repeated paths
+		Iterator<ArrayList<Integer>> pit = allPaths.iterator();
+		ArrayList<Integer> auxPath = new ArrayList<Integer>();
+		HashSet<String> pathPairs = new HashSet<String>();
+		while(pit.hasNext()){
+		auxPath = pit.next();	
+		String pPair = pathToString(auxPath);
+		System.out.print("PPAR: "+pPair+" ");
+			if (!pathPairs.contains(pPair))
+			{
+				pathPairs.add(pPair);
+				System.out.println(" OK");
+			}
+			else{
+			System.out.println(" REMOVE Repeated");
+				pit.remove();
+			}
+		}
+		
+		// Discard too long and short paths, and extend paths that do not reach base
+		// points if possible
+		pit = allPaths.iterator();
+		ArrayList<Integer> path;
+		Vector2i minMaxWormLength = WormSkeleton.getMinMaxLength(wormLength,0.70,1.5);
+		while (pit.hasNext())
+			{
+			path = pit.next();
+			if (path.size()<minMaxWormLength.x||path.size()>minMaxWormLength.y)
+				{
+				System.out.println("Path to long to short "+path.size()+" "+minMaxWormLength);
+				pit.remove();
+				}
+			//Check if reaches base point
+			else
+				{
+				int lastPoint = path.get(path.size()-1);
+				if (wc.basePoints.contains((Integer) lastPoint))
+					continue;
+				else
+					{
+					// check if is close to a base point
+					int closest = -1;
+					double bestD = Integer.MAX_VALUE;
+					double d;
+					int pbase;
+					bit = wc.basePoints.iterator();
+					while (bit.hasNext())
+						{
+						pbase = bit.next();
+						// if (checkedBase.contains((Integer) pbase))
+						// continue;
+						d = WormPixelMatcher.calculatePixelDistance(lastPoint, pbase,
+								wc.wpm);
+						if (d<bestD && d<3)
+							{
+							bestD = d;
+							closest = pbase;
+							}
+						}
+					if (closest!=-1)
+						{
+						// The path has not been added previously
+						path.add(closest);
+						String pPair = pathToString(path);
+						System.out.print("NEW PATH: "+pPair+" ");
+						if (!pathPairs.contains(pPair))
+							{
+							// checkedBase.add(closest);
+							pathPairs.add(pPair);
+							System.out.println(" OK ADD");
+							}
+						else
+							{
+							System.out.println("REMOVE Cause new path Exists");
+							pit.remove();
+							}
+						}
+					else
+						{
+						pit.remove();
+						}
+					}
+
+				}
+			}
+		
 		return allPaths;
-	}
+		}
 	
 	private static void pathBranching(int[] matching, boolean[] isBase,
 			boolean[] isSkeleton, int w, int pixel,
 			ArrayList<ArrayList<Integer>> paths, ArrayList<Integer> currentSkPoints)
 		{
 		int[] neighbors;
-		if (matching[pixel]!=0) // the pixel has already been checked
+		//Circular path
+		if (matching[pixel]!=0){ // the pixel has already been checked
+			paths.remove(currentSkPoints);
 			return;
+			}
 		matching[pixel] = 1;
 		currentSkPoints.add(pixel);
+		//Created because currentSkPoints can be modified recursively
+		ArrayList<Integer> callingPath = new ArrayList<Integer>(currentSkPoints);
 		// if (isBase[pixel])
 		// currentBasePoints.add(pixel);
 
@@ -535,7 +636,7 @@ public abstract class SkeletonTransform
 				{// Follow every path recursively
 				if (createBranch)
 					{
-					ArrayList<Integer> newPath = new ArrayList<Integer>(currentSkPoints);
+					ArrayList<Integer> newPath = new ArrayList<Integer>(callingPath);
 					paths.add(newPath);
 					int[] newMatching = matching.clone();
 					pathBranching(newMatching, isBase, isSkeleton, w, neighbors[i],
@@ -736,6 +837,7 @@ public abstract class SkeletonTransform
 				if(!pathPairs.contains(pPair)){
 				//checkedBase.add(closest);
 				pathPairs.add(pPair);
+				currentPath.add(closest);
 				wormPaths.add(currentPath);
 				}
 				}

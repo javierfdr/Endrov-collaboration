@@ -1,7 +1,9 @@
 package endrov.worms;
 
 import java.util.ArrayList;
+
 import java.util.Iterator;
+import java.util.Hashtable;
 
 import javax.vecmath.Vector2d;
 
@@ -18,6 +20,7 @@ import endrov.worms.skeleton.SkeletonTransform;
 import endrov.worms.skeleton.SkeletonUtils;
 import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.skeleton.WormSkeleton;
+
 
 public class WormShapeFitting
 	{
@@ -252,8 +255,13 @@ public class WormShapeFitting
 	ArrayList<ArrayList<Integer>> shapeList = new ArrayList<ArrayList<Integer>>();
 	WormPixelMatcher wpm = wprof.wpm;
 	System.out.println("Guessing Worm Path");
+	
 	ArrayList<WormSkeleton> skList = SkeletonTransform.wormsFromPaths(
 			inputImage, dtArray, wpm, SkeletonTransform.guessWormPaths(wc, 15,wpm,WormSkeleton.getMinMaxLength(wormLength)));
+	
+	ArrayList<WormSkeleton> allList = SkeletonTransform.wormsFromPaths(
+			 inputImage, dtArray, wpm, SkeletonTransform.getAllPaths(wc,wormLength));
+	
 	System.out.println("Finished Guessing");
 	
 	Iterator<WormSkeleton> wit = skList.iterator();
@@ -305,5 +313,42 @@ public class WormShapeFitting
 		}
 		return shapeList;
 	};
+	
+	public static Hashtable<Integer,ArrayList<WormSkeleton>> buildPathDictionary(ArrayList<WormSkeleton> wormSkeletons){
+		Hashtable<Integer,ArrayList<WormSkeleton>> pathDic = new Hashtable<Integer, ArrayList<WormSkeleton>>();
+		Iterator<WormSkeleton> wit = wormSkeletons.iterator();
+		WormSkeleton ws;
+		int base1;
+		int base2;
+		while(wit.hasNext()){
+			ws = wit.next();
+			base1 = ws.getSkPoints().get(0);
+			base2 = ws.getSkPoints().get(ws.getSkPoints().size()-1);
+			
+	    ArrayList<WormSkeleton> list1= (ArrayList<WormSkeleton>)pathDic.get(base1);
+	     if (list1 != null) {
+	        	list1.add(ws);
+	     }
+	     else{
+	     	ArrayList<WormSkeleton> newList = new ArrayList<WormSkeleton>();
+	     	newList.add(ws);
+	     	pathDic.put(base1, newList);
+	     }
+			
+		    ArrayList<WormSkeleton> list2= (ArrayList<WormSkeleton>)pathDic.get(base2);
+		     if (list2 != null) {
+		        	list2.add(ws);
+		     }
+		     else{
+		     	ArrayList<WormSkeleton> newList = new ArrayList<WormSkeleton>();
+		     	newList.add(ws);
+		     	pathDic.put(base2, newList);
+		     }
+		}
+		
+		return pathDic;
+	}
+	
+	
 	
 	}

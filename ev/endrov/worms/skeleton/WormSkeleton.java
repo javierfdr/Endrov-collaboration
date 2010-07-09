@@ -90,8 +90,12 @@ public class WormSkeleton extends Skeleton
 		this.skPoints = new ArrayList<Integer>(skPoints);	
 	}
 	
+	public static Vector2i getMinMaxLength(int wormLength,double percMin, double percMax){
+		return new Vector2i((int)(wormLength*percMin),(int)(wormLength*percMax));
+	}
+	
 	public static Vector2i getMinMaxLength(int wormLength){
-		return new Vector2i((int)(wormLength*0.70),(int)(wormLength*1.3));
+		return getMinMaxLength(wormLength,0.70,1.3);
 	}
 	
 	}

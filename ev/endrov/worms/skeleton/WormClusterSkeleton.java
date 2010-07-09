@@ -10,7 +10,7 @@ import endrov.worms.WormPixelMatcher;
 
 public final class WormClusterSkeleton extends Skeleton
 	{
-	ArrayList<Integer> basePoints;
+	public ArrayList<Integer> basePoints;
 	ArrayList<Integer> skPoints;
 	boolean[] isBasePoint; // added for efficient check
 	boolean[] isSkPoint; // added for efficient check
