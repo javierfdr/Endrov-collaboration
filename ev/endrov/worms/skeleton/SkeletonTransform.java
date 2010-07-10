@@ -729,7 +729,7 @@ public abstract class SkeletonTransform
 				System.out.println("Remove");
 			}
 		}
-
+				
 		return wormPaths;
 		}
 
@@ -856,6 +856,16 @@ public abstract class SkeletonTransform
 			base2 = aux;
 		}
 		return base1+"-"+base2;
+	}
+	
+	public static String basesPathToString(int base1, int base2){
+	int aux;
+	if(base1>base2){
+		aux = base1;
+		base1 = base2;
+		base2 = aux;
+	}
+	return base1+"-"+base2;
 	}
 	
 	public static Vector2i bestHeuristicNeighbor(WormClusterSkeleton wc,
