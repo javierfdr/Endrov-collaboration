@@ -1,5 +1,6 @@
 package endrov.worms;
 
+import java.awt.image.RasterOp;
 import java.util.ArrayList;
 
 import java.util.HashSet;
@@ -35,8 +36,9 @@ public class WormShapeFitting
 	 */
 	public static double objFunction(ArrayList<Integer> rastShape, int[] dtArray)
 		{
+		if(rastShape ==null) return Double.MAX_VALUE;
 		double background = 0;
-		double foreground = 0;
+		double foreground = 0;		
 		Iterator<Integer> it = rastShape.iterator();
 		while (it.hasNext())
 			{
@@ -242,20 +244,26 @@ public class WormShapeFitting
 			}
 		}
 	
-	public static ArrayList<Integer> fitIsolatedWorm(WormClusterSkeleton wc,WormPixelMatcher wpm, int minSkeletonLength){
+	public static ArrayList<Integer> fitIsolatedWorm(WormClusterSkeleton wc,WormPixelMatcher wpm, WormProfile wprof,
+			int[] dtArray, int minSkeletonLength,double splineRate){
 		//TAKE LATER INTO ACCOUNT, TOo BIG SKELETONS
 	
 		ArrayList<Integer> wormContour = SkeletonTransform.getShapeContour(wc,minSkeletonLength);
-	//	ArrayList<Point> points = wpm.pixelListToPoint(wormContour);
-	//	ArrayList<Point> base = new ArrayList<Point>();
-	//	base.add(wpm.pixelToPoint(wormContour.get(0)));
-	//	base.add(wpm.pixelToPoint(wormContour.get(wormContour.size()-1)));
+		WormSkeleton ws = null;
+		try
+			{
+			ws = new WormSkeleton(wc, wpm);
+			}
+		catch (NotWormException e)
+			{
+			System.out.println("EXCEPTION ");
+			e.printStackTrace();
+			}
 		
-	//	CardinalSpline skSpline = EvCardinalSpline.getShapeSpline(base,points,0.5,0.2);
-	//	wormContour = wpm.pointListToPixelList(EvCardinalSpline.getCardinalPoints(skSpline, 0));
+		wormContour = WormShape.ensureCounterClockwise(wormContour, wprof, ws, dtArray);		
 		return wormContour;
-
 	}
+
 	
 	//public static void addToBase(Hashtable<Integer,> pathDic, ){
 	
@@ -273,99 +281,126 @@ public class WormShapeFitting
 									
 		HashSet<WormShape> clusterBestMatch = new HashSet<WormShape>();
 		ArrayList<Integer> basePoints = wc.getBasePoints();
-		ArrayList<Vector3d> matches;
-		Iterator<Vector3d> it3;
-		Vector3d match;
+
 		int shapeIndex;
 		double min;
 		int bestShapeIndex;
 		int base;
 		HashSet<Integer> checkBases = new HashSet<Integer>();
 		
-		//create base point index array
-		Hashtable<Integer,Integer> baseHash = new Hashtable<Integer, Integer>();
-		Hashtable<Integer,Integer> baseReverse = new Hashtable<Integer, Integer>();
-		for(int bi=0;bi<basePoints.size();bi++){
-			baseHash.put(basePoints.get(bi),bi);
-			baseReverse.put(bi,basePoints.get(bi));
-		}
-		//Create matching matrix
-		double[][] matchMatrix = new double[basePoints.size()][basePoints.size()];
-		for(int i=0;i<matchMatrix.length;i++){
-		for(int j=0;j<matchMatrix.length;j++){
-				matchMatrix[i][j] = -1;
-		}
-	}
-		
-		//Detect conflicting shapes and fitted shapesb
-		ArrayList<Integer> conflictingBases = detectConflictingBases(fitDic, basePoints);
-		System.out.println("CONFLICTING POINTS -------->>> <<<-----------");
-		for(int i=0;i<conflictingBases.size();i++){
-			System.out.print(conflictingBases.get(i)+" ");
-		}
-		System.out.println();
-		
-		int secondBase;
-		System.out.println("BASE SIZE: "+basePoints.size());
-		//for(int i =0;i<basePoints.size(); i++){
-		for(int i =0;i<conflictingBases.size(); i++){
-			base = basePoints.get(i);
-			matches = fitDic.get(base);
-			if(matches==null){
-				continue;
-			} 
-			it3 = matches.iterator();
-			while (it3.hasNext())
-				{
-				match = it3.next();				
-				shapeIndex = (int) match.z;					
-				secondBase = baseHash.get((int)match.x);
-				matchMatrix[i][secondBase] = match.y;
-				matchMatrix[secondBase][i] = match.y;
-				}
+
+		HashSet<Integer> nonConflictingShapes = new HashSet<Integer>();
+		ArrayList<Integer> conflictingBases = detectConflictingBases(fitDic, basePoints,nonConflictingShapes);		
+		ArrayList<Integer> shapeList = resolveConflict(conflictingBases,fitDic,basePoints);
+				
+		//Add conflict resolved shapes to the final match list
+		Iterator<Integer> shapeIt = shapeList.iterator();
+		while(shapeIt.hasNext()){
+			clusterBestMatch.add(matchedShapes.get(shapeIt.next()));
 		}
 		
-		System.out.println("PRINTING MATCH MATRIX");
-		greedyNonBipartiteAssignment.printMatchMatrix(matchMatrix);
-					
-		ArrayList<Vector2i> bestAssignment = greedyNonBipartiteAssignment.findBestAssignment(matchMatrix);
-		Iterator<Vector2i> bit = bestAssignment.iterator();
-		Vector2i assignment;
-		while(bit.hasNext()){
-			assignment = bit.next();
-			System.out.println("Assignment Pair: "+assignment);
-			matches = fitDic.get(baseReverse.get(assignment.x));
-			int otherBase;
-			if(matches==null){
-				System.out.println("FIRST NULL");
-				matches = fitDic.get(baseReverse.get(assignment.y));
-				if(matches==null) {
-					System.out.println("NULL AGAIN");
-					continue;}
-				otherBase = baseReverse.get(assignment.x);
-			}
-			else{
-				otherBase = baseReverse.get(assignment.y);
-			}
-				it3 = matches.iterator();
-				while(it3.hasNext()){
-					match = it3.next();
-					if(((int)match.x) == otherBase){
-						clusterBestMatch.add(matchedShapes.get((int)match.z));
-						break;
-					}
-				}
-			System.out.println("I N     V  I    T  R   O   ->>>>>>>>>");
-			}
+		//Add non conflicting shapes to the final match list
+		shapeIt = nonConflictingShapes.iterator();
+		while(shapeIt.hasNext()){
+			clusterBestMatch.add(matchedShapes.get(shapeIt.next()));
+		}
+		
 		return new ArrayList<WormShape>(clusterBestMatch);
 		}
 
+	private static ArrayList<Integer> resolveConflict(ArrayList<Integer> conflictingBases, 
+			Hashtable<Integer, ArrayList<Vector3d>> fitDic ,ArrayList<Integer> basePoints){
+				
+			ArrayList<Integer> shapeList = new ArrayList<Integer>();
+			
+			//create base point index array
+			Hashtable<Integer,Integer> baseHash = new Hashtable<Integer, Integer>();
+			Hashtable<Integer,Integer> baseReverse = new Hashtable<Integer, Integer>();
+			for(int bi=0;bi<conflictingBases.size();bi++){
+				baseHash.put(conflictingBases.get(bi),bi);
+				baseReverse.put(bi,conflictingBases.get(bi));
+			}
+			//Create matching matrix
+			double[][] matchMatrix = new double[conflictingBases.size()][conflictingBases.size()];
+			for(int i=0;i<matchMatrix.length;i++){
+			for(int j=0;j<matchMatrix.length;j++){
+					matchMatrix[i][j] = -1;
+			}
+		}
+			
+			ArrayList<Vector3d> matches;
+			Iterator<Vector3d> it3;
+			Vector3d match;
+			Integer secondBase;
+			int base;
+			int shapeIndex;
+			for(int i =0;i<conflictingBases.size(); i++){
+				base = conflictingBases.get(i);
+				matches = fitDic.get(base);
+				if(matches==null){
+					continue;
+				} 
+				int firstBaseIndex = baseHash.get(base);
+				it3 = matches.iterator();
+				while (it3.hasNext())
+					{
+					match = it3.next();				
+					shapeIndex = (int) match.z;					
+					secondBase = baseHash.get((int)match.x);
+					//Discard paths that reach non conflicting bases
+					if(secondBase == null) continue;
+					
+					
+					System.out.println("BASE AND SECOND "+firstBaseIndex+" "+secondBase);
+					
+					matchMatrix[firstBaseIndex][secondBase] = match.y;
+					matchMatrix[secondBase][firstBaseIndex] = match.y;
+					}
+			}
+			
+			System.out.println("PRINTING MATCH MATRIX");
+			greedyNonBipartiteAssignment.printMatchMatrix(matchMatrix);
+						
+			ArrayList<Vector2i> bestAssignment = greedyNonBipartiteAssignment.findBestAssignment(matchMatrix);
+			Iterator<Vector2i> bit = bestAssignment.iterator();
+			Vector2i assignment;
+			while(bit.hasNext()){
+				assignment = bit.next();
+				System.out.println("Assignment Pair: "+assignment);
+				matches = fitDic.get(baseReverse.get(assignment.x));
+				int otherBase;
+				if(matches==null){
+					System.out.println("FIRST NULL");
+					matches = fitDic.get(baseReverse.get(assignment.y));
+					if(matches==null) {
+						System.out.println("NULL AGAIN");
+						continue;}
+					otherBase = baseReverse.get(assignment.x);
+				}
+				else{
+					otherBase = baseReverse.get(assignment.y);
+				}
+					it3 = matches.iterator();
+					while(it3.hasNext()){
+						match = it3.next();
+						if(((int)match.x) == otherBase){
+							System.out.println("Adding Shape: "+baseReverse.get(assignment.x)+" "+baseReverse.get(assignment.y));
+							shapeList.add((int)match.z);
+							break;
+						}
+					}
+				System.out.println("I N     V  I    T  R   O   ->>>>>>>>>");
+				}										
+			return shapeList;
+	}
+	
 	/**
 	 * Calculates the bases whose best match conflicts with another best match
 	 * base. 
 	 */
 	private static ArrayList<Integer> detectConflictingBases(
-			Hashtable<Integer, ArrayList<Vector3d>> fitDic, ArrayList<Integer> bases)
+			Hashtable<Integer, ArrayList<Vector3d>> fitDic, ArrayList<Integer> bases,
+			HashSet<Integer> nonConflictingShapes)
 		{
 
 		Iterator<Integer> bit = bases.iterator();
@@ -373,30 +408,36 @@ public class WormShapeFitting
 		ArrayList<Vector3d> matches;
 		Iterator<Vector3d> it3;
 		Vector3d match;
+		Vector3d bestMatch = null;
 		double min;
-		int bestMatchIndex;
+		//int bestMatchIndex;
+		//int bestShapeIndex;
 		HashSet<Integer> conflictingBases = new HashSet<Integer>();
 		Hashtable<Integer, HashSet<Integer>> pathsPerBase= new Hashtable< Integer, HashSet<Integer>>();
 		
+		//Indexes of shape per base. Just an integer required not list
+		Hashtable<Integer, Integer> indexPerBase = new Hashtable<Integer, Integer>();
 		
-		HashSet<Integer> nonConflictingBases = new HashSet<Integer>();
 		while (bit.hasNext())
 			{
 			base = bit.next();			
 			matches = fitDic.get(base);
-			boolean isNew = true;
+			boolean isNew = true;			
 			if (matches!=null)
 				{
 				min = Double.MAX_VALUE;
-				bestMatchIndex = -1;
+				//bestMatchIndex = -1;
+				//bestShapeIndex = -1;
 				it3 = matches.iterator();
 				while (it3.hasNext())
 					{
 					match = it3.next();
 					if (min>match.y)
 						{
-						bestMatchIndex = (int) match.x;
+						//bestMatchIndex = (int) match.x;
 						min = match.y;
+						//bestShapeIndex = (int)match.z;
+						bestMatch = match;
 						}
 					}
 				HashSet<Integer> basePaths = pathsPerBase.get(base);
@@ -404,36 +445,55 @@ public class WormShapeFitting
 					basePaths = new HashSet<Integer>();
 					pathsPerBase.put(base, basePaths);
 				}
-				basePaths.add(bestMatchIndex);
+				basePaths.add((int)bestMatch.x);
+				indexPerBase.put(base,(int)bestMatch.z);
 					
-				basePaths = pathsPerBase.get(bestMatchIndex);
+				basePaths = pathsPerBase.get((int)bestMatch.x);
 				if(basePaths==null){
 					basePaths = new HashSet<Integer>();
-					pathsPerBase.put(bestMatchIndex, basePaths);
+					pathsPerBase.put((int)bestMatch.x, basePaths);
 				}
-				basePaths.add(base);										
+				basePaths.add(base);
+				indexPerBase.put((int) bestMatch.x, (int) bestMatch.z);
 				}
 			}
 
-		bit=bases.iterator();
-		HashSet basePaths  = new HashSet<Integer>();
+		bit = bases.iterator();
+		HashSet basePaths = new HashSet<Integer>();
 		while (bit.hasNext())
 			{
 			base = bit.next();
 			basePaths = pathsPerBase.get(base);
-			if(basePaths == null) continue;
+			if (basePaths==null)
+				continue;
 			System.out.println("BP SIZE: "+basePaths.size());
-			//If there are more than 1 path for a base point add all the involved bases
-			if(basePaths.size() > 1){
-				
+			// If there are more than 1 path for a base point add all the involved
+			// bases
+			if (basePaths.size()>1)
+				{
+
 				Iterator<Integer> pit = basePaths.iterator();
-				while(pit.hasNext()){
+				while (pit.hasNext())
+					{
 					conflictingBases.add(pit.next());
-				}
+					}
 				conflictingBases.add(base);
-			}			
-		}
-		
+				}
+			}
+		bit = bases.iterator();
+		while (bit.hasNext())
+			{
+			base = bit.next();
+			if (!conflictingBases.contains(base))
+				{
+				Integer shapeIndex = indexPerBase.get(base);
+				if (shapeIndex!=null)
+					{
+					nonConflictingShapes.add(shapeIndex);
+					}
+				}
+			}
+
 		return new ArrayList<Integer>(conflictingBases);
 
 	}
@@ -517,7 +577,7 @@ public class WormShapeFitting
 			System.out.println("Matching Worm in WormCLuster: "+count);	
 			count+=1;
 			WormSkeleton ws = wit.next();
-			skeletonMatchingOpt(ws,wprof,dtArray,wpm,matchedShapes,matchDic,index);					
+			skeletonMatchingOpt(ws,wprof,dtArray,wpm,matchedShapes,matchDic,index,true);					
 			index++;
 			}
 	//Find the base points that have no paths and all the possible paths
@@ -546,7 +606,7 @@ public class WormShapeFitting
 		System.out.println("Matching Forgotten: "+count);	
 		count+=1;
 		WormSkeleton ws = wit.next();
-		skeletonMatchingOpt(ws,wprof,dtArray,wpm,matchedShapes,matchDic,index);					
+		skeletonMatchingOpt(ws,wprof,dtArray,wpm,matchedShapes,matchDic,index,false);					
 		index++;
 		}
 	
@@ -564,14 +624,20 @@ public class WormShapeFitting
 	
 	private static void skeletonMatchingOpt(WormSkeleton ws,WormProfile wprof,int[] dtArray,
 			WormPixelMatcher wpm, ArrayList<WormShape> matchedShapes,
-			Hashtable<Integer,ArrayList<Vector3d>> matchDic,int index){
+			Hashtable<Integer,ArrayList<Vector3d>> matchDic,int index,boolean isGuessedPath){
 
 			//Optimize WormSkeleton shape
 
 			double[] optValue = {-1};
 			System.out.println("Starting bending");
 			ArrayList<Integer> rastShape = bendingOptimization(ws, wprof, dtArray,optValue);
-			WormShape worm = new WormShape(rastShape,wpm,true);
+
+			//Preference is given to guessed paths to improve their matching value
+			if(isGuessedPath){			
+				optValue[0] = optValue[0]*0.30;
+			}
+			
+			WormShape worm = new WormShape(rastShape,wpm,false);
 			matchedShapes.add(worm);			
 			System.out.println("Finish bending");
 	    

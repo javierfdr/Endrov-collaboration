@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 import endrov.roi.newer.FlipCodeTessellate;
+import endrov.roi.newer.TriangulationException;
 import endrov.util.Vector2i;
 
 public abstract class PolygonRasterizer
@@ -20,7 +21,16 @@ public abstract class PolygonRasterizer
 		ArrayList<Integer> rasterShape = new ArrayList<Integer>();	
 
 		//triangulate the polygon
-		ArrayList<int[]> triangles = (ArrayList<int[]>) FlipCodeTessellate.process(polygonPoints);
+		ArrayList<int[]> triangles = new ArrayList<int[]>();
+		try
+			{
+			triangles = (ArrayList<int[]>) FlipCodeTessellate.process(polygonPoints);
+			}
+		catch (TriangulationException e)
+			{
+			System.out.println("Triangulation Error. Probably bad polygon");
+			return null;
+			}
 		Iterator<int[]> tIt = triangles.iterator();
 		
 		//Rasterize triangles and inner points to rasterShape

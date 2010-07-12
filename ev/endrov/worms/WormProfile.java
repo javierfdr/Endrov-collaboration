@@ -58,6 +58,7 @@ public class WormProfile
 		public WormProfile(WormSkeleton ws, boolean consecPts,int numPoints,int[] dtArray){
 			this.wpm = ws.getPixelMatcher();
 			
+			System.out.println("Generating worm profile");
 			//ArrayList<Integer> wPath = SkeletonTransform.getShapeContour(ws.toWormClusterSkeleton(),50);	
 			//ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(wPath);
 			//ArrayList<Integer> rastShape = PolygonRasterizer.rasterize(ws.w,ws.h,tpv);
@@ -80,9 +81,11 @@ public class WormProfile
 		public static double[] getThickness(int[] wormDT,WormSkeleton ws, 
 				boolean consecPts, int numPoints){
 				
+				/*
 				if(!consecPts){
 					SkeletonUtils.makeConsecutive(ws);
-				}				
+				}	
+				*/			
 				System.out.println("Skeleton is consecutive");
 				
 				WormPixelMatcher wpm = ws.getPixelMatcher();
@@ -561,17 +564,6 @@ public class WormProfile
 		return extremes;
 	}
 
-		
-		public static ArrayList<Integer> calculateShapeContour(ArrayList<Integer> controlPoints){
-			ArrayList<Integer> shape = new ArrayList<Integer>();							
-			return shape;
-		}
-		
-		private static WormSkeleton ensureCounterClockwise(WormSkeleton ws){
-				int[] bases = ws.getBasePoints();							
-				return ws;
-		}	
-		
 		/**
 		 * Calculate the average length for the WormSkeleton objects in the list.
 		 * The length of a WormSkeleton is the number of pixels that composes

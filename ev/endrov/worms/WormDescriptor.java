@@ -134,7 +134,7 @@ public class WormDescriptor implements Cloneable
 		ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(skp);
 		return PolygonRasterizer.rasterize(wpm.w,wpm.h,tpv);
 	}
-	
+
 	public ArrayList<Integer> drawAngles(){
 		ArrayList<Integer> points = new ArrayList<Integer>();
 		int[] lp;
