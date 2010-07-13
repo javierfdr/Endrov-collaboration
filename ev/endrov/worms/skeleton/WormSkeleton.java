@@ -46,9 +46,12 @@ public class WormSkeleton extends Skeleton
 	public WormSkeleton(WormClusterSkeleton wcs, WormPixelMatcher wpm) throws NotWormException
 		{
 		super(wcs.image,wcs.dt,wcs.w,wcs.h);
-		if (wcs.getBasePoints().size()!=2)
+		if (wcs.getBasePoints().size()!=2){
+			System.out.println("NUM WORMS: "+wcs.numWorms);		
+			System.out.println("NUM BASE POINTS: "+wcs.getBasePoints());
 			throw new NotWormException(
 					"Wrong amount of base points. Must be exactly two");
+		}
 		else{
 			ArrayList<Integer> bp = wcs.getBasePoints();
 			this.basePoints = new int[2];

@@ -56,6 +56,9 @@ public final class WormClusterSkeleton extends Skeleton
 		for (int i = 0; i<this.isSkPoint.length; i++)
 			this.isSkPoint[i] = isSkPoint[i];
 		numWorms = basePoints.size()/2;
+		if(basePoints.size()%2 != 0){
+			numWorms+=1;
+		}
 		this.wpm = wpm;
 		}
 
@@ -90,6 +93,9 @@ public final class WormClusterSkeleton extends Skeleton
 		// unnecessary
 		this.isSkPoint = SkeletonUtils.listToMatrix(w*h, skPoints);
 		numWorms = basePoints.size()/2;
+		if(basePoints.size()%2 != 0){
+			numWorms+=1;
+		}
 		this.wpm = wpm;
 		}
 

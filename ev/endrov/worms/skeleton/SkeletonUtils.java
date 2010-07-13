@@ -357,8 +357,10 @@ public class SkeletonUtils
 		int next = base[0];
 		int previous = next;
 		int[] neigh;
+		boolean foundCross = false;
 		while (next!=base[1])
 			{
+			foundCross = false;
 			conscSkPoints.add(next);
 			neigh = SkeletonUtils
 					.getCrossNeighbors(next, ws.getPixelMatcher().getW());
@@ -368,12 +370,13 @@ public class SkeletonUtils
 				{
 				if (isSkPoint[neigh[i]] && neigh[i]!=previous)
 					{
+					foundCross = true;
 					previous = next;
-					next = neigh[i];
+					next = neigh[i];					
 					break;
 					}
 				}
-			if (previous==next){ //Did not find in cross neighbor
+			if (!foundCross){ //Did not find in cross neighbor
 				neigh = SkeletonUtils.getCircularNeighbors(next, ws.getPixelMatcher().getW());
 				for (int i = 1; i<8; i+=2)
 					{

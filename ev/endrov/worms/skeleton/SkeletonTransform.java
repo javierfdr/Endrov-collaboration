@@ -506,7 +506,8 @@ public abstract class SkeletonTransform
 			WormClusterSkeleton wc, int wormLength)
 		{
 		ArrayList<ArrayList<Integer>> allPaths = new ArrayList<ArrayList<Integer>>();
-
+		Vector2i minMaxWormLength = WormSkeleton.getMinMaxLength(wormLength,0.70,1.5);
+		
 		//Calculate all paths from every base point
 		Iterator<Integer> bit = wc.basePoints.iterator();
 		int base;
@@ -518,7 +519,7 @@ public abstract class SkeletonTransform
 			allPaths.add(newPath);
 			newPath.add(base);
 			pathBranching(matching, wc.isBasePoint, wc.isSkPoint, wc.w, base, allPaths,
-					newPath);
+					newPath, minMaxWormLength.y,0);
 		}
 		
 		//Delete repeated paths
@@ -528,14 +529,11 @@ public abstract class SkeletonTransform
 		while(pit.hasNext()){
 		auxPath = pit.next();	
 		String pPair = pathToString(auxPath);
-		System.out.print("PPAR: "+pPair+" ");
 			if (!pathPairs.contains(pPair))
 			{
 				pathPairs.add(pPair);
-				System.out.println(" OK");
 			}
 			else{
-			System.out.println(" REMOVE Repeated");
 				pit.remove();
 			}
 		}
@@ -544,7 +542,6 @@ public abstract class SkeletonTransform
 		// points if possible
 		pit = allPaths.iterator();
 		ArrayList<Integer> path;
-		Vector2i minMaxWormLength = WormSkeleton.getMinMaxLength(wormLength,0.70,1.5);
 		while (pit.hasNext())
 			{
 			path = pit.next();
@@ -612,8 +609,15 @@ public abstract class SkeletonTransform
 	
 	private static void pathBranching(int[] matching, boolean[] isBase,
 			boolean[] isSkeleton, int w, int pixel,
-			ArrayList<ArrayList<Integer>> paths, ArrayList<Integer> currentSkPoints)
+			ArrayList<ArrayList<Integer>> paths, ArrayList<Integer> currentSkPoints,
+			int maxWormLength,int currentLength)
 		{
+		if(currentLength >= maxWormLength){
+			System.out.println("ALL PATH TRACKING: ---------------->>>> TO LONG PATH");
+			paths.remove(currentSkPoints);
+			return;
+		}
+		
 		int[] neighbors;
 		//Circular path
 		if (matching[pixel]!=0){ // the pixel has already been checked
@@ -639,14 +643,16 @@ public abstract class SkeletonTransform
 					ArrayList<Integer> newPath = new ArrayList<Integer>(callingPath);
 					paths.add(newPath);
 					int[] newMatching = matching.clone();
-					pathBranching(newMatching, isBase, isSkeleton, w, neighbors[i],
-							paths, newPath);
+					
+						pathBranching(newMatching, isBase, isSkeleton, w, neighbors[i],
+								paths, newPath,maxWormLength,currentLength+1);					
 					}
 				else
-					{
+					{				
 					pathBranching(matching, isBase, isSkeleton, w, neighbors[i], paths,
-							currentSkPoints);
+							currentSkPoints,maxWormLength,currentLength+1);
 					createBranch = true;
+					
 					}
 				}
 			}
@@ -711,20 +717,20 @@ public abstract class SkeletonTransform
 			if (!checkedBase.contains((Integer) base))
 				{
 				checkedBase.add(base);
-				traceBestPath(wc, base, nSteps, wormPaths, checkedBase,wc.basePoints,wpm,pathPairs);
+				traceBestPath(wc, base, nSteps, wormPaths, checkedBase,wc.basePoints,wpm,pathPairs,minMaxWormLength.y);
 				}
 			else{
 				System.out.println("Skip base");
 			}
 		}
 
-		//Discard to short and to long paths
+		//Discard to short paths
 		Iterator<ArrayList<Integer>> wit = wormPaths.iterator();
 		int wormLength;
 		while(wit.hasNext()){
 			wormLength = wit.next().size();
 			System.out.println("WL: "+wormLength+" MIN-MAX: "+minMaxWormLength);
-			if(wormLength< minMaxWormLength.x || wormLength > minMaxWormLength.y){
+			if(wormLength< minMaxWormLength.x){
 				wit.remove();
 				System.out.println("Remove");
 			}
@@ -751,7 +757,7 @@ public abstract class SkeletonTransform
 	public static void traceBestPath(WormClusterSkeleton wc, int base,
 			int nSteps, ArrayList<ArrayList<Integer>> wormPaths,
 			ArrayList<Integer> checkedBase, ArrayList<Integer> basePoints,
-			WormPixelMatcher wpm, HashSet<String> pathPairs)
+			WormPixelMatcher wpm, HashSet<String> pathPairs,int maxPathLength)
 		{
 		System.out.println("Starting tracking: "+wpm.getPixelPos(base));
 		ArrayList<Integer> currentPath = new ArrayList<Integer>();
@@ -773,9 +779,10 @@ public abstract class SkeletonTransform
 		currentPath.add(base);
 		isPath[base] = true;
 		previous = -1;
-
-		while (bestN.x!=-1 && !reachedBase)
+		int numSteps = 0;
+		while (bestN.x!=-1 && !reachedBase && numSteps<maxPathLength)
 			{
+			numSteps+=1;
 			neigh = SkeletonUtils.getCrossNeighbors(bestN.x, wc.w);
 			// aux =
 			// bestHeuristicNeighbor(wc,neigh,directions,diagonalDirections,previous);
@@ -792,6 +799,7 @@ public abstract class SkeletonTransform
 					lastNSteps, lastMove, bestN, lastNCounter);
 			reachedBase = wc.isBasePoint[bestN.x];
 			}
+		if(numSteps ==maxPathLength) return;
 		// If a base was reached then is marked and added to the path
 		if (reachedBase = true)
 			{

@@ -23,11 +23,18 @@ public class WormShape
 	boolean[] isWormArea;
 	
 	public WormShape(ArrayList<Integer> wormContour,ArrayList<Integer> wormArea, WormPixelMatcher wpm){
-		wormContour = new ArrayList<Integer>(wormContour);
-		wormArea = new ArrayList<Integer>(wormArea);
+		if(wormArea == null) this.wormArea = new ArrayList<Integer>();
+		else{
+			this.wormArea = new ArrayList<Integer>(wormArea);
+		}
+		if(wormContour== null) this.wormContour = new ArrayList<Integer>();
+		else{
+			this.wormContour = new ArrayList<Integer>(wormContour);
+		}
+
 		this.wpm = wpm;
-		isContourPoint = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(), wormContour);
-		isWormArea = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(), wormArea);		
+		this.isContourPoint = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(), wormContour);
+		this.isWormArea = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(), wormArea);		
 	}
 	
 	/**
@@ -44,48 +51,43 @@ public class WormShape
 			isContourPoint = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(),
 					wormContour);
 			
+			double[] srs = {2.0,1.5,1.0};
+			
 			// Rasterize to generate Area. Firs a two spline contour attempt. This is more accurate
 			// but it could not be rasterizable. If it fails a oneSplineContour attempt is done
 			System.out.println("Rasterizing to generate Area");			
-			double splineRate = 0.09;
-			ArrayList<Integer> splineContour = twoSplineContour(wormContour, wpm, splineRate);
-			wormArea = WormShape.rasterizeWorm(splineContour, wpm);
-						
+			double splineRate = 0.2;
+			wormArea = null;
+			ArrayList<Integer> splineContour = new ArrayList<Integer>();
 			//Reduce spline rate if shape is not succesfully rasterized
-			int numAtt = 5;
-			splineRate -= 0.03;
-			while(wormArea ==null && numAtt>0 && splineRate > 0){
+			int numAtt = 0;
+			while(wormArea == null && numAtt<3){
+				splineRate = srs[numAtt];	
 				splineContour = twoSplineContour(wormContour, wpm, splineRate);
 				wormArea = WormShape.rasterizeWorm(splineContour, wpm);			
-				splineRate -= 0.03;
-				numAtt--;
+				numAtt++;
 			}
-									
 			if (wormArea==null)
 				{
-				splineRate = 0.09;
-				splineContour = oneSplineContour(wormContour, wpm, splineRate);
-				wormArea = WormShape.rasterizeWorm(splineContour, wpm);
-
 				// Reduce spline rate if shape is not succesfully rasterized
-				numAtt = 5;
-				splineRate -= 0.03;
-				while (wormArea==null&&numAtt>0&&splineRate>0)
+				numAtt = 0;
+				splineRate = 2.0;
+				while (wormArea==null&&numAtt<3)
 					{
+					splineRate = srs[numAtt];						
 					splineContour = oneSplineContour(wormContour, wpm, splineRate);
 					wormArea = WormShape.rasterizeWorm(splineContour, wpm);
-					splineRate -= 0.03;
-					numAtt--;
+					numAtt++;
 					}
-				if (wormArea==null)
-					{
-					wormArea = new ArrayList<Integer>();
-					}
+				}
+			
+			if (wormArea==null)
+				{
+				wormArea = new ArrayList<Integer>();
 				}
 
 			isWormArea = SkeletonUtils
-			.listToMatrix(wpm.getH()*wpm.getW(), wormArea);
-		
+			.listToMatrix(wpm.getH()*wpm.getW(), wormArea);		
 		}
 		else{
 			wormArea = new ArrayList<Integer>(wormPoints);
@@ -281,8 +283,8 @@ public class WormShape
 
 		//Construct north spline
 		ArrayList<Point> base = new ArrayList<Point>();
-		points = (ArrayList<Point>) getSubList(points,1, (wormContour.size())-1);
-		base.add(wpm.pixelToPoint(wormContour.get(1)));
+		points = (ArrayList<Point>) getSubList(points,0, (wormContour.size())-2);
+		base.add(wpm.pixelToPoint(wormContour.get(0)));
 		base.add(wpm.pixelToPoint(wormContour.get((wormContour.size())-2)));
 
 		CardinalSpline skSpline = EvCardinalSpline.getShapeSpline(base,points,0.5,numPointsPerc);
@@ -292,6 +294,25 @@ public class WormShape
 		return newContour;
 	}
 	
+
+	public static ArrayList<Integer> oneSplineNoBaseContour(ArrayList<Integer> wormContour, 
+			WormPixelMatcher wpm, double numPointsPerc){
+		ArrayList<Integer> newContour = new ArrayList<Integer>();
+		
+		ArrayList<Point> points = wpm.pixelListToPoint(wormContour);
+
+		//Construct north spline
+		ArrayList<Point> base = new ArrayList<Point>();
+		points = (ArrayList<Point>) getSubList(points,1, (wormContour.size())-2);
+		base.add(wpm.pixelToPoint(wormContour.get(1)));
+		base.add(wpm.pixelToPoint(wormContour.get((wormContour.size())-2)));
+
+		CardinalSpline skSpline = EvCardinalSpline.getShapeSpline(base,points,0.5,numPointsPerc);
+		ArrayList<Integer> splineContour = wpm.pointListToPixelList(EvCardinalSpline.getCardinalPoints(skSpline, 0));
+		newContour.addAll(splineContour);			
+					
+		return newContour;
+	}
 	
 }
 

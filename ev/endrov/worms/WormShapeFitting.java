@@ -14,6 +14,7 @@ import com.graphbuilder.curve.Point;
 
 import endrov.imageset.EvPixels;
 import endrov.quickhull3d.Vector3d;
+import endrov.roi.newer.TriangulationException;
 import endrov.tesselation.PolygonRasterizer;
 import endrov.util.Vector2i;
 import endrov.util.Vector3i;
@@ -631,7 +632,8 @@ public class WormShapeFitting
 			double[] optValue = {-1};
 			System.out.println("Starting bending");
 			ArrayList<Integer> rastShape = bendingOptimization(ws, wprof, dtArray,optValue);
-
+			if(rastShape==null) return;
+			
 			//Preference is given to guessed paths to improve their matching value
 			if(isGuessedPath){			
 				optValue[0] = optValue[0]*0.30;
@@ -717,18 +719,10 @@ public class WormShapeFitting
 	
 	boolean rastOk = true;
 	//ArrayList<Integer> rastShape = new ArrayList<Integer>();
-	try
-		{			
-		rastShape = wd.fitAndRasterizeWorm();
-		}
-	catch (RuntimeException e)
-		{
-		rastOk = false;		
-		}
-	if (!rastOk){
-	return null;
-	}
 	
+	//If rasterization fails then it will be null
+	rastShape = wd.fitAndRasterizeWorm();
+
 	System.out.println("  -->Worm succesfully rasterized");
 	return rastShape;
 	

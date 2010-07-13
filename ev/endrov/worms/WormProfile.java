@@ -81,11 +81,11 @@ public class WormProfile
 		public static double[] getThickness(int[] wormDT,WormSkeleton ws, 
 				boolean consecPts, int numPoints){
 				
-				/*
+				
 				if(!consecPts){
 					SkeletonUtils.makeConsecutive(ws);
 				}	
-				*/			
+				
 				System.out.println("Skeleton is consecutive");
 				
 				WormPixelMatcher wpm = ws.getPixelMatcher();
