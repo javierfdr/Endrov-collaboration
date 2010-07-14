@@ -6,6 +6,7 @@ import java.util.Iterator;
 import endrov.imageset.EvPixels;
 import endrov.imageset.EvPixelsType;
 import endrov.util.Vector2i;
+import endrov.worms.WormPixelMatcher;
 
 public class SkeletonUtils
 	{
@@ -396,5 +397,59 @@ public class SkeletonUtils
 		
 		ws.setSkPoints(conscSkPoints);
 		}
+
+	/**
+	 * Calculate the length of the worm by avoiding two steps paths
+	 */
+	public static int calculatePathLength(ArrayList<Integer> skPoints,WormPixelMatcher wpm){
+		return skPoints.size();
+	/*
+		boolean isSkPoint[] = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(), skPoints);
+		int next = skPoints.get(0);
+		int w = wpm.getW();
+		int length = 0;
+		while(next!=-1){
+			next = trackSkeleton(next,isSkPoint,w);
+			length+=1;
+		}	
+		return length;
+		*/
+	}
+	
+	private static int trackSkeleton(int pixel,boolean[] isSkPoint,int w){
+		isSkPoint[pixel] = false;
+		int[] neigh = getCircularNeighbors(pixel, w);
+		boolean foundNext = false;
+		int next = -1;
+		
+		//Start by the corners
+		for(int i=1;i<neigh.length;i+=2){
+		//If the next was found make the neighbors unreachable to avoid loops
+			if(foundNext){
+				isSkPoint[neigh[i]]=false;
+			}
+			else{
+				if(isSkPoint[neigh[i]]){
+					foundNext = true;
+					next = neigh[i];
+				}
+			}
+		}
+		//Repeat process with the cross neighbors
+		for(int i=0;i<neigh.length;i+=2){
+		//If the next was found make the neighbors unreachable to avoid loops
+			if(foundNext){
+				isSkPoint[neigh[i]]=false;
+			}
+			else{
+				if(isSkPoint[neigh[i]]){
+					foundNext = true;
+					next = neigh[i];
+				}
+			}
+		}
+				
+		return next;
+	}
 
 	}

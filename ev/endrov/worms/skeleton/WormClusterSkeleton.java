@@ -125,6 +125,40 @@ public final class WormClusterSkeleton extends Skeleton
 		}
 
 	/**
+	 * Add each extra base to base list if is not contained previously
+	 */
+	public void addExtraBases(ArrayList<Integer> extraBases){
+		Iterator<Integer> it = extraBases.iterator();
+		int base;
+		while(it.hasNext()){
+			base = it.next();
+			if((!basePoints.contains((Integer)base)) && isSkPoint[base]){
+				basePoints.add(base);
+			}
+		}
+		//recalculate number of worms
+		numWorms = basePoints.size()/2;
+		if(basePoints.size()%2 != 0){
+			numWorms+=1;
+		}
+	}
+	
+	/**
+	 * Delete each base from base list if is not contained previously
+	 */
+	public void deleteExtraBases(ArrayList<Integer> extraBases){
+		Iterator<Integer> it = extraBases.iterator();
+		int pixel;
+		while(it.hasNext()){
+			pixel = it.next();
+			if(isSkPoint[pixel]){
+				isSkPoint[pixel] = false;
+				skPoints.remove((Integer)pixel);
+			}
+		}
+	}
+	
+	/**
 	 * Returns the paths that most likely describe the worms of the calling worm
 	 * cluster following the directional neighbors starting from the given base
 	 * points.

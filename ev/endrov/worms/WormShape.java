@@ -56,11 +56,25 @@ public class WormShape
 			// Rasterize to generate Area. Firs a two spline contour attempt. This is more accurate
 			// but it could not be rasterizable. If it fails a oneSplineContour attempt is done
 			System.out.println("Rasterizing to generate Area");			
-			double splineRate = 0.2;
+			
 			wormArea = null;
-			ArrayList<Integer> splineContour = new ArrayList<Integer>();
-			//Reduce spline rate if shape is not succesfully rasterized
-			int numAtt = 0;
+			double contourPerc = 1;		
+			int numAtt = 8;
+			ArrayList<Integer> contour = new ArrayList<Integer>();
+			while(wormArea == null && numAtt<3){
+				contour = twoSplineContour(wormContour, wpm, contourPerc);
+				wormArea = WormShape.rasterizeWorm(contour, wpm);
+				if(wormArea!=null){
+					System.out.println("GREAT PERCENTAGE ----------->: "+contourPerc);
+				}
+				contourPerc-=0.1;
+				numAtt++;
+			}
+			
+			//If percentage of the worm did not work try a contour spline generation approach
+			double splineRate = 0.2;
+			ArrayList<Integer> splineContour = new ArrayList<Integer>();			
+			numAtt = 0;
 			while(wormArea == null && numAtt<3){
 				splineRate = srs[numAtt];	
 				splineContour = twoSplineContour(wormContour, wpm, splineRate);
@@ -243,6 +257,14 @@ public class WormShape
 		return sub;
 		}
 	
+	public static ArrayList<Integer> contourPercentage(ArrayList<Integer> wormContour, 
+			WormPixelMatcher wpm, double numPointsPerc){
+	
+		ArrayList<Integer> basePoints = new ArrayList<Integer>();
+		return takeNIntegerPoints(wormContour, numPointsPerc);
+
+	}
+	
 	public static ArrayList<Integer> twoSplineContour(ArrayList<Integer> wormContour, 
 			WormPixelMatcher wpm, double numPointsPerc){
 		ArrayList<Integer> newContour = new ArrayList<Integer>();
@@ -313,6 +335,40 @@ public class WormShape
 					
 		return newContour;
 	}
+	
+	private static ArrayList<Integer> takeNIntegerPoints(ArrayList<Integer> points,
+			double numPointsPercentage)
+		{
+		int length = points.size();
+		int numPoints = (int) (((double) length)*numPointsPercentage);
+		if (numPoints<2)
+			return null;
+		int step = length/(numPoints-1);
+		int stepCount;
+		Iterator<Integer> it = points.iterator();
+		ArrayList<Integer> cp = new ArrayList<Integer>();
+		
+		Integer nextPixel = null;
+
+		// Adding skeleton points to ControlPath. Note that
+		// the base points are added twice, manually and belonging
+		// to points. This to make them count in spline curve
+		while (it.hasNext()&&numPoints>0)
+			{
+			nextPixel = it.next();
+			cp.add(nextPixel);
+			stepCount = 0;
+			while (stepCount<step-1&&it.hasNext())
+				{
+				it.next();
+				stepCount++;
+				}
+			numPoints--;
+			}
+
+		return cp;
+		}
+	
 	
 }
 

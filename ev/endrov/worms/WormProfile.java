@@ -33,14 +33,14 @@ public class WormProfile
 			double[][] thicknessList = new double[numWorms][numPoints];
 			Iterator<WormSkeleton> wit = worms.iterator();
 			int count=0;
-			System.out.println("Number of profiles to generate: "+worms.size());
+			//System.out.println("Number of profiles to generate: "+worms.size());
 			while(wit.hasNext()){
-				System.out.println("Number: "+count+" generated");
+				//System.out.println("Number: "+count+" generated");
 				tempProf = new WormProfile(wit.next(),consecPts,numPoints,dtArray);								
 				thicknessList[count] = tempProf.thickness;
 				count++;
 			}
-			System.out.println("All Generated");
+			//System.out.println("All Generated");
 			wpm = worms.get(0).getPixelMatcher();
 			thickness= new double[numPoints];
 			//Set the average thickness for each control point
@@ -58,7 +58,7 @@ public class WormProfile
 		public WormProfile(WormSkeleton ws, boolean consecPts,int numPoints,int[] dtArray){
 			this.wpm = ws.getPixelMatcher();
 			
-			System.out.println("Generating worm profile");
+			//System.out.println("Generating worm profile");
 			//ArrayList<Integer> wPath = SkeletonTransform.getShapeContour(ws.toWormClusterSkeleton(),50);	
 			//ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(wPath);
 			//ArrayList<Integer> rastShape = PolygonRasterizer.rasterize(ws.w,ws.h,tpv);
@@ -86,7 +86,7 @@ public class WormProfile
 					SkeletonUtils.makeConsecutive(ws);
 				}	
 				
-				System.out.println("Skeleton is consecutive");
+				//System.out.println("Skeleton is consecutive");
 				
 				WormPixelMatcher wpm = ws.getPixelMatcher();
 				//create skeleton spline  and take numPoints
@@ -100,7 +100,7 @@ public class WormProfile
 				
 				double[] thickness = new double[numPoints];
 				
-				System.out.println("Calculating average points");
+				//System.out.println("Calculating average points");
 				//Calculate average distance to contour points and add to thickness
 				for(int i=1;i<profPts.length -1;i++){								
 					Vector2i[] extremes =getExtremes(wormDT,wpm,wpm.getPixelPos(profPts[i-1]),wpm.getPixelPos(profPts[i]), wpm.getPixelPos(profPts[i+1]),wormDT[profPts[i]]);								
@@ -110,7 +110,7 @@ public class WormProfile
 					d2=distBestLinePoint(wormDT, wpm, l1, contourPoints);									
 					thickness[i]=(d1+d2)/2;					
 				}				
-				System.out.println("1-profile generated");
+				//System.out.println("1-profile generated");
 				return thickness;
 		}
 		
@@ -570,12 +570,14 @@ public class WormProfile
 		 * the skeleton.
 		 * @param singleWormList List of isolated worms. 
 		 */
-		public static int calculateWormLength(ArrayList<WormSkeleton> singleWormList){
+		public static int calculateWormListLength(ArrayList<WormSkeleton> singleWormList,WormPixelMatcher wpm){
 			int average =0;
 			Iterator<WormSkeleton> it = singleWormList.iterator();
 			ArrayList<Integer> lengthList = new ArrayList<Integer>();
+			System.out.println("Calculating worm length");
 			while(it.hasNext()){
-				lengthList.add(it.next().getSkPoints().size());				
+				//lengthList.add(it.next().getSkPoints().size());				
+				lengthList.add(SkeletonUtils.calculatePathLength(it.next().getSkPoints(), wpm));
 			}		
 			//sort and delete the 20% of higher and lower values
 			Collections.sort(lengthList);
@@ -591,8 +593,7 @@ public class WormProfile
 				int l = lit.next();
 				average+=l;
 			}
-					
-			System.out.println();
+		
 			return (average/lengthList.size());
 		}
 		

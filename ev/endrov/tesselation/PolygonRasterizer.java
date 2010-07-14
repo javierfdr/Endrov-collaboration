@@ -28,7 +28,7 @@ public abstract class PolygonRasterizer
 			}
 		catch (TriangulationException e)
 			{
-			System.out.println("Triangulation Error. Probably bad polygon");
+			//System.out.println("Triangulation Error. Probably bad polygon");
 			return null;
 			}
 		Iterator<int[]> tIt = triangles.iterator();

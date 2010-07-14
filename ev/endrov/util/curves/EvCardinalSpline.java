@@ -99,20 +99,44 @@ public class EvCardinalSpline
 		int numPoints = (int) (((double) length)*numPointsPercentage);
 		if (numPoints<2)
 			return null;
+		ControlPath cp = new ControlPath();
+
+		ArrayList<Point> controlPathPoints = takeNPoints(basePoints,
+				points,numPointsPercentage);
+		Iterator<Point> it = controlPathPoints.iterator();
+		while(it.hasNext()){
+			cp.addPoint(it.next());
+		}
+	
+		CardinalSpline cs = new CardinalSpline(cp, new GroupIterator("0:n-1", cp
+				.numPoints()));
+		cs.setAlpha(alpha);
+
+		return cs;
+		}
+
+	public static ArrayList<Point> takeNPoints(ArrayList<Point> basePoints,
+			ArrayList<Point> points,double numPointsPercentage)
+		{
+		int length = points.size();
+		int numPoints = (int) (((double) length)*numPointsPercentage);
+		if (numPoints<2)
+			return null;
 		int step = length/(numPoints-1);
 		int stepCount;
 		Iterator<Point> it = points.iterator();
-		ControlPath cp = new ControlPath();
+		ArrayList<Point> cp = new ArrayList<Point>();
+		
 		Point nextPixel = null;
 
 		// Adding skeleton points to ControlPath. Note that
 		// the base points are added twice, manually and belonging
 		// to points. This to make them count in spline curve
-		cp.addPoint(basePoints.get(0));
+		cp.add(basePoints.get(0));
 		while (it.hasNext()&&numPoints>0)
 			{
 			nextPixel = it.next();
-			cp.addPoint(nextPixel);
+			cp.add(nextPixel);
 			stepCount = 0;
 			while (stepCount<step-1&&it.hasNext())
 				{
@@ -122,15 +146,13 @@ public class EvCardinalSpline
 			numPoints--;
 			}
 		if (nextPixel!=basePoints.get(1))
-			cp.addPoint(basePoints.get(1));
-		cp.addPoint(basePoints.get(1));
-		CardinalSpline cs = new CardinalSpline(cp, new GroupIterator("0:n-1", cp
-				.numPoints()));
-		cs.setAlpha(alpha);
-
-		return cs;
+			cp.add(basePoints.get(1));
+		cp.add(basePoints.get(1));
+	
+		return cp;
 		}
-
+	
+	
 	/**
 	 * Returns a list containing numPoints points evenly separated that belong to
 	 * the cs cardinal spline path. If numPoints is bigger than the number of
