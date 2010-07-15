@@ -1,11 +1,22 @@
 package endrov.worms;
 
 import java.awt.image.RasterOp;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Hashtable;
+import java.util.Scanner;
 
 import javax.vecmath.Vector2d;
 
@@ -49,8 +60,8 @@ public class WormShapeFitting
 				foreground++;
 			}
 			}
-		//return background;
-		return (background/(foreground+background))*1.4;
+		return background;
+		//return (background/(foreground+background));
 		}
 
 	public static void wormClusterOptimization(WormClusterSkeleton wc,WormPixelMatcher wpm,int wormLength)
@@ -117,6 +128,7 @@ public class WormShapeFitting
 					newpos = wd.angleNorthLine[cp][dist];
 					wd.updateCP(cp, newpos);
 					}
+			
 				rast = true;
 				try
 					{
@@ -169,6 +181,7 @@ public class WormShapeFitting
 			}
 
 		//System.out.println("INIT-BEST: "+initBest+" "+best);
+		
 		return best;
 		}
 
@@ -277,43 +290,39 @@ public class WormShapeFitting
 	 */
 	
 	public static ArrayList<WormShape> filterFittingDictionary(Hashtable<Integer,ArrayList<Vector3d>> fitDic, 
-			ArrayList<WormShape> matchedShapes,WormClusterSkeleton wc,WormPixelMatcher wpm, int wormLength,
+			ArrayList<WormShape> matchedShapes, ArrayList<Integer>matchedIndex, WormClusterSkeleton wc,WormPixelMatcher wpm, int wormLength,
 			ArrayList<Integer> notAssignedBases){
 									
 		HashSet<WormShape> clusterBestMatch = new HashSet<WormShape>();
 		ArrayList<Integer> basePoints = wc.getBasePoints();
 
-		int shapeIndex;
-		double min;
-		int bestShapeIndex;
-		int base;
-		HashSet<Integer> checkBases = new HashSet<Integer>();
-		
-
 		HashSet<Integer> nonConflictingShapes = new HashSet<Integer>();
 		HashSet<Integer> nonConflictingBases = new HashSet<Integer>();
 		ArrayList<Integer> conflictingBases = detectConflictingBases(fitDic, basePoints,nonConflictingShapes,nonConflictingBases);		
-		
+
 		HashSet<Integer> assignedBases = new HashSet<Integer>();
 		ArrayList<Integer> shapeList = resolveConflict(conflictingBases,fitDic,basePoints,assignedBases);
 		assignedBases.addAll(nonConflictingBases);
 		
 		notAssignedBases.addAll(identifyNotAssignedBases(assignedBases, basePoints));			
-
 		
 		//Add conflict resolved shapes to the final match list
 		Iterator<Integer> shapeIt = shapeList.iterator();
+		int shapeIndex;
 		while(shapeIt.hasNext()){
-			clusterBestMatch.add(matchedShapes.get(shapeIt.next()));
+			shapeIndex = shapeIt.next();
+			matchedIndex.add(shapeIndex);
+			clusterBestMatch.add(matchedShapes.get(shapeIndex));
 		}
-		
+				
 		//Add non conflicting shapes to the final match list
 		shapeIt = nonConflictingShapes.iterator();
 		while(shapeIt.hasNext()){
-			clusterBestMatch.add(matchedShapes.get(shapeIt.next()));
+			shapeIndex = shapeIt.next();
+			matchedIndex.add(shapeIndex);
+			clusterBestMatch.add(matchedShapes.get(shapeIndex));
 		}
-		
-		
+				
 		return new ArrayList<WormShape>(clusterBestMatch);
 		}
 
@@ -394,6 +403,7 @@ public class WormShapeFitting
 							assignedBases.add(baseReverse.get(assignment.x));
 							assignedBases.add(baseReverse.get(assignment.y));
 							shapeList.add((int)match.z);
+							System.out.println("ASSIGNING SHAPE MATCHING NUMBER: "+(int)match.z);
 							break;
 						}
 					}
@@ -574,7 +584,8 @@ public class WormShapeFitting
 	
 	Iterator<WormSkeleton> wit = skList.iterator();
 	int count=0;
-	int index =0;
+	int index = matchedShapes.size(); //IMPORTANT THIS WAS CHANGED TO FIT WORM SHAPES index = 0
+	
 	//For every base a list containing recieving base, optimization value and 
 	//matched array position is stored
 	Hashtable<Integer,ArrayList<Vector3d>> matchDic = new Hashtable<Integer, ArrayList<Vector3d>>();	
@@ -614,59 +625,116 @@ public class WormShapeFitting
 		WormSkeleton ws = wit.next();
 		result = skeletonMatchingOpt(ws,wprof,dtArray,wpm,matchedShapes,matchDic,index,false,guessPower);					
 		if(result==true) index++;
-		
 		}
 
 		return matchDic;
 		//return matchedShapes;
 	};
 	
-	private static boolean skeletonMatchingOpt(WormSkeleton ws,WormProfile wprof,int[] dtArray,
-			WormPixelMatcher wpm, ArrayList<WormShape> matchedShapes,
-			Hashtable<Integer,ArrayList<Vector3d>> matchDic,int index,boolean isGuessedPath,double guessPower){
+	private static boolean skeletonMatchingOpt(WormSkeleton ws,
+			WormProfile wprof, int[] dtArray, WormPixelMatcher wpm,
+			ArrayList<WormShape> matchedShapes,
+			Hashtable<Integer, ArrayList<Vector3d>> matchDic, int index,
+			boolean isGuessedPath, double guessPower)
+		{
 
-			//Optimize WormSkeleton shape
+		// Optimize WormSkeleton shape
 
-			double[] optValue = {-1};
-		//	System.out.println("Starting bending");
-			ArrayList<Integer> rastShape = bendingOptimization(ws, wprof, dtArray,optValue);
-			if(rastShape==null) return false;
-			
-			//Preference is given to guessed paths to improve their matching value
-			if(isGuessedPath){			
-				optValue[0] = (optValue[0]*guessPower);
+		double[] optValue =
+			{ -1 };
+		// System.out.println("Starting bending");
+		ArrayList<Integer> rastShape = bendingOptimization(ws, wprof, dtArray,
+				optValue);
+		if (rastShape==null)
+			return false;
+
+		// Preference is given to guessed paths to improve their matching value
+		if (isGuessedPath)
+			{
+			optValue[0] = (optValue[0]*guessPower);
 			}
+
+		WormShape worm = new WormShape(rastShape, wpm, false);
+		matchedShapes.add(worm);
+		// System.out.println("Finish bending");
+
+		int base1 = ws.getSkPoints().get(0);
+		int base2 = ws.getSkPoints().get(ws.getSkPoints().size()-1);
+
+	Vector3d newMatch = new Vector3d((double) base2, optValue[0],
+				(double) index);
+		Iterator<Vector3d> vit;
+		Vector3d next;
+		ArrayList<Vector3d> list = (ArrayList<Vector3d>) matchDic.get(base1);
+		if (list!=null)
+			{
+			boolean isNew = true;
+			vit = list.iterator();
+			while(vit.hasNext())
+				{
+				next = vit.next();
+				if (next.x==newMatch.x)
+					{
+					isNew = false;
+					if (newMatch.y<next.y)
+						{
+						//list.remove((Vector3d) next);
+						vit.remove();
+						list.add(newMatch);				
+						break;
+						}					
+					}
+				}
+			if (isNew)
+				{
+				list.add(newMatch);
+				}
+
+			}
+		else
+			{
+			ArrayList<Vector3d> newList = new ArrayList<Vector3d>();
+			newList.add(newMatch);
+			matchDic.put(base1, newList);
+			}
+
+		newMatch = new Vector3d((double) base1, optValue[0], (double) index);
+		list = (ArrayList<Vector3d>) matchDic.get(base2);
+
+		if (list!=null)
+			{
+
+			boolean isNew = true;
+			vit = list.iterator();
+			while(vit.hasNext())
+				{
+				next = vit.next();
+				if (next.x==newMatch.x)
+					{
+					isNew = false;
+					if (newMatch.y<next.y)
+						{
+						vit.remove();
+						list.add(newMatch);
+						break;
+						
+						}					
+					}
+				}
+			if (isNew)
+				{
+				list.add(newMatch);
+				}		
 			
-			WormShape worm = new WormShape(rastShape,wpm,false);
-			matchedShapes.add(worm);			
-			//System.out.println("Finish bending");
-	    
-			int base1 = ws.getSkPoints().get(0);
-			int base2 = ws.getSkPoints().get(ws.getSkPoints().size()-1);
-			
-			Vector3d newMatch = new Vector3d((double)base2, optValue[0], (double)index);
-			ArrayList<Vector3d> list= (ArrayList<Vector3d>)matchDic.get(base1);
-	     if (list != null) {
-	        	list.add(newMatch);
-	     }
-	     else{
-	     	ArrayList<Vector3d> newList = new ArrayList<Vector3d>();
-	     	newList.add(newMatch);
-	     	matchDic.put(base1, newList);
-	     }
-	     
-				newMatch = new Vector3d((double)base1, optValue[0], (double)index);
-				list= (ArrayList<Vector3d>)matchDic.get(base2);
-		     if (list != null) {
-		        	list.add(newMatch);
-		     }
-		     else{
-		     	ArrayList<Vector3d> newList = new ArrayList<Vector3d>();
-		     	newList.add(newMatch);
-		     	matchDic.put(base2, newList);
-		     }
-		     return true;
-	}
+			}
+		else
+			{
+			ArrayList<Vector3d> newList = new ArrayList<Vector3d>();
+			newList.add(newMatch);
+			matchDic.put(base2, newList);
+			}
+		return true;
+		}
 	
 	public static void printFitDic(Hashtable<Integer,ArrayList<Vector3d> > fittingDic, WormClusterSkeleton wc){
 			Iterator<Integer> bit = wc.getBasePoints().iterator();
@@ -687,7 +755,260 @@ public class WormShapeFitting
 					System.out.println("       --> "+rec);					
 				}		
 			}
-			System.out.println();
+			System.out.println("DICTIONARY HAVE BEEN PRINTED");
+	}
+	
+	public static void printDicToFile(Hashtable<Integer,ArrayList<Vector3d> > fittingDic, WormClusterSkeleton wc,String filename,int acumShapeIndex){
+	Iterator<Integer> bit = wc.getBasePoints().iterator();
+	Iterator<Vector3d> lit;
+	ArrayList<Vector3d> mlist;
+	Vector3d rec;
+	int base;
+	
+	File f = new File(filename);  
+	FileOutputStream fis = null;
+	try
+		{
+		fis = new FileOutputStream(f,true);
+		}
+	catch (FileNotFoundException e1)
+		{
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+		}  
+	//BufferedOutputStream bis = new BufferedOutputStream(fis);  
+	//DataInputStream dis = new DataInputStream(bis); 
+	
+  PrintWriter pw = null;
+	pw = new PrintWriter(fis);
+	//The next starts iteration of base points
+	while(bit.hasNext()){	
+		base = bit.next();
+		mlist= fittingDic.get(base);
+		if(mlist==null) continue;
+		
+		pw.println(base);
+		lit = mlist.iterator();		
+		while(lit.hasNext()){			
+			rec = lit.next();
+			pw.print("-1.1 ");
+			pw.print(rec.x+" ");
+			//pw.println(-4);
+			pw.print(rec.y+" ");
+			//pw.println(-4);
+			pw.print((acumShapeIndex+rec.z)+" ");	
+			pw.println();
+		}
+		pw.println("-2.0");
+		//Stop iteration for this base		
+	}
+	//is done
+  pw.close(); // Without this, the output file may be empty
+
+}
+		
+	
+	public static Hashtable<Integer,ArrayList<Vector3d> > readDicFromFile(String filename){
+		Hashtable<Integer,ArrayList<Vector3d>> fitDic = new Hashtable<Integer, ArrayList<Vector3d>>();
+		Scanner sc = null;
+		try
+			{
+			sc = new Scanner(new File(filename));
+			}
+		catch (FileNotFoundException e)
+			{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			}
+		if(sc==null) return null;
+		double next = -3.0;
+		
+		int base;
+		Vector3d v3 = new Vector3d();
+		while(sc.hasNext()){
+			base = sc.nextInt();
+			next = sc.nextDouble();
+			ArrayList<Vector3d> matches = new ArrayList<Vector3d>();
+			while(next!=-2.0){				
+				v3 = new Vector3d();					
+				v3.x= (sc.nextDouble());
+				v3.y=(sc.nextDouble());
+				v3.z=sc.nextDouble();
+				next = sc.nextDouble();
+				matches.add(v3);
+			}
+			fitDic.put(base,matches);
+		}	
+		return fitDic;
+	}
+	
+
+	public static void printShapesToFile(ArrayList<WormShape> matchedShapes,String filename){
+	Iterator<WormShape> wit = matchedShapes.iterator();
+	Iterator<Integer> lit;
+	ArrayList<Vector3d> mlist;
+	Vector3d rec;
+	int base;
+	
+	File f = new File(filename);  
+	FileOutputStream fis = null;
+	try
+		{
+		fis = new FileOutputStream(f,true);
+		}
+	catch (FileNotFoundException e1)
+		{
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+		}  
+	//BufferedOutputStream bis = new BufferedOutputStream(fis);  
+	//DataInputStream dis = new DataInputStream(bis); 
+	
+  PrintWriter pw = null;
+	pw = new PrintWriter(fis);
+	//The next starts iteration of base points
+	WormShape wsh = null;
+	while(wit.hasNext()){	
+		wsh = wit.next();	
+		pw.print(-1+" ");
+		lit = wsh.getWormArea().iterator();		
+		int pixel;
+		while(lit.hasNext()){			
+			pixel = lit.next();
+			pw.print(pixel+" ");
+		}
+		pw.println(-1);
+		//Stop iteration for this base		
+	}
+	//is done
+  pw.close(); // Without this, the output file may be empty
+
+}
+	
+
+	public static void printIsoWormsToFile(ArrayList<WormShape> isolatedWorms,String filename){
+	Iterator<WormShape> wit = isolatedWorms.iterator();
+	Iterator<Integer> lit;
+	ArrayList<Vector3d> mlist;
+	Vector3d rec;
+	int base;
+	
+	File f = new File(filename);  
+	FileOutputStream fis = null;
+	try
+		{
+		fis = new FileOutputStream(f,true);
+		}
+	catch (FileNotFoundException e1)
+		{
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+		}  
+	//BufferedOutputStream bis = new BufferedOutputStream(fis);  
+	//DataInputStream dis = new DataInputStream(bis); 
+	
+  PrintWriter pw = null;
+	pw = new PrintWriter(fis);
+		// The next starts iteration of base points
+		WormShape wsh = null;
+		while (wit.hasNext())
+			{
+			wsh = wit.next();
+			pw.print(-1+" ");
+			lit = wsh.getWormContour().iterator();
+			int pixel;
+			while (lit.hasNext())
+				{
+				pixel = lit.next();
+				pw.print(pixel+" ");
+				}
+			pw.println(-1);
+			pw.print(-1+" ");
+			lit = wsh.getWormArea().iterator();
+			while (lit.hasNext())
+				{
+				pixel = lit.next();
+				pw.print(pixel+" ");
+				}
+			pw.println(-1);
+			// Stop iteration for this base
+			}
+		// is done
+		pw.close(); // Without this, the output file may be empty
+		}
+	
+
+	public static ArrayList<WormShape> readIsoltedFromFile(String filename,WormPixelMatcher wpm){
+		ArrayList<ArrayList<Integer>> shapes = new ArrayList<ArrayList<Integer>>();
+		Scanner sc = null;
+		System.out.println("ISOLATED FILE NAME: "+filename);
+		try
+			{
+			sc = new Scanner(new File(filename));
+			}
+		catch (FileNotFoundException e)
+			{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			}
+		if(sc==null) return null;
+		
+		int next;
+		while(sc.hasNext()){
+			next = sc.nextInt();
+			if(next==-1){
+				next = sc.nextInt();
+				ArrayList<Integer> shape = new ArrayList<Integer>();
+				while(next!=-1){
+					shape.add(next);
+					next = sc.nextInt();
+				}
+				shapes.add(shape);
+			}			
+		}
+		ArrayList<WormShape> wshapes = new ArrayList<WormShape>();
+		Iterator<ArrayList<Integer>> it = shapes.iterator();
+		while(it.hasNext()){
+			WormShape worm = new WormShape(it.next(), it.next(),wpm);	
+			wshapes.add(worm);
+		}		
+		return wshapes;
+	}
+	
+	public static ArrayList<WormShape> readShapesFromFile(String filename,WormPixelMatcher wpm){
+		ArrayList<ArrayList<Integer>> shapes = new ArrayList<ArrayList<Integer>>();
+		Scanner sc = null;
+		try
+			{
+			sc = new Scanner(new File(filename));
+			}
+		catch (FileNotFoundException e)
+			{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			}
+		if(sc==null) return null;
+		
+		int next;
+		while(sc.hasNext()){
+			next = sc.nextInt();
+			if(next==-1){
+				next = sc.nextInt();
+				ArrayList<Integer> shape = new ArrayList<Integer>();
+				while(next!=-1){
+					shape.add(next);
+					next = sc.nextInt();
+				}
+				shapes.add(shape);
+			}			
+		}
+		ArrayList<WormShape> wshapes = new ArrayList<WormShape>();
+		Iterator<ArrayList<Integer>> it = shapes.iterator();
+		while(it.hasNext()){
+			WormShape worm = new WormShape(it.next(), wpm, false);	
+			wshapes.add(worm);
+		}		
+		return wshapes;
 	}
 	
 	private static ArrayList<Integer> bendingOptimization(WormSkeleton ws,WormProfile wprof,int[] dtArray,double[] optValue){

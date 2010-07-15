@@ -197,5 +197,6 @@ public class WormPixelMatcher
 		double distance = Math.sqrt(Math.pow(p1c.x-p2c.x, 2)+Math.pow(p1c.y-p2c.y,2));
 		return distance;			
 	}
+	
 
 	}

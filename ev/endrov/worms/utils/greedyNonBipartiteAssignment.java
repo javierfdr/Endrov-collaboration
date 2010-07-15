@@ -66,7 +66,7 @@ public class greedyNonBipartiteAssignment
 				{
 				if (totalCost(best, matchMatrix)>totalCost(res, matchMatrix))
 					{
-					best = res;
+					best = res;					
 					}
 				}
 			}
@@ -79,7 +79,7 @@ public class greedyNonBipartiteAssignment
 		Vector2i n;
 		while(sit.hasNext()){
 			n = sit.next();
-			totalCost+= matchMatrix[n.x][n.y];
+			totalCost+= matchMatrix[n.x][n.y];			
 		}
 		return totalCost;
 	}

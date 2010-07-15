@@ -19,6 +19,7 @@ import endrov.util.Vector2i;
 import endrov.util.curves.EvCardinalSpline;
 import endrov.worms.skeleton.SkeletonTransform;
 import endrov.worms.skeleton.SkeletonUtils;
+import endrov.worms.skeleton.Thickening;
 import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.skeleton.WormSkeleton;
 
@@ -27,6 +28,11 @@ public class WormProfile
 		public WormPixelMatcher wpm;	
 		public double[] thickness;
 				
+		public WormProfile(WormPixelMatcher wpm, double[] thickness){
+			this.thickness = thickness.clone();
+			this.wpm = wpm;
+		}
+		
 		public WormProfile(ArrayList<WormSkeleton> worms,boolean consecPts,int numPoints,int[] dtArray){
 			WormProfile tempProf;
 			int numWorms = worms.size();
