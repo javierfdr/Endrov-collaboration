@@ -1,4 +1,4 @@
-package endrov.worms.skeleton;
+package endrov.skeletonization;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -184,7 +184,7 @@ public class Thinning
 	 *          list containing the positions for the pixels that belong to the
 	 *          distance transformed shape
 	 */
-	public static void thinToOnePixel(int[] dtImage, boolean[] isShape, int w,
+	public static void thinToSkeleton(int[] dtImage, boolean[] isShape, int w,
 			int h, ArrayList<Integer> shapePoints)
 		{
 		boolean makeThinner = true;

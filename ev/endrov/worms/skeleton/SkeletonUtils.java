@@ -29,25 +29,37 @@ public class SkeletonUtils
 
 		return neighbors;
 		}
-/**
- * Return the value of the circular neighbor in the corresponding position
- * neigh to pixel
- */
-	public static int getNeighbor(int pixel,int neigh,int w){
-			switch(neigh){
-			case 0: return pixel-w;
-			case 1: return pixel-w+1;
-			case 2: return pixel+1;
-			case 3: return pixel+w+1;
-			case 4: return pixel+w;
-			case 5: return pixel+w-1;
-			case 6: return pixel-1;
-			case 7: return pixel-w-1;
-			default: return -1;
+
+	/**
+	 * Return the value of the circular neighbor in the corresponding position
+	 * neigh to pixel
+	 */
+	public static int getNeighbor(int pixel, int neigh, int w)
+		{
+		switch (neigh)
+			{
+			case 0:
+				return pixel-w;
+			case 1:
+				return pixel-w+1;
+			case 2:
+				return pixel+1;
+			case 3:
+				return pixel+w+1;
+			case 4:
+				return pixel+w;
+			case 5:
+				return pixel+w-1;
+			case 6:
+				return pixel-1;
+			case 7:
+				return pixel-w-1;
+			default:
+				return -1;
 			}
-	
-	}
-	
+
+		}
+
 	/**
 	 * Returns the 4 surrounding pixels, placed at the cardinal points.
 	 */
@@ -69,14 +81,14 @@ public class SkeletonUtils
 	public static Vector2i[] getCrossNeighborsDir(int position, int w)
 		{
 		Vector2i neighbors[] = new Vector2i[4];
-		neighbors[0] = new Vector2i(position-w,0); // Up
-		neighbors[1] = new Vector2i(position+1,2); // right;
-		neighbors[2] = new Vector2i(position+w,4); // down
-		neighbors[3] = new Vector2i(position-1,6); // left
+		neighbors[0] = new Vector2i(position-w, 0); // Up
+		neighbors[1] = new Vector2i(position+1, 2); // right;
+		neighbors[2] = new Vector2i(position+w, 4); // down
+		neighbors[3] = new Vector2i(position-1, 6); // left
 
 		return neighbors;
 		}
-	
+
 	/**
 	 * True if neighbor is a circular neighbor of position in a image of width w
 	 */
@@ -94,15 +106,18 @@ public class SkeletonUtils
 		return false;
 		}
 
-	public static int calculateMovement(int current, int previous,int w){
+	public static int calculateMovement(int current, int previous, int w)
+		{
 		int[] circ = getCircularNeighbors(previous, w);
-		for(int count=0;count<circ.length;count++){
-			if (circ[count]==current) return count;
-		}
-		
+		for (int count = 0; count<circ.length; count++)
+			{
+			if (circ[count]==current)
+				return count;
+			}
+
 		return -1;
-	}
-	
+		}
+
 	/**
 	 * Creates and EvPixels image setting to 1 the positions in the list points.
 	 */
@@ -124,7 +139,7 @@ public class SkeletonUtils
 	/**
 	 * Creates and EvPixels image setting the positions in the list points.
 	 */
-	public static EvPixels buildImage(int w, int h,int[] matrix)
+	public static EvPixels buildImage(int w, int h, int[] matrix)
 		{
 		EvPixels skImage = new EvPixels(EvPixelsType.INT, w, h);
 		int[] skArray = skImage.getArrayInt();
@@ -156,7 +171,7 @@ public class SkeletonUtils
 			}
 		return skImage;
 		}
-	
+
 	/**
 	 * Returns an array of length 'size' setting true every position found in
 	 * list.
@@ -173,7 +188,7 @@ public class SkeletonUtils
 			}
 		return matrix;
 		}
-	
+
 	/**
 	 * Returns an array of length 'size' setting every position found in list to
 	 * the corresponding value in valueMatrix
@@ -192,9 +207,10 @@ public class SkeletonUtils
 		return matrix;
 		}
 
-/**
- * Returns the position of the points that are higher than 0 in the given matrix
- */
+	/**
+	 * Returns the position of the points that are higher than 0 in the given
+	 * matrix
+	 */
 	public static ArrayList<Integer> matrixToList(int[] matrix)
 		{
 		ArrayList<Integer> list = new ArrayList<Integer>();
@@ -205,146 +221,180 @@ public class SkeletonUtils
 			}
 		return list;
 		}
-	
+
 	/**
 	 * Returns the position of the points that are true in the given matrix
 	 */
-		public static ArrayList<Integer> matrixToList(boolean[] matrix)
+	public static ArrayList<Integer> matrixToList(boolean[] matrix)
+		{
+		ArrayList<Integer> list = new ArrayList<Integer>();
+		for (int i = 0; i<matrix.length; i++)
 			{
-			ArrayList<Integer> list = new ArrayList<Integer>();
-			for (int i = 0; i<matrix.length; i++)
-				{
-				if (matrix[i])
-					list.add(i);
-				}
-			return list;
+			if (matrix[i])
+				list.add(i);
 			}
-
-
-	public static ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray, int w,
-			int currentPixel,int neighborMovement)
-		{
-			int nList[] = new int[6];
-							
-	switch (neighborMovement)
-		{
-		case 0: //up
-			nList[0] = currentPixel-w; nList[1] = 0; // up
-			nList[2] = currentPixel-w+1;nList[3] =1; // up-right
-			nList[4] = currentPixel-w-1;nList[5] =7; // up-left
-			break;
-		case 1: //up-right
-			nList[0] = currentPixel-w+1; nList[1] = 1;//up-right
-			nList[2] = currentPixel+1; nList[3] = 2;//right
-			nList[4] = currentPixel-w; nList[5] = 0;//up
-			break;
-		case 2: //right
-			nList[0] = currentPixel+1; nList[1] = 2; // right
-			nList[2] = currentPixel-w+1; nList[3] = 1; // right-up
-			nList[4] = currentPixel+w+1; nList[5]= 3;// right-down
-			break;
-		case 3: //down-right
-			nList[0] = currentPixel+w+1; nList[1] = 3;//down-right
-			nList[2] = currentPixel+1; nList[3] = 2; //right
-			nList[4] = currentPixel+w; nList[5] = 4;//down
-			break;
-		case 4: //down
-			nList[0] = currentPixel+w;nList[1] = 4; // down
-			nList[2] = currentPixel+w-1; nList[3] = 5;// down-left
-			nList[4] = currentPixel+w+1; nList[5]= 3; // down-right
-			break;
-
-		case 5: //down-left
-			nList[0] = currentPixel+w-1; nList[1] = 5;//down-left
-			nList[2] = currentPixel+w; nList[3] = 4;//down
-			nList[4] = currentPixel-1; nList[5] = 6;//left
-			break;
-		case 6: //left
-			nList[0] = currentPixel-1; nList[1] = 6; // left
-			nList[2] = currentPixel-1+w; nList[3]= 5;// left-down
-			nList[4] = currentPixel-1-w; nList[5] = 7;// left-up
-			break;
-		case 7: //up-left
-			nList[0] = currentPixel-w-1; nList[1] = 7;//up-left
-			nList[2] = currentPixel-1; nList[3] = 6;//left
-			nList[4] = currentPixel-w; nList[5] = 0;//up
-			break;
-
+		return list;
 		}
-	ArrayList<Vector2i> neighbors= new ArrayList<Vector2i>(3);
-	for (int i=0; i<6; i+=2){
-		Vector2i n = new Vector2i(nList[i],nList[i+1]);
-		neighbors.add(n);
-	}
-	return neighbors;			
-	}
-	
+
+	public static ArrayList<Vector2i> getDirectionalNeighbors(int[] imageArray,
+			int w, int currentPixel, int neighborMovement)
+		{
+		int nList[] = new int[6];
+
+		switch (neighborMovement)
+			{
+			case 0: // up
+				nList[0] = currentPixel-w;
+				nList[1] = 0; // up
+				nList[2] = currentPixel-w+1;
+				nList[3] = 1; // up-right
+				nList[4] = currentPixel-w-1;
+				nList[5] = 7; // up-left
+				break;
+			case 1: // up-right
+				nList[0] = currentPixel-w+1;
+				nList[1] = 1;// up-right
+				nList[2] = currentPixel+1;
+				nList[3] = 2;// right
+				nList[4] = currentPixel-w;
+				nList[5] = 0;// up
+				break;
+			case 2: // right
+				nList[0] = currentPixel+1;
+				nList[1] = 2; // right
+				nList[2] = currentPixel-w+1;
+				nList[3] = 1; // right-up
+				nList[4] = currentPixel+w+1;
+				nList[5] = 3;// right-down
+				break;
+			case 3: // down-right
+				nList[0] = currentPixel+w+1;
+				nList[1] = 3;// down-right
+				nList[2] = currentPixel+1;
+				nList[3] = 2; // right
+				nList[4] = currentPixel+w;
+				nList[5] = 4;// down
+				break;
+			case 4: // down
+				nList[0] = currentPixel+w;
+				nList[1] = 4; // down
+				nList[2] = currentPixel+w-1;
+				nList[3] = 5;// down-left
+				nList[4] = currentPixel+w+1;
+				nList[5] = 3; // down-right
+				break;
+
+			case 5: // down-left
+				nList[0] = currentPixel+w-1;
+				nList[1] = 5;// down-left
+				nList[2] = currentPixel+w;
+				nList[3] = 4;// down
+				nList[4] = currentPixel-1;
+				nList[5] = 6;// left
+				break;
+			case 6: // left
+				nList[0] = currentPixel-1;
+				nList[1] = 6; // left
+				nList[2] = currentPixel-1+w;
+				nList[3] = 5;// left-down
+				nList[4] = currentPixel-1-w;
+				nList[5] = 7;// left-up
+				break;
+			case 7: // up-left
+				nList[0] = currentPixel-w-1;
+				nList[1] = 7;// up-left
+				nList[2] = currentPixel-1;
+				nList[3] = 6;// left
+				nList[4] = currentPixel-w;
+				nList[5] = 0;// up
+				break;
+
+			}
+		ArrayList<Vector2i> neighbors = new ArrayList<Vector2i>(3);
+		for (int i = 0; i<6; i += 2)
+			{
+			Vector2i n = new Vector2i(nList[i], nList[i+1]);
+			neighbors.add(n);
+			}
+		return neighbors;
+		}
 
 	/**
-	 * Returns the neighbor that corresponds to the maximum directional movement from
-	 * previousPixel to currentPixel, performing the movement neighborMovement.
-	 * The max directional neighbor has to belong to the image skeleton given by
-	 * isSkPoint
+	 * Returns the neighbor that corresponds to the maximum directional movement
+	 * from previousPixel to currentPixel, performing the movement
+	 * neighborMovement. The max directional neighbor has to belong to the image
+	 * skeleton given by isSkPoint
 	 */
-	public static Vector2i getMaxDirectionalNeighbor(int[] imageArray,boolean[] isSkPoint, int w,
-			int currentPixel,int neighborMovement)
+	public static Vector2i getMaxDirectionalNeighbor(int[] imageArray,
+			boolean[] isSkPoint, int w, int currentPixel, int neighborMovement)
 		{
-		ArrayList<Vector2i> neighbors= SkeletonUtils.getDirectionalNeighbors(imageArray, w, currentPixel, neighborMovement);
-		//get the max directional neighbor and its direction
+		ArrayList<Vector2i> neighbors = SkeletonUtils.getDirectionalNeighbors(
+				imageArray, w, currentPixel, neighborMovement);
+		// get the max directional neighbor and its direction
 
-		Vector2i maxVector= new Vector2i(-1,-1);
+		Vector2i maxVector = new Vector2i(-1, -1);
 		int max = Integer.MAX_VALUE;
-		
-		//Get first that is skPoint
-		for(int i=0;i<neighbors.size();i++){
-			if(isSkPoint[neighbors.get(i).x]){
+
+		// Get first that is skPoint
+		for (int i = 0; i<neighbors.size(); i++)
+			{
+			if (isSkPoint[neighbors.get(i).x])
+				{
 				maxVector = neighbors.get(i);
 				max = maxVector.x;
 				break;
+				}
 			}
-		}
-				
-		Iterator<Vector2i> it = neighbors.iterator(); it.next();
-		Vector2i n;
-		while (it.hasNext()){
-			n= it.next();
-			if (imageArray[n.x] > max && isSkPoint[n.x]) {
-				max = imageArray[n.x];
-				maxVector = n;
-			}				
-		}
-		return maxVector;	
-		}	
-		
-	/**
-	 * Returns the neighbor that corresponds to the maximum directional movement from
-	 * previousPixel to currentPixel, performing the movement neighborMovement.
-	 * 
-	 */
-	public static Vector2i getMaxDirectionalNeighbor(int[] imageArray,int w,
-			int currentPixel,int neighborMovement)
-		{
-		ArrayList<Vector2i> neighbors= SkeletonUtils.getDirectionalNeighbors(imageArray, w, currentPixel, neighborMovement);
-		//get the max directional neighbor and its direction
 
-		Vector2i maxVector= new Vector2i(-1,-1);
-		int max = Integer.MAX_VALUE;
-		
-		//Set first neighbor as max
-		//maxVector = neighbors.get(0);
-		max = maxVector.x;	
-				
-		Iterator<Vector2i> it = neighbors.iterator(); it.next();
+		Iterator<Vector2i> it = neighbors.iterator();
+		it.next();
 		Vector2i n;
-		while (it.hasNext()){
-			n= it.next();
-			if (imageArray[n.x] > max) {
+		while (it.hasNext())
+			{
+			n = it.next();
+			if (imageArray[n.x]>max&&isSkPoint[n.x])
+				{
 				max = imageArray[n.x];
 				maxVector = n;
-			}				
+				}
+			}
+		return maxVector;
 		}
-		return maxVector;	
-		}	
+
+	/**
+	 * Returns the neighbor that corresponds to the maximum directional movement
+	 * from previousPixel to currentPixel, performing the movement
+	 * neighborMovement.
+	 */
+	public static Vector2i getMaxDirectionalNeighbor(int[] imageArray, int w,
+			int currentPixel, int neighborMovement)
+		{
+		ArrayList<Vector2i> neighbors = SkeletonUtils.getDirectionalNeighbors(
+				imageArray, w, currentPixel, neighborMovement);
+		// get the max directional neighbor and its direction
+
+		Vector2i maxVector = new Vector2i(-1, -1);
+		int max = Integer.MAX_VALUE;
+
+		// Set first neighbor as max
+		// maxVector = neighbors.get(0);
+		max = maxVector.x;
+
+		Iterator<Vector2i> it = neighbors.iterator();
+		it.next();
+		Vector2i n;
+		while (it.hasNext())
+			{
+			n = it.next();
+			if (imageArray[n.x]>max)
+				{
+				max = imageArray[n.x];
+				maxVector = n;
+				}
+			}
+		return maxVector;
+		}
+
 	/**
 	 * Sort the worm skeleton given by ws in consecutive pixel order
 	 */
@@ -369,87 +419,96 @@ public class SkeletonUtils
 			// none)
 			for (int i = 0; i<4; i++)
 				{
-				if (isSkPoint[neigh[i]] && neigh[i]!=previous)
+				if (isSkPoint[neigh[i]]&&neigh[i]!=previous)
 					{
 					foundCross = true;
 					previous = next;
-					next = neigh[i];					
+					next = neigh[i];
 					break;
 					}
 				}
-			if (!foundCross){ //Did not find in cross neighbor
-				neigh = SkeletonUtils.getCircularNeighbors(next, ws.getPixelMatcher().getW());
-				for (int i = 1; i<8; i+=2)
+			if (!foundCross)
+				{ // Did not find in cross neighbor
+				neigh = SkeletonUtils.getCircularNeighbors(next, ws.getPixelMatcher()
+						.getW());
+				for (int i = 1; i<8; i += 2)
 					{
-					if (isSkPoint[neigh[i]] && neigh[i]!=previous)
+					if (isSkPoint[neigh[i]]&&neigh[i]!=previous)
 						{
 						previous = next;
 						next = neigh[i];
 						break;
 						}
-					}			
-			}
-			if (previous==next) break; // not found
+					}
+				}
+			if (previous==next)
+				break; // not found
 			}
 
 		if (next==base[1])
 			conscSkPoints.add(next);
-		
+
 		ws.setSkPoints(conscSkPoints);
 		}
 
 	/**
 	 * Calculate the length of the worm by avoiding two steps paths
 	 */
-	public static int calculatePathLength(ArrayList<Integer> skPoints,WormPixelMatcher wpm){
+	public static int calculatePathLength(ArrayList<Integer> skPoints,
+			WormPixelMatcher wpm)
+		{
 		return skPoints.size();
-	/*
-		boolean isSkPoint[] = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(), skPoints);
-		int next = skPoints.get(0);
-		int w = wpm.getW();
-		int length = 0;
-		while(next!=-1){
-			next = trackSkeleton(next,isSkPoint,w);
-			length+=1;
-		}	
-		return length;
-		*/
-	}
-	
-	private static int trackSkeleton(int pixel,boolean[] isSkPoint,int w){
+		/*
+		 * boolean isSkPoint[] = SkeletonUtils.listToMatrix(wpm.getH()*wpm.getW(),
+		 * skPoints); int next = skPoints.get(0); int w = wpm.getW(); int length =
+		 * 0; while(next!=-1){ next = trackSkeleton(next,isSkPoint,w); length+=1; }
+		 * return length;
+		 */
+		}
+
+	private static int trackSkeleton(int pixel, boolean[] isSkPoint, int w)
+		{
 		isSkPoint[pixel] = false;
 		int[] neigh = getCircularNeighbors(pixel, w);
 		boolean foundNext = false;
 		int next = -1;
-		
-		//Start by the corners
-		for(int i=1;i<neigh.length;i+=2){
-		//If the next was found make the neighbors unreachable to avoid loops
-			if(foundNext){
-				isSkPoint[neigh[i]]=false;
-			}
-			else{
-				if(isSkPoint[neigh[i]]){
+
+		// Start by the corners
+		for (int i = 1; i<neigh.length; i += 2)
+			{
+			// If the next was found make the neighbors unreachable to avoid loops
+			if (foundNext)
+				{
+				isSkPoint[neigh[i]] = false;
+				}
+			else
+				{
+				if (isSkPoint[neigh[i]])
+					{
 					foundNext = true;
 					next = neigh[i];
+					}
 				}
 			}
-		}
-		//Repeat process with the cross neighbors
-		for(int i=0;i<neigh.length;i+=2){
-		//If the next was found make the neighbors unreachable to avoid loops
-			if(foundNext){
-				isSkPoint[neigh[i]]=false;
-			}
-			else{
-				if(isSkPoint[neigh[i]]){
+		// Repeat process with the cross neighbors
+		for (int i = 0; i<neigh.length; i += 2)
+			{
+			// If the next was found make the neighbors unreachable to avoid loops
+			if (foundNext)
+				{
+				isSkPoint[neigh[i]] = false;
+				}
+			else
+				{
+				if (isSkPoint[neigh[i]])
+					{
 					foundNext = true;
 					next = neigh[i];
+					}
 				}
 			}
-		}
-				
+
 		return next;
-	}
+		}
 
 	}

@@ -17,17 +17,18 @@ public abstract class Skeleton
 	 * @param dt
 	 *          a distance transformation of image
 	 * @param w
-	 * 					the width of image
+	 *          the width of image
 	 * @param h
 	 *          the height of image
 	 */
 	public Skeleton(EvPixels image, int[] dt, int w, int h)
 		{
-		this.image = image;		
+		this.image = image;
 		this.w = w;
 		this.h = h;
 		this.dt = new int[dt.length];
-		for(int i=0;i<dt.length;i++) this.dt[i] = dt[i];
+		for (int i = 0; i<dt.length; i++)
+			this.dt[i] = dt[i];
 		}
 
 	/**
@@ -45,7 +46,8 @@ public abstract class Skeleton
 		this.w = image.getWidth();
 		this.h = image.getHeight();
 		this.dt = new int[dt.length];
-		for(int i=0;i<dt.length;i++) this.dt[i] = dt[i];
+		for (int i = 0; i<dt.length; i++)
+			this.dt[i] = dt[i];
 		}
 
 	}

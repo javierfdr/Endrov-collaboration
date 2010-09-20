@@ -16,7 +16,7 @@ public final class WormClusterSkeleton extends Skeleton
 	boolean[] isSkPoint; // added for efficient check
 	int numWorms;
 	WormPixelMatcher wpm;
-	
+
 	/**
 	 * Creates a instance of worm cluster skeleton, that is a skeleton of an image
 	 * that could contain 1 or more overlapping worms. The number of worms are
@@ -41,7 +41,7 @@ public final class WormClusterSkeleton extends Skeleton
 	 */
 	public WormClusterSkeleton(EvPixels image, int[] dt, int w, int h,
 			ArrayList<Integer> basePoints, ArrayList<Integer> skPoints,
-			boolean[] isBasePoint, boolean[] isSkPoint,WormPixelMatcher wpm)
+			boolean[] isBasePoint, boolean[] isSkPoint, WormPixelMatcher wpm)
 		{
 
 		super(image, dt, w, h);
@@ -56,13 +56,13 @@ public final class WormClusterSkeleton extends Skeleton
 		for (int i = 0; i<this.isSkPoint.length; i++)
 			this.isSkPoint[i] = isSkPoint[i];
 		numWorms = basePoints.size()/2;
-		if(basePoints.size()%2 != 0){
-			numWorms+=1;
-		}
+		if (basePoints.size()%2!=0)
+			{
+			numWorms += 1;
+			}
 		this.wpm = wpm;
 		}
 
-	
 	/**
 	 * Creates a instance of worm cluster skeleton, that is a skeleton of an image
 	 * that could contain 1 or more overlapping worms. The number of worms are
@@ -83,7 +83,8 @@ public final class WormClusterSkeleton extends Skeleton
 	 */
 
 	public WormClusterSkeleton(EvPixels image, int[] dt, int w, int h,
-			ArrayList<Integer> basePoints, ArrayList<Integer> skPoints,WormPixelMatcher wpm)
+			ArrayList<Integer> basePoints, ArrayList<Integer> skPoints,
+			WormPixelMatcher wpm)
 		{
 
 		super(image, dt, w, h);
@@ -93,9 +94,10 @@ public final class WormClusterSkeleton extends Skeleton
 		// unnecessary
 		this.isSkPoint = SkeletonUtils.listToMatrix(w*h, skPoints);
 		numWorms = basePoints.size()/2;
-		if(basePoints.size()%2 != 0){
-			numWorms+=1;
-		}
+		if (basePoints.size()%2!=0)
+			{
+			numWorms += 1;
+			}
 		this.wpm = wpm;
 		}
 
@@ -124,40 +126,75 @@ public final class WormClusterSkeleton extends Skeleton
 		return numWorms;
 		}
 
+	public WormPixelMatcher getPixelMatcher()
+		{
+		return wpm;
+		}
+
 	/**
 	 * Add each extra base to base list if is not contained previously
 	 */
-	public void addExtraBases(ArrayList<Integer> extraBases){
+	public void addExtraBases(ArrayList<Integer> extraBases)
+		{
 		Iterator<Integer> it = extraBases.iterator();
 		int base;
-		while(it.hasNext()){
+		while (it.hasNext())
+			{
 			base = it.next();
-			if((!basePoints.contains((Integer)base)) && isSkPoint[base]){
+			if ((!basePoints.contains((Integer) base)))
+				{
 				basePoints.add(base);
+				isBasePoint[base] = true;
+				if (!isSkPoint[base])
+					{
+					isSkPoint[base] = true;
+					skPoints.add(base);
+					}
+				}
+			}
+		// recalculate number of worms
+		numWorms = basePoints.size()/2;
+		if (basePoints.size()%2!=0)
+			{
+			numWorms += 1;
 			}
 		}
-		//recalculate number of worms
-		numWorms = basePoints.size()/2;
-		if(basePoints.size()%2 != 0){
-			numWorms+=1;
+
+	/**
+	 * Add each extra skeleton points
+	 */
+	public void addExtraSk(ArrayList<Integer> extraSk)
+		{
+		for (int skp : extraSk)
+			{
+			isSkPoint[skp] = true;
+			skPoints.add(skp);
+			}
 		}
-	}
-	
+
 	/**
 	 * Delete each base from base list if is not contained previously
 	 */
-	public void deleteExtraBases(ArrayList<Integer> extraBases){
+	public void deleteExtraBases(ArrayList<Integer> extraBases)
+		{
 		Iterator<Integer> it = extraBases.iterator();
 		int pixel;
-		while(it.hasNext()){
+		while (it.hasNext())
+			{
 			pixel = it.next();
-			if(isSkPoint[pixel]){
+			if (isSkPoint[pixel])
+				{
 				isSkPoint[pixel] = false;
-				skPoints.remove((Integer)pixel);
+				skPoints.remove((Integer) pixel);
+				if (isBasePoint[pixel])
+					{
+					isBasePoint[pixel] = false;
+					basePoints.remove((Integer) pixel);
+					}
+				}
 			}
 		}
-	}
-	
+
 	/**
 	 * Returns the paths that most likely describe the worms of the calling worm
 	 * cluster following the directional neighbors starting from the given base
@@ -191,7 +228,7 @@ public final class WormClusterSkeleton extends Skeleton
 			ArrayList<Integer> newPath = new ArrayList<Integer>();
 			newPath.add(base);
 			neigh = SkeletonUtils.getCircularNeighbors(base, w); // Thinning gives
-																														// cross path only
+			// cross path only
 			for (int n = 0; n<8; n++)
 				{
 				if (isSkPoint[neigh[n]])
@@ -249,11 +286,10 @@ public final class WormClusterSkeleton extends Skeleton
 		return wormPaths;
 		}
 
-
 	public static ArrayList<WormSkeleton> getIsolatedWorms(
 			ArrayList<WormClusterSkeleton> warray, WormPixelMatcher wpm)
 		{
-		
+
 		ArrayList<WormSkeleton> wormList = new ArrayList<WormSkeleton>();
 		ArrayList<WormSkeleton> isolatedWormList = new ArrayList<WormSkeleton>();
 		for (int j = 0; j<warray.size(); j++)
@@ -273,45 +309,52 @@ public final class WormClusterSkeleton extends Skeleton
 				}
 			wormList.add(ws);
 			}
-		
-		//Calculate average length and get only those who are between the 30% under average 
-		//and 30% above average values
-		
+
+		// Calculate average length and get only those who are between the 30% under
+		// average
+		// and 30% above average values
+
 		Iterator<WormSkeleton> wIt = wormList.iterator();
 		ArrayList<Integer> lengthList = new ArrayList<Integer>();
 		int newLen;
-		while(wIt.hasNext()){
+		while (wIt.hasNext())
+			{
 			lengthList.add(wIt.next().getSkPoints().size());
-		}
+			}
 		Collections.sort(lengthList);
-		//Take out the smallest and biggest value
+		// Take out the smallest and biggest value
 		int lsize = lengthList.size();
-		if(lsize>2){
+		if (lsize>2)
+			{
 			lengthList.remove(0);
 			lengthList.remove(lsize-2);
-		}
-		else return wormList;
-		
-		int average=0;
+			}
+		else
+			return wormList;
+
+		int average = 0;
 		Iterator<Integer> lit = lengthList.iterator();
-		while(lit.hasNext()){
-			average+=lit.next();
-		}
+		while (lit.hasNext())
+			{
+			average += lit.next();
+			}
 		average = average/(lsize-2);
-		
+
 		System.out.println("AVG: "+average);
 		wIt = wormList.iterator();
 		WormSkeleton ws = null;
-		double wsSize =-1;
-		while(wIt.hasNext()){
+		double wsSize = -1;
+		while (wIt.hasNext())
+			{
 			ws = wIt.next();
 			wsSize = ws.getSkPoints().size();
 			System.out.println("WSIZE: "+wsSize);
-			if(wsSize<= (double)1.30*average && wsSize>= (double)0.70*average){
+			if (wsSize<=(double) 1.30*average&&wsSize>=(double) 0.70*average)
+				{
 				isolatedWormList.add(ws);
+				}
 			}
-		}				
 		return isolatedWormList;
 		}
-	
+
 	}

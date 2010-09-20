@@ -8,6 +8,7 @@ import javax.vecmath.Vector2d;
 import com.graphbuilder.curve.Point;
 
 import endrov.util.Vector2i;
+import endrov.util.curves.PointFactory;
 
 /**
  * Class that represents a matching matrix that contains the corresponding (x,y)
@@ -35,21 +36,26 @@ public class WormPixelMatcher
 			}
 		}
 
-	public int getH(){
+	public int getH()
+		{
 		return h;
-	}
-	public int getW(){
+		}
+
+	public int getW()
+		{
 		return w;
-	}
-	
-	public int posToPixel(Vector2i pos){
+		}
+
+	public int posToPixel(Vector2i pos)
+		{
 		return ((pos.x)+pos.y*w);
-	}
-	
-	public int posToPixel(Vector2d pos){
-		return (((int)pos.x)+((int)pos.y)*w);	
-	}
-	
+		}
+
+	public int posToPixel(Vector2d pos)
+		{
+		return (((int) pos.x)+((int) pos.y)*w);
+		}
+
 	/**
 	 * Returns 2-dimensional position corresponding to pixel position
 	 */
@@ -57,14 +63,15 @@ public class WormPixelMatcher
 		{
 		return matchMatrix[pixel];
 		}
-	
+
 	/**
 	 * Returns 2-dimensional position corresponding to pixel position
 	 */
-	public Vector2i getPixelPos(Point p){
+	public Vector2i getPixelPos(Point p)
+		{
 		return matchMatrix[pointToPixel(p)];
-	}
-	
+		}
+
 	public int pointToPixel(Point p)
 		{
 		double[] xy = p.getLocation();
@@ -104,7 +111,7 @@ public class WormPixelMatcher
 
 	public ArrayList<Vector2i> pixelListToVector2i(ArrayList<Integer> points)
 		{
-		ArrayList<Vector2i> vList = new ArrayList<Vector2i>(points.size()); 
+		ArrayList<Vector2i> vList = new ArrayList<Vector2i>(points.size());
 		Iterator<Integer> pIt = points.iterator();
 		int count = 0;
 		while (pIt.hasNext())
@@ -114,20 +121,19 @@ public class WormPixelMatcher
 			}
 		return vList;
 		}
-	
-	public ArrayList<Vector2d> pixelListToVector2d(ArrayList<Integer> points)
-	{
-	ArrayList<Vector2d> vList = new ArrayList<Vector2d>(points.size()); 
-	Iterator<Integer> pIt = points.iterator();
-	Vector2i n;
-	while (pIt.hasNext())
-	{	
-		n=getPixelPos(pIt.next());
-		vList.add(new Vector2d(n.x,n.y));
-		}
-	return vList;
-	}
 
+	public ArrayList<Vector2d> pixelListToVector2d(ArrayList<Integer> points)
+		{
+		ArrayList<Vector2d> vList = new ArrayList<Vector2d>(points.size());
+		Iterator<Integer> pIt = points.iterator();
+		Vector2i n;
+		while (pIt.hasNext())
+			{
+			n = getPixelPos(pIt.next());
+			vList.add(new Vector2d(n.x, n.y));
+			}
+		return vList;
+		}
 
 	public float[][] pixelListTo2DArray(ArrayList<Integer> points)
 		{
@@ -144,8 +150,7 @@ public class WormPixelMatcher
 			}
 		return vArray;
 		}
-	
-	
+
 	/**
 	 * Returns an array of int transforming each Point from points list to the
 	 * corresponding integer matrix value
@@ -163,8 +168,9 @@ public class WormPixelMatcher
 			}
 		return pixels;
 		}
-	
-	public ArrayList<Integer> pointListToPixelList(ArrayList<Point> points){
+
+	public ArrayList<Integer> pointListToPixelList(ArrayList<Point> points)
+		{
 		ArrayList<Integer> pixels = new ArrayList<Integer>(points.size());
 		Iterator<Point> it = points.iterator();
 		while (it.hasNext())
@@ -172,14 +178,12 @@ public class WormPixelMatcher
 			pixels.add(pointToPixel(it.next()));
 			}
 		return pixels;
-	}
-	
+		}
+
 	/**
-	 * Transform a int array containing the two base points
-	 * into a Point array
-	 * 
+	 * Transform a int array containing the two base points into a Point array
 	 */
-	
+
 	public ArrayList<Point> baseToPoint(int[] basePoints)
 		{
 		if (basePoints.length!=2)
@@ -190,13 +194,15 @@ public class WormPixelMatcher
 
 		return pl;
 		}
-	
-	public static double calculatePixelDistance(int p1,int p2,WormPixelMatcher wpm){
+
+	public static double calculatePixelDistance(int p1, int p2,
+			WormPixelMatcher wpm)
+		{
 		Vector2i p1c = wpm.getPixelPos(p1);
 		Vector2i p2c = wpm.getPixelPos(p2);
-		double distance = Math.sqrt(Math.pow(p1c.x-p2c.x, 2)+Math.pow(p1c.y-p2c.y,2));
-		return distance;			
-	}
-	
+		double distance = Math.sqrt(Math.pow(p1c.x-p2c.x, 2)
+				+Math.pow(p1c.y-p2c.y, 2));
+		return distance;
+		}
 
 	}

@@ -23,7 +23,7 @@ public class WormDescriptor implements Cloneable
 	WormPixelMatcher wpm;
 	WormProfile wprof;
 	public int[] controlPoints;
-	
+
 	int[] dtArray;
 	ImVector2[] angleNorthVector;
 	ImVector2[] angleSouthVector;
@@ -35,15 +35,15 @@ public class WormDescriptor implements Cloneable
 	 * Creates a new worm descriptor given a WormPixelMatcher object that
 	 * represents the current worm as an Endrov image, and Worm skeleton from
 	 * which the corresponding spline curve is calculated. This constructor uses
-	 * the default values 0.09 for the percentage of control points used and 0.5 as
-	 * alpha value.
+	 * the default values 0.09 for the percentage of control points used and 0.5
+	 * as alpha value.
 	 * 
 	 * @param wm
 	 *          Representation of the worm as Endrov image
 	 * @param ws
 	 *          The skeleton of the worm
 	 */
-	
+
 	public WormDescriptor(WormProfile wprof, WormSkeleton ws, int dtArray[],
 			int numPoints, double bendingLength)
 		{
@@ -56,7 +56,7 @@ public class WormDescriptor implements Cloneable
 		this.angleSouthLine = new int[wprof.thickness.length][];
 		this.numPoints = numPoints;
 
-		CardinalSpline cs = EvCardinalSpline.getShapeSpline(ws, 0.5, 0.09);
+		CardinalSpline cs = getShapeSpline(ws, 0.5, 0.09);
 		ArrayList<Point> cPoints = EvCardinalSpline
 				.getCardinalPoints(cs, numPoints);
 		this.controlPoints = wprof.wpm.pointListToPixel(cPoints);
@@ -95,7 +95,7 @@ public class WormDescriptor implements Cloneable
 			Line l2 = new Line(pos1, new Vector2i((int) Math.round(v2.x+pos1.x),
 					(int) Math.round(v2.y+pos1.y)));
 
-			ArrayList<Integer> linePoints = l1.getLinePoints(wpm);
+			ArrayList<Integer> linePoints = l1.getLinePoints(wpm.w);
 			Iterator<Integer> lit = linePoints.iterator();
 
 			int[] intL = new int[linePoints.size()];
@@ -107,7 +107,7 @@ public class WormDescriptor implements Cloneable
 				}
 			this.angleNorthLine[i] = intL;
 
-			linePoints = l2.getLinePoints(wpm);
+			linePoints = l2.getLinePoints(wpm.w);
 			lit = linePoints.iterator();
 			intL = new int[linePoints.size()];
 			count = 0;
@@ -121,52 +121,132 @@ public class WormDescriptor implements Cloneable
 
 		}
 
-	public ArrayList<Integer> rasterizeWorm(){
-		ArrayList<Integer> skp = WormProfile.constructShape(controlPoints, wprof, 0, dtArray);
-		//return skp;
+	public ArrayList<Integer> rasterizeWorm()
+		{
+		ArrayList<Integer> skp = WormProfile.constructShape(controlPoints, wprof,
+				0, dtArray);
 		ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(skp);
-		return PolygonRasterizer.rasterize(wpm.w,wpm.h,tpv);
-	}
-	
-	public ArrayList<Integer> fitAndRasterizeWorm(){
-		ArrayList<Integer> skp = WormProfile.expandingConstructShape(controlPoints, wprof, 0, dtArray);
-		//return skp;
-		ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(skp);
-		return PolygonRasterizer.rasterize(wpm.w,wpm.h,tpv);
-	}
+		return PolygonRasterizer.rasterize(wpm.w, wpm.h, tpv);
+		}
 
-	public ArrayList<Integer> drawAngles(){
+	public ArrayList<Integer> fitAndRasterizeWorm()
+		{
+		ArrayList<Integer> skp = WormProfile.expandingConstructShape(controlPoints,
+				wprof, 0, dtArray);
+		// return skp;
+		ArrayList<Vector2d> tpv = wpm.pixelListToVector2d(skp);
+		return PolygonRasterizer.rasterize(wpm.w, wpm.h, tpv);
+		}
+
+	public ArrayList<Integer> drawAngles()
+		{
 		ArrayList<Integer> points = new ArrayList<Integer>();
 		int[] lp;
-		//North Angle
-		for (int i=1;i<angleNorthLine.length-1;i++){
+		// North Angle
+		for (int i = 1; i<angleNorthLine.length-1; i++)
+			{
 			lp = angleNorthLine[i];
-			for (int j=0;j<lp.length;j++){
+			for (int j = 0; j<lp.length; j++)
+				{
 				points.add(lp[j]);
-			}
-		}
-		//South angle
-		for (int i=1;i<angleSouthLine.length-1;i++){
-		lp = angleSouthLine[i];
-		for (int j=0;j<lp.length;j++){
-			points.add(lp[j]);
-			}
-		}
-		
-		//line connecting control points
-		for (int i=0;i<wprof.thickness.length-1;i++){
-				Line l = new Line(wpm.getPixelPos(controlPoints[i]), wpm.getPixelPos(controlPoints[i+1]));
-				ArrayList<Integer> lpoints = l.getLinePoints(wpm);
-				Iterator<Integer> lit = lpoints.iterator();
-				while(lit.hasNext()){
-					points.add(lit.next());
 				}
-		}		
+			}
+		// South angle
+		for (int i = 1; i<angleSouthLine.length-1; i++)
+			{
+			lp = angleSouthLine[i];
+			for (int j = 0; j<lp.length; j++)
+				{
+				points.add(lp[j]);
+				}
+			}
+
+		// line connecting control points
+		for (int i = 0; i<wprof.thickness.length-1; i++)
+			{
+			Line l = new Line(wpm.getPixelPos(controlPoints[i]), wpm
+					.getPixelPos(controlPoints[i+1]));
+			ArrayList<Integer> lpoints = l.getLinePoints(wpm.w);
+			Iterator<Integer> lit = lpoints.iterator();
+			while (lit.hasNext())
+				{
+				points.add(lit.next());
+				}
+			}
 		return points;
-	}
-	
-	public void updateCP(int position, int value){
+		}
+
+	public void updateCP(int position, int value)
+		{
 		this.controlPoints[position] = value;
-	}
-	
+		}
+
+	/**
+	 * Calculates a cardinal spline that starts in one base point and ends in the
+	 * other one, passing through the points defined at the points given in the
+	 * worm Skeleton
+	 * 
+	 * @param alpha
+	 *          slack value
+	 * @param numPointsPercentage
+	 *          Number of points from 'points' that want to be consider as control
+	 *          points
+	 * @return
+	 */
+	public static CardinalSpline getShapeSpline(WormSkeleton ws, double alpha,
+			double numPointsPercentage)
+		{
+		ArrayList<Point> bases = ws.getPixelMatcher().baseToPoint(
+				ws.getBasePoints());
+		ArrayList<Point> points = ws.getPixelMatcher().pixelListToPoint(
+				ws.getSkPoints());
+		return EvCardinalSpline.getShapeSpline(bases, points, alpha,
+				numPointsPercentage);
+		}
+
+	public WormPixelMatcher getWpm()
+		{
+		return wpm;
+		}
+
+	public WormProfile getWprof()
+		{
+		return wprof;
+		}
+
+	public int[] getControlPoints()
+		{
+		return controlPoints;
+		}
+
+	public int[] getDtArray()
+		{
+		return dtArray;
+		}
+
+	public ImVector2[] getAngleNorthVector()
+		{
+		return angleNorthVector;
+		}
+
+	public ImVector2[] getAngleSouthVector()
+		{
+		return angleSouthVector;
+		}
+
+	public int[][] getAngleNorthLine()
+		{
+		return angleNorthLine;
+		}
+
+	public int[][] getAngleSouthLine()
+		{
+		return angleSouthLine;
+		}
+
+	public int getNumPoints()
+		{
+		return numPoints;
+		}
+
 	}
