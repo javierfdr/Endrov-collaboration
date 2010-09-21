@@ -5,6 +5,7 @@
  */
 package endrov.bookmark;
 
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,12 +16,13 @@ import java.util.Map;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
-import endrov.basicWindow.BasicWindow;
+import endrov.data.EvContainer;
 import endrov.data.EvData;
 import endrov.data.EvPath;
 import endrov.imageWindow.ImageWindow;
 import endrov.imageWindow.ImageWindowExtension;
 import endrov.imageWindow.ImageWindowTool;
+import endrov.undo.UndoOpPutObject;
 import endrov.util.EvSwingUtil;
 
 /**
@@ -32,7 +34,7 @@ public class BookmarkImageWindowHook implements ImageWindowExtension
 	{
 	public void newImageWindow(final ImageWindow w)
 		{
-		w.imageWindowTools.add(new ImageWindowTool(){
+		w.addImageWindowTool(new ImageWindowTool(){
 			JMenu miBookmark=new JMenu("Bookmarks");
 			JMenuItem miAddBookmark=new JMenuItem("Add bookmark");
 			
@@ -44,37 +46,15 @@ public class BookmarkImageWindowHook implements ImageWindowExtension
 				miAddBookmark.addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e)
 						{
-						Bookmark b=Bookmark.addBookmarkDialog(w, w.getSelectedData());
-						if(b!=null)
+						EvContainer container=w.getSelectedData();
+						String name=Bookmark.addBookmarkDialog(w, container);
+						if(name!=null)
 							{
-							b.frame=w.frameControl.getFrame();
-							b.z=w.frameControl.getModelZ();
-							BasicWindow.updateWindows();
+							Bookmark b=new Bookmark();
+							b.frame=w.getFrame();
+							b.z=w.getZ();
+							new UndoOpPutObject("Add bookmark "+name, b, container, name);
 							}
-						/*
-						EvContainer data=w.getSelectedData();
-						if(data==null)
-							BasicWindow.showErrorDialog("No container selected");
-						else
-							{
-							String name=JOptionPane.showInputDialog(w, "Name of bookmark");
-							if(name!=null)
-								{
-								if(data.metaObject.containsKey(name))
-									BasicWindow.showErrorDialog("Object with this name exists already");
-								else
-									{
-									Bookmark b=new Bookmark();
-									b.frame=w.frameControl.getFrame();
-									b.z=w.frameControl.getModelZ();
-									
-									data.metaObject.put(name, b);
-									BasicWindow.updateWindows();
-									}
-								}
-							
-							}
-							*/
 						}
 					});
 				miBookmark.addSeparator();
@@ -92,12 +72,12 @@ public class BookmarkImageWindowHook implements ImageWindowExtension
 							{
 							public void actionPerformed(ActionEvent e)
 								{
-								if(w.frameControl!=null)
-									{
-									w.frameControl.setFrame(m.frame);
-									if(m.z!=null)
-										w.frameControl.setZ(m.z);
-									}
+								//if(w.frameControl!=null)
+									//{
+								w.setFrame(m.frame);
+								if(m.z!=null)
+									w.setZ(m.z);
+									//}
 								w.repaint();
 								}
 							});
@@ -119,7 +99,7 @@ public class BookmarkImageWindowHook implements ImageWindowExtension
 				{
 				}
 
-			public void mouseClicked(MouseEvent e)
+			public void mouseClicked(MouseEvent e, Component invoker)
 				{
 				}
 

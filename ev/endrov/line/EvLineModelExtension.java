@@ -83,8 +83,9 @@ public class EvLineModelExtension implements ModelWindowExtension
 		/**
 		 * Render graphics
 		 */
-		public void displayFinal(GL gl,List<TransparentRender> transparentRenderers)
+		public void displayFinal(GL glin,List<TransparentRender> transparentRenderers)
 			{
+			GL2 gl=glin.getGL2();
 			for(EvLine ia:getAnnot())
 				renderOne(gl, ia);
 			}
@@ -94,7 +95,7 @@ public class EvLineModelExtension implements ModelWindowExtension
 		/**
 		 * Render label of one nucleus
 		 */
-		private void renderOne(GL gl, EvLine ia)
+		private void renderOne(GL2 gl, EvLine ia)
 			{
 			//Save world coordinate
 			gl.glPushMatrix();
@@ -103,7 +104,7 @@ public class EvLineModelExtension implements ModelWindowExtension
 			gl.glColor3d(0, 1.0, 0);
 			if(ia.pos.size()>1)
 				{
-				EvDecimal curFrame=w.frameControl.getFrame();
+				EvDecimal curFrame=w.getFrame();
 				
 				//TODO bad bd comparison. double
 				if(ia.pos.get(0).frame.equals(curFrame) && ia.pos.size()>1)
@@ -143,9 +144,9 @@ public class EvLineModelExtension implements ModelWindowExtension
 		/**
 		 * Given a middle position, figure out radius required to fit objects
 		 */
-		public Collection<Double> autoCenterRadius(Vector3d mid, double FOV)
+		public double autoCenterRadius(Vector3d mid)
 			{
-			return Collections.emptySet();
+			return 0;
 			}
 		
 		public EvDecimal getFirstFrame(){return null;}

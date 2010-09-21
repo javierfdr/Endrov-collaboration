@@ -4,7 +4,6 @@
  * for the full text and how to cite.
  */
 package endrov.driverMicromanager;
-import endrov.ev.EV;
 import endrov.ev.PluginDef;
 
 public class PLUGIN extends PluginDef
@@ -24,7 +23,8 @@ public class PLUGIN extends PluginDef
 		try
 			{
 			Class.forName("mmcorej.CMMCore");
-			return EV.isLinux() || EV.isMac();
+//			return EV.isLinux() || EV.isMac();
+			return false;
 			}
 		catch (ClassNotFoundException e)
 			{

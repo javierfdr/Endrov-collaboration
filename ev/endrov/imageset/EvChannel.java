@@ -10,9 +10,11 @@ import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.vecmath.Vector3d;
 
 import org.jdom.Element;
 
@@ -44,7 +46,7 @@ public class EvChannel extends EvObject implements AnyEvImage
 	/**
 	 * Get access to an image
 	 */
-	public EvImage getImageLoader(EvDecimal frame, EvDecimal z)
+	/*public EvImage getImageLoader(EvDecimal frame, EvDecimal z)
 		{
 		try
 			{
@@ -54,7 +56,20 @@ public class EvChannel extends EvObject implements AnyEvImage
 			{
 			return null;
 			}
-		}
+		}*/
+
+	/*
+	public EvImage getImageLoaderInt(EvDecimal frame, int z)
+		{
+		try
+			{
+			return imageLoader.get(frame).getInt(z);
+			}
+		catch (Exception e)
+			{
+			return null;
+			}
+		}*/
 
 	/**
 	 * Get the first stack. Convenience method; meant mainly to be used when the
@@ -66,7 +81,7 @@ public class EvChannel extends EvObject implements AnyEvImage
 		}
 
 	/**
-	 * Get access to a frame
+	 * Get a frame, create if needed. Should only be used if the content of the frame will be deleted, or otherwise ensure that data is correct
 	 */
 	public EvStack getCreateFrame(EvDecimal frame)
 		{
@@ -82,36 +97,6 @@ public class EvChannel extends EvObject implements AnyEvImage
 	public EvStack getFrame(EvDecimal frame)
 		{
 		return imageLoader.get(frame);
-		}
-
-	/**
-	 * Get or create an image
-	 */
-	public EvImage createImageLoader(EvDecimal frame, EvDecimal z)
-		{
-		EvImage im = getImageLoader(frame, z);
-		if (im!=null)
-			return im;
-		else
-			{
-			im = new EvImage();
-			setImage(frame, z, im);
-			return im;
-			}
-		}
-
-	/**
-	 * Set image
-	 */
-	public void setImage(EvDecimal frame, EvDecimal z, EvImage im)
-		{
-		EvStack frames = imageLoader.get(frame);
-		if (frames==null)
-			{
-			frames = new EvStack();
-			imageLoader.put(frame, frames);
-			}
-		frames.put(z, im);
 		}
 
 	/****************************************************************************************/
@@ -168,62 +153,6 @@ public class EvChannel extends EvObject implements AnyEvImage
 			return after.firstKey();
 		}
 
-	/**
-	 * Find the closest slice given a frame and slice
-	 * 
-	 * @param frame
-	 *          Which frame to search
-	 * @param z
-	 *          Z we wish to match
-	 * @return Same z if frame does not exist or no slices exist, otherwise the
-	 *         closest z
-	 */
-	public EvDecimal closestZ(EvDecimal frame, EvDecimal z)
-		{
-		EvStack slices = imageLoader.get(frame);
-		if (slices==null)
-			return z;
-		else
-			return slices.closestZ(z);
-		}
-
-	/**
-	 * Find the closest slice above given a slice in a frame
-	 * 
-	 * @param frame
-	 *          Which frame to search
-	 * @param z
-	 *          Z we wish to match
-	 * @return Same z if frame does not exist or no slices exist, otherwise the
-	 *         closest z above
-	 */
-	public EvDecimal closestZAbove(EvDecimal frame, EvDecimal z)
-		{
-		EvStack slices = imageLoader.get(frame);
-		if (slices==null)
-			return z;
-		else
-			return slices.closestZAbove(z);
-		}
-
-	/**
-	 * Find the closest slice below given a slice in a frame
-	 * 
-	 * @param frame
-	 *          Which frame to search
-	 * @param z
-	 *          Z we wish to match
-	 * @return Same z if frame does not exist or no slices exist, otherwise the
-	 *         closest z below
-	 */
-	public EvDecimal closestZBelow(EvDecimal frame, EvDecimal z)
-		{
-		EvStack slices = imageLoader.get(frame);
-		if (slices==null)
-			return z;
-		else
-			return slices.closestZBelow(z);
-		}
 
 	/****************************************************************************************/
 	/************************** Channel Meta data *******************************************/
@@ -232,12 +161,12 @@ public class EvChannel extends EvObject implements AnyEvImage
 	/** Binning, a scale factor from the microscope */
 	public int chBinning = 1;
 
-	/** Displacement */
-	public double defaultDispX = 0, defaultDispY = 0;
-	public EvDecimal defaultDispZ = new EvDecimal(0);
+	/** Displacement um */
+	public Vector3d defaultDisp=new Vector3d();
+	//public double defaultDispX = 0, defaultDispY = 0, defaultDispZ = 0;
 
-	public Double defaultResX = null, defaultResY = null;
-	public EvDecimal defaultResZ = null;
+	/** Resolution um/px */
+	public Double defaultResX = null, defaultResY = null, defaultResZ = null;
 
 	/** Comppression 0-100, 100=lossless, what compression to apply to new images */
 	public int compression = 100;
@@ -265,6 +194,15 @@ public class EvChannel extends EvObject implements AnyEvImage
 		return framedata.get(prop);
 		}
 
+	public void setFrameMeta(EvDecimal frame, String prop, String value)
+		{
+		HashMap<String, String> framedata = metaFrame.get(frame);
+		if (framedata==null)
+			metaFrame.put(frame, framedata=new HashMap<String, String>());
+		framedata.put(prop, value);
+		}
+
+	
 	/** Get (other) meta data in form of a string (default="") */
 	public String getMetaValueString(String s)
 		{
@@ -335,8 +273,7 @@ public class EvChannel extends EvObject implements AnyEvImage
 					if (resZ==null)
 						return;
 
-					StackHacks.setResXYZ(EvChannel.this, Double.parseDouble(resX), Double
-							.parseDouble(resY), new EvDecimal(resZ));
+					StackHacks.setResXYZ(EvChannel.this, Double.parseDouble(resX), Double.parseDouble(resY), Double.parseDouble(resZ));
 					BasicWindow.updateWindows();
 					}
 			});
@@ -367,25 +304,40 @@ public class EvChannel extends EvObject implements AnyEvImage
 
 	public void loadMetadata(Element e)
 		{
+		double defaultDispX=0;
+		double defaultDispY=0;
+		double defaultDispZ=0;
+		Double defaultDispXpx=null;
+		Double defaultDispYpx=null;
+		
 		for (Object oi : e.getChildren())
 			{
 			Element i = (Element) oi;
 
+			
 			try
 				{
 				if (i.getName().equals("dispX"))
-					defaultDispX = Double.parseDouble(i.getValue());
+					defaultDispXpx = Double.parseDouble(i.getValue());
 				else if (i.getName().equals("dispY"))
+					defaultDispYpx = Double.parseDouble(i.getValue());
+				
+				else if (i.getName().equals("dispXum"))
+					defaultDispX = Double.parseDouble(i.getValue());
+				else if (i.getName().equals("dispYum"))
 					defaultDispY = Double.parseDouble(i.getValue());
+				
 				else if (i.getName().equals("dispZ"))
-					defaultDispZ = new EvDecimal(i.getValue());
+					defaultDispZ = Double.parseDouble(i.getValue());
 				
 				else if (i.getName().equals("resX"))
 					defaultResX = Double.parseDouble(i.getValue());
 				else if (i.getName().equals("resY"))
 					defaultResY = Double.parseDouble(i.getValue());
+				
+				
 				else if (i.getName().equals("resZ"))
-					defaultResZ = new EvDecimal(i.getValue());
+					defaultResZ = Double.parseDouble(i.getValue());
 
 				else if (i.getName().equals("binning"))
 					chBinning = Integer.parseInt(i.getValue());
@@ -400,38 +352,52 @@ public class EvChannel extends EvObject implements AnyEvImage
 				}
 			catch (NumberFormatException e1)
 				{
+				e1.printStackTrace();
 				EvLog.printError("Parse error, gracefully ignoring and resuming", e1);
 				}
+			
 			}
 		
-		
 
+		//Convert old displacement into um
+		if(defaultDispXpx!=null)
+			defaultDispX=defaultDispXpx*defaultResX;
+		if(defaultDispYpx!=null)
+			defaultDispY=defaultDispYpx*defaultResY;
+		
+		//Set disp vector
+		defaultDisp=new Vector3d(-defaultDispX, -defaultDispY, -defaultDispZ);
 		}
 
 	public String saveMetadata(Element e)
 		{
+		//For conversion!
+		metaOther.remove("dispX");
+		metaOther.remove("dispY");
+		
 		//Retrieve default stack settings
 		if(!imageLoader.isEmpty())
 			{
 			EvStack fstack=getFirstStack();
 			
-			fstack.getResbinZinverted(); //TODO will not be needed later
-			
 			defaultResX=fstack.resX;
 			defaultResY=fstack.resY;
 			defaultResZ=fstack.resZ;
 
-			defaultDispX=fstack.dispX;
-			defaultDispY=fstack.dispY;
-			defaultDispZ=fstack.dispZ;
+			defaultDisp=fstack.getDisplacement();
+/*			Vector3d sDisp=fstack.getDisplacement();
+			defaultDispX=sDisp.x;
+			defaultDispY=sDisp.y;
+			defaultDispZ=sDisp.z;
+			*/
 
 			metaOther.put("resX", ""+defaultResX);
 			metaOther.put("resY", ""+defaultResY);
 			metaOther.put("resZ", ""+defaultResZ);
 			
-			metaOther.put("dispX", ""+defaultDispX);
-			metaOther.put("dispY", ""+defaultDispY);
-			metaOther.put("dispZ", ""+defaultDispZ);
+			metaOther.put("dispXum", ""+-defaultDisp.x);
+			metaOther.put("dispYum", ""+-defaultDisp.y);
+			metaOther.put("dispZum", ""+-defaultDisp.z);
 			
 			}
 
@@ -440,7 +406,7 @@ public class EvChannel extends EvObject implements AnyEvImage
 		for(String key:metaOther.keySet())
 			e.addContent(new Element(key).addContent(""+metaOther.get(key)));
 		
-		for(EvDecimal frame:imageLoader.keySet())
+		for(EvDecimal frame:new TreeSet<EvDecimal>(imageLoader.keySet()))
 			{
 			HashMap<String,String> otherMeta=metaFrame.get(frame);
 			if(otherMeta==null)
@@ -451,9 +417,11 @@ public class EvChannel extends EvObject implements AnyEvImage
 				}
 			
 
+
 			//Override default stack settings?
 			EvStack stack=imageLoader.get(frame);
-			stack.getResbinZinverted(); //TODO will not be needed later
+			Vector3d sDisp=stack.getDisplacement();
+			//stack.getResbinZinverted(); //TODO will not be needed later
 			if(stack.resX!=defaultResX)
 				otherMeta.put("resX", ""+stack.resX);
 			else
@@ -462,21 +430,23 @@ public class EvChannel extends EvObject implements AnyEvImage
 				otherMeta.put("resY", ""+stack.resY);
 			else
 				otherMeta.remove("resY");
-			if(!stack.resZ.equals(defaultResZ))
+			if(stack.resZ!=defaultResZ)
 				otherMeta.put("resZ", ""+stack.resZ);
 			else
 				otherMeta.remove("resZ");
 			
-			if(stack.dispX!=defaultDispX)
-				otherMeta.put("dispX", ""+stack.dispX);
+			if(sDisp.x!=defaultDisp.x)
+				otherMeta.put("dispXum", ""+-sDisp.x);
 			else
-				otherMeta.remove("dispX");
-			if(stack.dispY!=defaultDispY)
-				otherMeta.put("dispY", ""+stack.dispY);
+				otherMeta.remove("dispXum");
+			
+			if(sDisp.y!=defaultDisp.y)
+				otherMeta.put("dispYum", ""+-sDisp.y);
 			else
-				otherMeta.remove("dispY");
-			if(!stack.dispZ.equals(defaultDispZ))
-				otherMeta.put("dispZ", ""+stack.dispZ);
+				otherMeta.remove("dispYum");
+			
+			if(sDisp.z!=defaultDisp.z)
+				otherMeta.put("dispZ", ""+-sDisp.z);
 			else
 				otherMeta.remove("dispZ");
 			

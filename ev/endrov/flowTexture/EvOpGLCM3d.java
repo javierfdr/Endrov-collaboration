@@ -5,10 +5,6 @@
  */
 package endrov.flowTexture;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 import endrov.imageset.EvStack;
 import endrov.util.Vector3i;
 
@@ -41,7 +37,7 @@ public class EvOpGLCM3d
 	
 	public static void /*Map<Vector3i, Integer>*/ calculate(EvStack stack, Vector3i[] points)
 		{
-		int[] count=new int[points.length];
+		//int[] count=new int[points.length];
 		
 //		stack.get
 		

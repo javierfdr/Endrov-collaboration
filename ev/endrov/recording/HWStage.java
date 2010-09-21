@@ -5,7 +5,7 @@
  */
 package endrov.recording;
 
-import endrov.hardware.Device;
+import endrov.hardware.EvDevice;
 
 
 /**
@@ -13,7 +13,7 @@ import endrov.hardware.Device;
  * @author Johan Henriksson
  *
  */
-public interface HWStage extends Device
+public interface HWStage extends EvDevice
 	{
 
 	public int getNumAxis();
@@ -27,4 +27,13 @@ public interface HWStage extends Device
 	public void setRelStagePos(double axis[]);
 	
 	public void goHome();
+	
+	/**
+	 * Stop current movement
+	 */
+	public void stop();
+	
+	public boolean hasSampleLoadPosition();
+	public void setSampleLoadPosition(boolean b);
+	public boolean getSampleLoadPosition();
 	}

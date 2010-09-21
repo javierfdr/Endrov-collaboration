@@ -8,9 +8,9 @@ package endrov.nucImage;
 import java.awt.*;
 import java.awt.event.*;
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Map;
-//import java.util.Collection;
+import java.util.Set;
 
 import javax.vecmath.*;
 import javax.swing.*;
@@ -18,12 +18,14 @@ import javax.swing.*;
 import endrov.basicWindow.*;
 import endrov.data.EvContainer;
 import endrov.data.EvSelection;
-import endrov.ev.EvLog;
 import endrov.imageWindow.*;
 import endrov.keyBinding.KeyBinding;
 import endrov.nuc.NucLineage;
 import endrov.nuc.NucCommonUI;
 import endrov.nuc.NucSel;
+import endrov.nuc.UndoOpReplaceSomeNuclei;
+import endrov.nuc.NucLineage.NucPos;
+import endrov.undo.UndoOpBasic;
 import endrov.util.EvDecimal;
 
 /**
@@ -33,14 +35,60 @@ import endrov.util.EvDecimal;
  */
 public class NucImageTool implements ImageWindowTool, ActionListener
 	{
-	private boolean active=false;
+	private boolean isMakingNucleus=false;
 	private double x1,x2,y1,y2;
 
-	private boolean holdTranslate=false;
-	private boolean holdRadius=false;
+	private boolean holdTranslateMouse=false;
+	private boolean holdRadiusMouse=false;
+	private boolean ignoreLeftClick=false;
 
 	private final ImageWindow w;
 	private final NucImageRenderer r;
+	
+	/**
+	 * Undo operation for only changing one keyframe
+	 * @author Johan Henriksson
+	 */
+	
+	public static class UndoOpNucleiEditKeyframe extends UndoOpBasic
+		{
+		private NucLineage lin;
+		private String name;
+		private EvDecimal frame;
+		private NucPos pos;
+		private NucPos newPos;
+		public UndoOpNucleiEditKeyframe(String opname, NucLineage lin, String name, EvDecimal frame, NucPos newPos)
+			{
+			super(opname);
+			this.frame=frame;
+			this.lin=lin;
+			this.name=name;
+			this.newPos=newPos;
+			NucLineage.Nuc nuc=lin.nuc.get(name);
+			if(nuc.pos.containsKey(frame))
+				pos=nuc.pos.get(frame).clone();
+			}
+	
+		public void redo()
+			{
+			NucLineage.Nuc nuc=lin.nuc.get(name);
+			nuc.pos.put(frame, newPos);
+			BasicWindow.updateWindows();  //this is a problem! w.updateImagePanel works well
+			}
+		
+		public void undo()
+			{
+			if(pos==null)
+				lin.nuc.get(name).pos.remove(frame);
+			else
+				lin.nuc.get(name).pos.put(frame,pos.clone());
+			BasicWindow.updateWindows();
+			}
+		
+		}
+	
+	
+	
 	
 	private WeakReference<NucLineage> editingLin=new WeakReference<NucLineage>(null);
 	private void setEditLin(NucLineage lin)
@@ -60,12 +108,8 @@ public class NucImageTool implements ImageWindowTool, ActionListener
 	private void fillMenu(JComponent menu)
 		{
 		new NucCommonUI(w).addToMenu(menu, false);
-		//menu.addSeparator();
 
 		menu.add(new JSeparator());
-		
-		//JMenu setColor=NucCommonUI.makeSetColorMenu();
-		//menu.add(setColor);
 		
 		EvContainer ims=w.getRootObject();
 		final WeakReference<EvContainer> wims=new WeakReference<EvContainer>(ims);
@@ -118,12 +162,15 @@ public class NucImageTool implements ImageWindowTool, ActionListener
 		{
 		}
 
-	
-	
-	public void mouseClicked(MouseEvent e)
+
+	public void mouseClicked(MouseEvent e, Component invoker)
 		{
 		if(SwingUtilities.isLeftMouseButton(e) && !r.getVisibleLineages().isEmpty())
-			NucLineage.mouseSelectNuc(NucLineage.currentHover, (e.getModifiersEx() & MouseEvent.SHIFT_DOWN_MASK)!=0);
+			{
+			if(!ignoreLeftClick)
+				NucCommonUI.mouseSelectNuc(NucCommonUI.currentHover, (e.getModifiersEx() & MouseEvent.SHIFT_DOWN_MASK)!=0);
+			ignoreLeftClick=false;
+			}
 		else if(SwingUtilities.isRightMouseButton(e))
 			{
 			JPopupMenu popup=new JPopupMenu();
@@ -134,238 +181,286 @@ public class NucImageTool implements ImageWindowTool, ActionListener
 	
 	public void mouseDragged(MouseEvent e, int dx, int dy)
 		{
-		if(active)
+		if(r.modifyingNucSel!=null && (holdTranslateMouse || holdRadiusMouse))
 			{
-			Vector2d v=w.transformS2W(new Vector2d(e.getX(),e.getY()));
+			//Get or create position
+			NucLineage.NucPos pos=r.getModifyingNucPos();
+			if(pos!=null)
+				{
+				if(holdTranslateMouse)
+					{
+					//Translate
+					r.hasReallyModified=true;
+					Vector2d v2=w.transformVectorS2W(new Vector2d(dx,dy));
+					pos.x+=v2.x;
+					pos.y+=v2.y;
+					w.updateImagePanel(); //TODO should signal update of lineage
+					//new UndoOpNucleiEditKeyframe(lin, name, frame, pos).execute();
+					}
+				//else if(KeyBinding.get(NucLineage.KEY_CHANGE_RADIUS).typed(e)) //KEYBIND
+				else if(holdRadiusMouse)
+					{
+					//Change radius
+					r.hasReallyModified=true;
+					pos.r+=w.scaleS2w(dy);
+					if(pos.r<w.scaleS2w(8.0))
+						pos.r=w.scaleS2w(8.0);
+					w.updateImagePanel();
+					//new UndoOpNucleiEditKeyframe(lin, name, frame, pos).execute();
+					//This is some code that could be resurrected, updating movement in all windows. but it might be slow.
+					//it is safer than the current approach from an undo point of view
+					}
+				
+				}
+			}
+		
+		if(isMakingNucleus)
+			{
+			Vector2d v=w.transformPointS2W(new Vector2d(e.getX(),e.getY()));
 			x2=v.x;
 			y2=v.y;
 			w.updateImagePanel();
 			}
 		}
 	
+	
 	public void mousePressed(MouseEvent e)
 		{
 		if(SwingUtilities.isLeftMouseButton(e))
 			{
-			//Start making a nucleus
-			active=true;
-			Vector2d v=w.transformS2W(new Vector2d(e.getX(),e.getY()));
-			x1=x2=v.x;
-			y1=y2=v.y;
+			if(r.rectIconChangeRadius!=null && r.rectIconChangeRadius.contains(e.getX(), e.getY()))
+				{
+				//Change radius of nucleus
+				if(r.interpNuc.containsKey(r.iconsForNuc))
+					{
+					//Also select?
+					holdRadiusMouse=true;
+					NucCommonUI.mouseSelectNuc(r.iconsForNuc, false);
+					startModifying(r.iconsForNuc);
+					}
+				ignoreLeftClick=true;
+				}
+			else if(r.rectIconCenterZ!=null && r.rectIconCenterZ.contains(e.getX(), e.getY()))
+				{
+				//Move nucleus z to this plane
+				if(r.interpNuc.containsKey(r.iconsForNuc))
+					actionBringToZ(r.iconsForNuc);
+				ignoreLeftClick=true;
+				}
+			else if(NucCommonUI.currentHover!=NucCommonUI.emptyHover)
+				{
+				//Move a nucleus
+				if(r.interpNuc.containsKey(NucCommonUI.currentHover))
+					{
+					//Also select?
+					holdTranslateMouse=true;
+					NucCommonUI.mouseSelectNuc(NucCommonUI.currentHover, (e.getModifiersEx() & MouseEvent.SHIFT_DOWN_MASK)!=0);
+					//NucCommonUI.mouseSelectNuc(NucCommonUI.currentHover, false);
+					//System.out.println("Select!!");
+					startModifying(NucCommonUI.currentHover);
+					}
+				ignoreLeftClick=true;
+				}			
+			else
+				{
+				//Start making a nucleus
+				isMakingNucleus=true;
+				Vector2d v=w.transformPointS2W(new Vector2d(e.getX(),e.getY()));
+				x1=x2=v.x;
+				y1=y2=v.y;
+				}
 			}
 		else if(SwingUtilities.isRightMouseButton(e))
 			{
 			//Cancel making nucleus
-			active=false;
+			isMakingNucleus=false;
 			w.updateImagePanel();
 			}
 		}
 
-	//need to make lin somewhere
 	
 	public void mouseReleased(MouseEvent e)
 		{
-		if(SwingUtilities.isLeftMouseButton(e) && active)
+		if(SwingUtilities.isLeftMouseButton(e))
 			{
-			//Make a nucleus if mouse has been dragged
 			
-			/*NucLineage lin=null;
-//			Collection<NucLineage> lins=getLineages();
-			if(!lins.isEmpty())
-				lin=lins.iterator().next();*/
-			NucLineage lin=editingLin.get();
-			
-			if(x1!=x2 && y1!=y2 && lin!=null && r.modifyingNucName==null)
+			if(holdTranslateMouse)
 				{
-				//New name for this nucleus => null
-				String nucName=lin.getUniqueNucName();
-				NucLineage.Nuc n=lin.getCreateNuc(nucName);
-				NucLineage.NucPos pos=n.getCreatePos(w.frameControl.getFrame());
-				pos.x=(x1+x2)/2;
-				pos.y=(y1+y2)/2;
-				pos.z=w.frameControl.getZ().doubleValue();//w.s2wz(w.frameControl.getZ().doubleValue());
-				pos.r=Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))/2;
-				
-				Vector2d so1=w.transformW2S(new Vector2d(pos.r,0));
-				Vector2d so2=w.transformW2S(new Vector2d(0,0));
-
-				if(Math.abs(so1.x-so2.x)>8)
-//				if(Math.abs(w.w2sx(pos.r)-w.w2sx(0))>8)
-					{
-					EvSelection.selectOnly(new NucSel(lin,nucName));
-					BasicWindow.updateWindows();
-					}
+				holdTranslateMouse=false;
+				r.commitModifyingNuc();
 				}
-				
-			active=false;
-			w.updateImagePanel();
+
+			if(holdRadiusMouse)
+				{
+				holdRadiusMouse=false;
+				r.commitModifyingNuc();
+				}
+
+			if(isMakingNucleus)
+				{
+				//Make a nucleus if mouse has been dragged. If the nucleus is too small it is likely a mistake; ignore it then.
+				final NucLineage lin=editingLin.get();
+				double radius=Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))/2;
+				if(w.scaleW2s(radius)>5 && lin!=null /*&& r.modifyingNucSel==null*/)
+					{
+					final EvDecimal frame=w.getFrame();
+					
+					//New name for this nucleus => null
+					final String nucName=lin.getUniqueNucName();
+					final NucLineage.NucPos pos=new NucLineage.NucPos();
+					pos.x=(x1+x2)/2;
+					pos.y=(y1+y2)/2;
+					pos.z=w.getZ().doubleValue();
+					pos.r=radius;
+					
+					new UndoOpReplaceSomeNuclei("Create "+nucName)
+						{
+						public void redo()
+							{
+							keep(lin,nucName);
+							NucLineage.Nuc n=lin.getCreateNuc(nucName);
+							n.pos.put(frame, pos);
+							EvSelection.selectOnly(new NucSel(lin,nucName));
+							BasicWindow.updateWindows();
+							}
+						}.execute();
+					}
+					
+				isMakingNucleus=false;
+				w.updateImagePanel();
+				}
+			
 			}
 		}
 
 	public void mouseMoved(MouseEvent e, int dx, int dy)
-		{			
-		//Handle modify-nucleus
-		NucLineage.NucPos pos=r.getModifyingNucPos();
-		if(pos!=null)
-			{
-			if(holdTranslate)
-				{
-				//Translate
-				pos.x+=w.scaleS2w(dx);
-				pos.y+=w.scaleS2w(dy);
-				}
-			//else if(KeyBinding.get(NucLineage.KEY_CHANGE_RADIUS).typed(e)) //KEYBIND
-			else if(holdRadius)
-				{
-				//Change radius
-				pos.r+=w.scaleS2w(dy);
-				if(pos.r<w.scaleS2w(8.0))
-					pos.r=w.scaleS2w(8.0);
-				}			
-			}
+		{	
 		}
 
 	
-	/*
-	 * (non-Javadoc)
-	 * @see client.ImageWindow.Tool#keyPressed(java.awt.event.KeyEvent)
-	 */
+	private void startModifying(NucSel sel)
+		{
+		r.modifyingNucSel=sel;
+		r.modifiedNuc=sel.getNuc().clone();
+		r.hasReallyModified=false;
+		}
+	
 	public void keyPressed(KeyEvent e)
 		{
-		if(KeyBinding.get(NucLineage.KEY_TRANSLATE).typed(e))
-			holdTranslate=true;
-		if(KeyBinding.get(NucLineage.KEY_CHANGE_RADIUS).typed(e))
-			holdRadius=true;
-		
-		EvDecimal curFramei=w.frameControl.getFrame();
-		NucLineage lin=NucLineage.currentHover.fst();
-		
+		EvDecimal curFrame=w.getFrame();
+		NucLineage lin=NucCommonUI.currentHover.fst();
+
 		if(lin!=null && (KeyBinding.get(NucLineage.KEY_TRANSLATE).typed(e) || KeyBinding.get(NucLineage.KEY_CHANGE_RADIUS).typed(e)))
 			{
 			//Translate or change radius
-			if(r.modifyingNucName==null && r.interpNuc.containsKey(NucLineage.currentHover)) //TODO: guarantee that every nucleus has 1 pos except during load
-				r.modifyingNucName=NucLineage.currentHover;
+			if(r.modifyingNucSel==null && NucCommonUI.currentHover!=NucCommonUI.emptyHover && r.interpNuc.containsKey(NucCommonUI.currentHover))
+				startModifying(NucCommonUI.currentHover);
 			}
-		else if(lin!=null && KeyBinding.get(NucLineage.KEY_CHANGE_RADIUS).typed(e))
+		else if(r.modifyingNucSel!=null)
 			{
-			//Divide nucleus
-			NucLineage.Nuc n=NucLineage.currentHover.getNuc();
-			if(n!=null && r.interpNuc.containsKey(NucLineage.currentHover))
+		
+			if(lin!=null && KeyBinding.get(NucLineage.KEY_DIVIDENUC).typed(e))
 				{
-				lin.divide(NucLineage.currentHover.snd(), curFramei);
-				BasicWindow.updateWindows();
+				//Divide nucleus
+				NucLineage.Nuc n=NucCommonUI.currentHover.getNuc();
+				if(n!=null && r.interpNuc.containsKey(NucCommonUI.currentHover))
+					NucCommonUI.actionDivideNuc(lin,NucCommonUI.currentHover.snd(), curFrame);
 				}
-			}
-		else if(KeyBinding.get(NucLineage.KEY_SETZ).typed(e))
-			{
-			//Bring nucleus to this Z
-			NucSel useNuc=NucLineage.currentHover;
-
-			if(useNuc.fst()==null)
+			else if(KeyBinding.get(NucLineage.KEY_SETZ).typed(e))
 				{
-				//System.out.println("foo");
-				HashSet<NucSel> selectedNuclei=NucLineage.getSelectedNuclei();
-				if(selectedNuclei.size()==1)
-					useNuc=selectedNuclei.iterator().next();
-				}
-			
-			NucLineage.Nuc n=null;
-			if(useNuc.fst()!=null) //wtf?
-				n=useNuc.getNuc();
-			
-			if(n!=null && r.interpNuc.containsKey(useNuc))
-				{
-				NucLineage.NucInterp inter=r.interpNuc.get(useNuc);
-				NucLineage.NucPos pos=n.getCreatePos(curFramei); 
-				pos.x=inter.pos.x;
-				pos.y=inter.pos.y;
-				pos.z=w.frameControl.getZ().doubleValue();//w.s2wz(w.frameControl.getZ().doubleValue());
-				pos.r=inter.pos.r;
-				r.commitModifyingNuc();
-				}
-			}
-		else if(lin!=null && KeyBinding.get(NucLineage.KEY_SETEND).typed(e))
-			{
-			//Set end frame of nucleus
-			NucLineage.Nuc n=lin.nuc.get(NucLineage.currentHover.snd());
-			if(n!=null)
-				{
-				if(n.overrideEnd!=null && n.overrideEnd.equals(curFramei))
-					n.overrideEnd=null;
-				else
+				//Bring nucleus to this Z
+				Set<NucSel> sels=NucCommonUI.getSelectedOrHoveredNuclei();
+				if(sels.size()==1)
 					{
-					n.overrideEnd=curFramei;
-					lin.removePosAfter(NucLineage.currentHover.snd(), curFramei,false);
+					NucSel useNuc=sels.iterator().next();
+					actionBringToZ(useNuc);
 					}
-				BasicWindow.updateWindows();
 				}
-			}
-		else if(lin!=null && KeyBinding.get(NucLineage.KEY_SETSTART).typed(e))
-			{
-			//Set end frame of nucleus
-			NucLineage.Nuc n=lin.nuc.get(NucLineage.currentHover.snd());
-			if(n!=null)
+			else if(lin!=null && KeyBinding.get(NucLineage.KEY_SETEND).typed(e))
 				{
-				if(n.overrideStart!=null && n.overrideStart.equals(curFramei))
-					n.overrideStart=null;
-				else
-					{	
-					n.overrideStart=curFramei;
-					lin.removePosBefore(NucLineage.currentHover.snd(), curFramei,false); 
+				//Set end frame of nucleus
+				NucLineage.Nuc n=lin.nuc.get(NucCommonUI.currentHover.snd());
+				if(n!=null)
+					NucCommonUI.actionSetEndFrame(Collections.singleton(NucCommonUI.currentHover), curFrame);
+				}
+			else if(lin!=null && KeyBinding.get(NucLineage.KEY_SETSTART).typed(e))
+				{
+				//Set end frame of nucleus
+				NucLineage.Nuc n=lin.nuc.get(NucCommonUI.currentHover.snd());
+				if(n!=null)
+					NucCommonUI.actionSetStartFrame(Collections.singleton(NucCommonUI.currentHover), curFrame);
+				}
+			/*else if(lin!=null && KeyBinding.get(NucLineage.KEY_MAKEPARENT).typed(e))
+				{
+				//This way of working... should it be kept?
+				
+				//Create parent for selected nucleus/nuclei
+				String parentName=lin.getUniqueNucName();
+				NucLineage.Nuc parent=lin.getCreateNuc(parentName);
+				
+				double x=0,y=0,z=0,r=0;
+				int num=0;
+				EvDecimal firstFrame=null;
+				for(NucSel childPair:NucLineage.getSelectedNuclei())
+					{
+					String childName=childPair.snd();
+					NucLineage.Nuc n=lin.nuc.get(childName);
+					NucLineage.NucPos pos=n.pos.get(n.getFirstFrame());
+					x+=pos.x;				
+					y+=pos.y;				
+					z+=pos.z;				
+					r+=pos.r;
+					if(firstFrame==null || n.getFirstFrame().less(firstFrame))
+						firstFrame=n.getFirstFrame();
+					num++;
+					n.parent=parentName;
+					parent.child.add(childName);
 					}
+				x/=num;			
+				y/=num;			
+				z/=num;			
+				r/=num;
+				NucLineage.NucPos pos=new NucLineage.NucPos();
+				pos.x=x; 
+				pos.y=y; 
+				pos.z=z; 
+				pos.r=r;
+				parent.pos.put(firstFrame.subtract(EvDecimal.ONE),pos);
+				
+//				this.r.w.frameControl.setFrame(firstFrame.subtract(EvDecimal.ONE));
 				BasicWindow.updateWindows();
-				}
-			}
-		else if(lin!=null && KeyBinding.get(NucLineage.KEY_MAKEPARENT).typed(e))
-			{
-			//Create parent for selected nucleus/nuclei
-			String parentName=lin.getUniqueNucName();
-			NucLineage.Nuc parent=lin.getCreateNuc(parentName);
-			
-			double x=0,y=0,z=0,r=0;
-			int num=0;
-			EvDecimal firstFrame=null;
-			for(NucSel childPair:NucLineage.getSelectedNuclei())
+				}*/
+			else if(lin!=null && KeyBinding.get(NucLineage.KEY_SETPARENT).typed(e))
 				{
-				String childName=childPair.snd();
-				NucLineage.Nuc n=lin.nuc.get(childName);
-				NucLineage.NucPos pos=n.pos.get(n.getFirstFrame());
-				x+=pos.x;				y+=pos.y;				z+=pos.z;				r+=pos.r;
-				if(firstFrame==null || n.getFirstFrame().less(firstFrame))
-					firstFrame=n.getFirstFrame();
-				num++;
-				n.parent=parentName;
-				parent.child.add(childName);
+				//Create parent-children relation
+				NucCommonUI.actionAssocParent();
 				}
-			x/=num;			y/=num;			z/=num;			r/=num;
-			NucLineage.NucPos pos=new NucLineage.NucPos();
-			pos.x=x; pos.y=y; pos.z=z; pos.r=r;
-			parent.pos.put(firstFrame.subtract(EvDecimal.ONE),pos); //TODO bd will not work
-			EvLog.printLog("Made parent "+parentName);
 			
-			this.r.w.frameControl.setFrame(firstFrame.subtract(EvDecimal.ONE));
-			BasicWindow.updateWindows();
 			}
-		else if(lin!=null && KeyBinding.get(NucLineage.KEY_SETPARENT).typed(e))
-			{
-			//Create parent-children relation
-			NucLineage.createParentChildSelected();
-			BasicWindow.updateWindows();
-			}
+		
 		}
 
 	
+	private void actionBringToZ(NucSel useNuc)
+		{
+		EvDecimal curFrame=w.getFrame();
+		NucLineage.NucPos pos=NucCommonUI.getOrInterpolatePosCopy(useNuc.fst(), useNuc.snd(), curFrame);
+		if(pos!=null)
+			{
+			pos.z=w.getZ().doubleValue();
+			new NucImageTool.UndoOpNucleiEditKeyframe("Bring "+useNuc.snd()+" to z",useNuc.fst(), useNuc.snd(), curFrame, pos).execute();
+			}
+		}
+
 	public void paintComponent(Graphics g)
 		{
-		if(active)
+		if(isMakingNucleus)
 			{
 			g.setColor(Color.RED);
 			double midx=(x2+x1)/2;
 			double midy=(y2+y1)/2;
 			double r=Math.sqrt((x1-midx)*(x1-midx)+(y1-midy)*(y1-midy));
-			Vector2d omid=w.transformW2S(new Vector2d(midx,midy));
-//			double omidx=w.w2sx(midx);
-//			double omidy=w.w2sy(midy);
+			Vector2d omid=w.transformPointW2S(new Vector2d(midx,midy));
 			double or=w.scaleW2s(r);
 			g.drawOval((int)(omid.x-or),(int)(omid.y-or),(int)(or*2),(int)(or*2));
 			}
@@ -374,30 +469,13 @@ public class NucImageTool implements ImageWindowTool, ActionListener
 	
 	public void keyReleased(KeyEvent e)
 		{
-		if(KeyBinding.get(NucLineage.KEY_TRANSLATE).typed(e))
-			holdTranslate=false;
-		if(KeyBinding.get(NucLineage.KEY_CHANGE_RADIUS).typed(e))
-			holdRadius=false;
-		
-		if(KeyBinding.get(NucLineage.KEY_TRANSLATE).typed(e) || KeyBinding.get(NucLineage.KEY_CHANGE_RADIUS).typed(e))
-			r.commitModifyingNuc();
 		}
 
 	public void mouseExited(MouseEvent e)
 		{
-		//	Delete nucleus if one is held and translating
-		NucLineage lin=r.getModifyingLineage();
-		NucLineage.Nuc n=r.getModifyingNuc();
-		
-		if(lin!=null && n!=null && holdTranslate)
-			{
-			//nuc temporarily flashes back here. don't know why (used to?)
-			EvDecimal framei=w.frameControl.getFrame();
-			n.pos.remove(framei);
-			if(n.pos.size()==0)
-				lin.removeNuc(r.modifyingNucName.snd());
-			}
-		r.modifyingNucName=null;
+		//Stop editing here!
+		if(r.modifyingNucSel!=null)
+			r.commitModifyingNuc();
 		BasicWindow.updateWindows();
 		}
 

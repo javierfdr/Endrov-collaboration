@@ -168,6 +168,7 @@ public class EllipseROI extends ROI
 	/**
 	 * Get slices that at least are partially selected
 	 */
+	/*
 	public Set<EvDecimal> getSlice(Imageset rec, String channel, EvDecimal frame)
 		{
 		TreeSet<EvDecimal> c=new TreeSet<EvDecimal>();
@@ -181,19 +182,19 @@ public class EllipseROI extends ROI
 						c.add(f);
 			}
 		return c;
-		}
+		}*/
 	
 	
 
-	public boolean imageInRange(String channel, EvDecimal frame, EvDecimal z)
+	public boolean imageInRange(String channel, EvDecimal frame, double z)
 		{
-		return regionChannels.channelInRange(channel) && regionFrames.inRange(frame) && regionZ.inRange(z);
+		return /*regionChannels.channelInRange(channel) &&*/ regionFrames.inRange(frame) && regionZ.inRange(z);
 		}
 	
 	/**
 	 * Get iterator over one image
 	 */
-	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final EvDecimal z)
+	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final double z)
 		{
 		if(imageInRange(channel, frame, z))
 			{
@@ -217,8 +218,8 @@ public class EllipseROI extends ROI
 			
 			it.midx=(stack.transformWorldImageX(regionX.start.doubleValue())+stack.transformWorldImageX(regionX.end.doubleValue()))/2.0;
 			it.midy=(stack.transformWorldImageY(regionY.start.doubleValue())+stack.transformWorldImageY(regionY.end.doubleValue()))/2.0;
-			it.rx=(stack.transformWorldImageX(regionX.end.doubleValue())-stack.transformWorldImageX(regionX.start.doubleValue()))/2.0;
-			it.ry=(stack.transformWorldImageY(regionY.end.doubleValue())-stack.transformWorldImageY(regionY.start.doubleValue()))/2.0;
+			it.rx=Math.abs((stack.transformWorldImageX(regionX.end.doubleValue())-stack.transformWorldImageX(regionX.start.doubleValue()))/2.0);
+			it.ry=Math.abs((stack.transformWorldImageY(regionY.end.doubleValue())-stack.transformWorldImageY(regionY.start.doubleValue()))/2.0);
 			
 			
 			//Sanity check
@@ -236,6 +237,25 @@ public class EllipseROI extends ROI
 		}
 	
 
+
+	@Override
+	public boolean pointInRange(String channel, EvDecimal frame, double x, double y, double z)
+		{
+		if(imageInRange(channel, frame, z))
+			{
+			double midx=(regionX.start.doubleValue()+regionX.end.doubleValue())/2.0;
+			double midy=(regionY.start.doubleValue()+regionY.end.doubleValue())/2.0;
+			double rx=Math.abs((regionX.end.doubleValue()-regionX.start.doubleValue())/2.0);
+			double ry=Math.abs((regionY.end.doubleValue()-regionY.start.doubleValue())/2.0);
+			
+			double dx=x-midx;
+			double dy=y-midy;
+			return dx*dx/(rx*rx) + dy*dy/(ry*ry)<1;
+			}
+		return false;
+		}
+
+	
 	
 	//ImageIterator?
 	
@@ -288,7 +308,7 @@ public class EllipseROI extends ROI
 	public void initPlacement(String chan, EvDecimal frame, EvDecimal z)
 		{
 		regionChannels.add(chan);
-		regionFrames.set(frame,frame.add(EvDecimal.ONE));
+		//regionFrames.set(frame,frame.add(EvDecimal.ONE));
 		regionZ.set(z, z.add(EvDecimal.ONE));
 		}
 		

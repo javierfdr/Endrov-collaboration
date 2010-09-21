@@ -25,7 +25,7 @@ public final class MakeMovieThread extends BatchThread
 	private final Imageset rec;
 	
 	private final EvDecimal startFrame, endFrame;
-	private final int z;
+	private final EvDecimal z;
 
 	private final int oneW;
 	private final java.util.List<MovieChannel> channels;
@@ -38,15 +38,15 @@ public final class MakeMovieThread extends BatchThread
 		public final String name;
 		//public final FilterSeq fs;
 		public final MovieDescString desc;
-		public MovieChannel(String nane,/* FilterSeq fs,*/ String desc)
+		public MovieChannel(String name,/* FilterSeq fs,*/ String desc)
 			{
-			this.name=nane;
+			this.name=name;
 			//this.fs=fs;
 			this.desc=new MovieDescString(desc);
 			}
 		}
 	
-	public MakeMovieThread(Imageset rec, EvDecimal startFrame, EvDecimal endFrame, int z, List<MovieChannel> channelNames, int oneW, String quality, File movieFile,
+	public MakeMovieThread(Imageset rec, EvDecimal startFrame, EvDecimal endFrame, EvDecimal z, List<MovieChannel> channelNames, int oneW, String quality, File movieFile,
 			EvMovieMakerFactory mf)
 		{
 		this.rec=rec;
@@ -118,8 +118,11 @@ public final class MakeMovieThread extends BatchThread
 					{
 					EvChannel ch=rec.getChannel(cName.name);
 					EvDecimal frame=ch.closestFrame(curframe);
-					EvDecimal tz=ch.closestZ(frame, new EvDecimal(z));
-					EvImage imload=ch.getImageLoader(frame, tz);
+					EvStack stack=ch.getFrame(frame);
+					int tz=stack.closestZint(z.doubleValue());
+					EvImage imload=stack.getInt(tz);
+					//EvDecimal tz=ch.closestZ(frame, z);
+					//EvImage imload=ch.getImageLoader(frame, tz);
 					if(imload==null)
 						{
 						batchError("Failure: Could not collect EvImage for ch:"+cName.name+" f:"+frame+" z:"+tz);
@@ -127,7 +130,7 @@ public final class MakeMovieThread extends BatchThread
 						}
 					else
 						{
-						EvStack stack=ch.imageLoader.get(frame);
+						//EvStack stack=ch.imageLoader.get(frame);
 						//imload=cName.fs.applyReturnImage(stack, imload);
 						BufferedImage ji=imload.getPixels().quickReadOnlyAWT();
 						if(ji==null)
@@ -179,11 +182,11 @@ public final class MakeMovieThread extends BatchThread
 	private class MovieChannelImage
 		{
 		public BufferedImage im;
-		public String name;
+		//public String name;
 		public double scale;
 		public MovieChannelImage(BufferedImage im, String name)
 			{
-			this.im=im; this.name=name; 
+			this.im=im; //this.name=name; 
 			}
 		}
 
@@ -219,9 +222,7 @@ public final class MakeMovieThread extends BatchThread
 			
 			g.setColor(Color.WHITE);
 			
-			g.drawString(
-			channels.get(i).desc.decode(rec, channels.get(i).name,frame),
-			 oneW*i, h-1);
+			g.drawString(channels.get(i).desc.decode(rec, channels.get(i).name,frame), oneW*i, h-1);
 			/*
 			if(i==0)
 				g.drawString(ch.name+" ("+frame+")", oneW*i, h-1);

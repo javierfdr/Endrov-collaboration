@@ -8,6 +8,7 @@ package endrov.shell;
 import java.util.*;
 
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.vecmath.Vector3d;
 
 import org.jdom.Element;
@@ -48,14 +49,19 @@ public class ShellModelExtension implements ModelWindowExtension
 		
 		public Collection<Vector3d> autoCenterMid()
 			{
+			return Collections.emptySet();
+			/*
+			if(1==1)
+				return Collections.emptySet();
 			List<Vector3d> col=new LinkedList<Vector3d>();
 			for(Shell s:w.getVisibleObjects(Shell.class))
 				col.add(new Vector3d(s.midx,s.midy,s.midz));
 			return col;
+			*/
 			}
-		public Collection<Double> autoCenterRadius(Vector3d mid, double FOV)
+		public double autoCenterRadius(Vector3d mid)
 			{
-			return Collections.emptySet();
+			return 0; //TODO
 			}
 		
 		
@@ -68,15 +74,12 @@ public class ShellModelExtension implements ModelWindowExtension
 			{
 			}
 		
-		/*
-		public Collection<Shell> getVisibleShell()
-			{
-			return w.getVisibleObjects(Shell.class);
-			}
-		*/
 		
-		public void displayFinal(GL gl,List<TransparentRender> transparentRenderers)
+		public void displayFinal(GL glin,List<TransparentRender> transparentRenderers)
 			{
+			if(1==1) return;
+			
+			GL2 gl=glin.getGL2();
 			for(Shell shell:w.getVisibleObjects(Shell.class))
 				{
 				gl.glPushMatrix();
@@ -106,7 +109,7 @@ public class ShellModelExtension implements ModelWindowExtension
 		/**
 		 * Render an ellipse on xy-plane
 		 */
-		private void renderEllipse(GL gl, double major, double minor)
+		private void renderEllipse(GL2 gl, double major, double minor)
 			{
 			gl.glBegin(GL.GL_LINE_LOOP);
 			for(double alpha=0;alpha<2*Math.PI;alpha+=0.2)

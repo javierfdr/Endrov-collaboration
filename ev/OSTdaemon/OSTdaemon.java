@@ -22,6 +22,7 @@ import loci.formats.ImageReader;
 import org.jdom.*;
 
 import endrov.imageset.BioformatsSliceIO;
+import endrov.imageset.EvPixels;
 import endrov.util.EvImageIOUtils;
 import endrov.util.EvXmlUtil;
 
@@ -192,6 +193,7 @@ public class OSTdaemon extends Thread
     		else
     			log("Unknown parameter in config file: "+cmd);
     		}
+    	input.close();
     	}
     catch(Exception e)
     	{
@@ -458,8 +460,9 @@ public class OSTdaemon extends Thread
 		}
 	
 
+	
 	/**
-	 * Read a stack using Bioformats
+	 * Read a stack using Bioformats. Would be better if it relied on the Endrov common API! 
 	 */
 	public static List<BufferedImage> readStackBioformats(File filename) throws Exception
 		{
@@ -472,7 +475,8 @@ public class OSTdaemon extends Thread
 		LinkedList<BufferedImage> list=new LinkedList<BufferedImage>();
 		for(int id=0;id<count;id++)
 			{
-			BufferedImage i=new BioformatsSliceIO(imageReader,id,0,"").loadJavaImage().quickReadOnlyAWT();
+			EvPixels pixels=new BioformatsSliceIO(imageReader,id,filename, false).loadJavaImage();
+			BufferedImage i=pixels.quickReadOnlyAWT();
 //			BufferedImage i=imageReader.openImage(id);
 			int w=i.getWidth();
 			int h=i.getHeight();
@@ -481,11 +485,11 @@ public class OSTdaemon extends Thread
 	
 			float matrix[][]={{0,0,0}};
 			if(i.getRaster().getNumBands()==1)
-				matrix=new float[][]{{0/*,0*/}};
+				matrix=new float[][]{{0}};
 			else if(i.getRaster().getNumBands()==2)
-				matrix=new float[][]{{0,0/*,0*/}};
+				matrix=new float[][]{{0,0}};
 			else if(i.getRaster().getNumBands()==3)
-				matrix=new float[][]{{0,0,0/*,0*/}};
+				matrix=new float[][]{{0,0,0}};
 	
 			matrix[0][subid]=1;
 			RasterOp op=new BandCombineOp(matrix,new RenderingHints(null));
@@ -493,6 +497,7 @@ public class OSTdaemon extends Thread
 	
 			list.add(im);
 			}
+		imageReader.close();
 		return list;
 		}
 	
@@ -669,14 +674,17 @@ public class OSTdaemon extends Thread
 
 			System.out.println("storing slices");
 			//Convert slices
+			int newz=0;
 			int numz=slices.size();
 			for(int i=0;i<numz;i++)
 				{
 				BufferedImage im=slices.get(i);
 				if(!(skipBlackSlices && isBlackSlice(im)) && !(skipWhiteSlices && isWhiteSlice(im)))
 					{				
-					File toFile = outputImageName(argImageset, argChannel, getOutputFormat(argChannel), argFrame, i);
+					//File toFile = outputImageName(argImageset, argChannel, getOutputFormat(argChannel), argFrame, i);
+					File toFile = outputImageName(argImageset, argChannel, getOutputFormat(argChannel), argFrame, newz); //Skip counting black or white frames!!
 					saveImage(im, toFile, getCompressionLevel(argChannel)/100.0f);
+					newz++;
 					}
 				else
 					System.out.println("Skipping slice "+i);

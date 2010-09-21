@@ -40,6 +40,7 @@ public class PLUGIN extends PluginDef
 				FlowUnitThresholdOtsu2D.class,
 				FlowUnitThresholdFukunaga2D.class,
 				FlowUnitThresholdPercentile2D.class,
+				FlowUnitThresholdQuantize2D.class
 				};
 		}
 	

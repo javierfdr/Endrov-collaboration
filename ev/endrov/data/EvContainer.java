@@ -51,7 +51,11 @@ public class EvContainer
 		{
 		EvContainer c=this;
 		for(String s:path.path)
+			{
 			c=c.getChild(s);
+			if(c==null)
+				return null; //Or throw an exception?
+			}
 		return c;
 		}
 	
@@ -69,7 +73,7 @@ public class EvContainer
 	
 	
 	/** Flag if the metadata container itself has been modified */
-	private boolean coreMetadataModified=false;
+	public boolean coreMetadataModified=false;
 	
 	/**
 	 * This blobID is only valid *exactly after XML has been read*. This is because is really should
@@ -81,12 +85,17 @@ public class EvContainer
 	 * Date when object was created. Can be null. Unix time
 	 */
 	public EvDecimal dateCreate;
-	
+		
 	/**
 	 * Date when this object was last modified. Can be null. Unix time.
 	 */
 	public EvDecimal dateLastModify;
 	
+	/**
+	 * Who created the object. Can be null
+	 */
+	public String author;
+
 	
 	public EvContainer()
 		{
@@ -109,7 +118,6 @@ public class EvContainer
 	 */
 	public void setMetadataModified()
 		{
-//		setMetadataModified(true);
 		coreMetadataModified=true;
 		dateLastModify=new EvDecimal(System.currentTimeMillis());
 		}
@@ -194,14 +202,22 @@ public class EvContainer
 	/**
 	 * Put a meta object into the collection
 	 */
-	public int addMetaObject(EvObject o)
+	public String addMetaObject(EvObject o)
+		{
+		String id=getFreeChildName();
+		metaObject.put(id, o);
+		return id;
+		}
+	
+	public String getFreeChildName()
 		{
 		int i=1;
 		while(metaObject.get(Integer.toString(i))!=null)
 			i++;
-		metaObject.put(Integer.toString(i), o);
-		return i;
+		String id=Integer.toString(i);
+		return id;
 		}
+	
 	
 	/**
 	 * Remove an object via the pointer
@@ -241,6 +257,8 @@ public class EvContainer
 					el.setAttribute("ostdatecreate",o.dateCreate.toString());
 				if(o.dateLastModify!=null)
 					el.setAttribute("ostdatemodify",o.dateLastModify.toString());
+				if(o.author!=null)
+					el.setAttribute("ostauthor",o.author);
 				
 				Element eData=new Element("data");
 				String metatypeName=o.saveMetadata(eData);
@@ -305,6 +323,8 @@ public class EvContainer
 			String dateModify=child.getAttributeValue("ostdatemodify");
 			if(dateModify!=null)
 				o.dateLastModify=new EvDecimal(dateModify);
+			o.author=child.getAttributeValue("ostauthor");
+			
 			
 			Element subob=child.getChild(tagChild); 
 			if(subob!=null)

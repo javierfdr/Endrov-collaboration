@@ -1,3 +1,8 @@
+/***
+ * Copyright (C) 2010 Johan Henriksson
+ * This code is under the Endrov / BSD license. See www.endrov.net
+ * for the full text and how to cite.
+ */
 package endrov.recording.camWindow;
 
 import java.awt.Color;
@@ -9,6 +14,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import endrov.imageset.EvPixels;
 
@@ -27,41 +36,14 @@ public class CameraHistogramViewRanged extends CameraHistogramView implements Mo
 	
 	private Color rangeBarColor=Color.RED;
 	
+	
 	public CameraHistogramViewRanged()
 		{
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		}
 	
-	@Override
-	protected void paintComponent(Graphics g)
-		{
-		super.paintComponent(g);
-		int xLower=toScreenX(lower);
-		int xUpper=toScreenX(upper);
-		g.setColor(rangeBarColor);
-		vertStitch(g, xLower);
-		vertStitch(g, xUpper);
-		}
 	
-	/**
-	 * Transform to screen coordinates
-	 */
-	private int toScreenX(int x)
-		{
-		int screenWidth=getWidth();
-		return x*screenWidth/rangeMax;
-		}
-
-	/**
-	 * Transform to world coordinates
-	 */
-	private int toWorldX(int x)
-		{
-		int screenWidth=getWidth();
-		return x*rangeMax/screenWidth;
-		}
-
 	/**
 	 * Vertical stitched line
 	 */
@@ -71,19 +53,40 @@ public class CameraHistogramViewRanged extends CameraHistogramView implements Mo
 		for(int y=0;y<h;y+=4)
 			g.drawLine(x, y, x, y);
 		}
+
+	
+	@Override
+	protected void paintComponent(Graphics g)
+		{
+		super.paintComponent(g);
+		int xLower=toScreenX(lower);
+		int xUpper=toScreenX(upper);
+		g.setColor(rangeBarColor);
+		vertStitch(g, xLower);
+		vertStitch(g, xUpper);		
+//		System.out.println("limit "+lower+"    "+upper);
+		}
+	
 	
 	/**
 	 * Calculate range automatically from image
 	 */
-	public void calcAutoRange(EvPixels p)
+	public void calcAutoRange(EvPixels[] p)
 		{
-		calcAutoRange(p.convertToInt(true).getArrayInt());
+		if(p.length==1)
+			calcAutoRange(p[0].convertToInt(true).getArrayInt());
+		else
+			{
+			calcAutoRange(p[0].convertToInt(true).getArrayInt());
+			extendAutoRange(p[1].convertToInt(true).getArrayInt());
+			extendAutoRange(p[2].convertToInt(true).getArrayInt());
+			}
 		}
 	
 	/**
 	 * Calculate range automatically from image
 	 */
-	public void calcAutoRange(int[] p)
+	private void calcAutoRange(int[] p)
 		{
 		int min=p[0], max=p[0];
 		for(int i=1;i<p.length;i++)
@@ -97,6 +100,23 @@ public class CameraHistogramViewRanged extends CameraHistogramView implements Mo
 		lower=min;
 		upper=max;
 		}
+	
+
+	private void extendAutoRange(int[] p)
+		{
+		int min=p[0], max=p[0];
+		for(int i=1;i<p.length;i++)
+			{
+			int v=p[i];
+			if(v<min)
+				min=v;
+			else if(v>max)
+				max=v;
+			}
+		lower=Math.min(min,lower);
+		upper=Math.max(max,upper);
+		}
+
 
 	public void mouseClicked(MouseEvent e)
 		{
@@ -112,7 +132,22 @@ public class CameraHistogramViewRanged extends CameraHistogramView implements Mo
 
 	public void mousePressed(MouseEvent e)
 		{
-		moveLimit(e);
+		if(SwingUtilities.isLeftMouseButton(e))
+			moveLimit(e);
+		else if(SwingUtilities.isRightMouseButton(e))
+			{
+			JPopupMenu menu=new JPopupMenu();
+			JCheckBoxMenuItem miUseCDF=new JCheckBoxMenuItem("Show CDF", showCDF);
+			miUseCDF.addActionListener(new ActionListener()
+				{
+				public void actionPerformed(ActionEvent arg0)
+					{
+					setShowCDF(!showCDF);
+					}
+				});
+			menu.add(miUseCDF);
+			menu.show(this, e.getX(), e.getY());
+			}
 		}
 
 	public void mouseReleased(MouseEvent e)
@@ -121,7 +156,8 @@ public class CameraHistogramViewRanged extends CameraHistogramView implements Mo
 
 	public void mouseDragged(MouseEvent e)
 		{
-		moveLimit(e);
+		if(SwingUtilities.isLeftMouseButton(e))
+			moveLimit(e);
 		}
 
 	public void mouseMoved(MouseEvent arg0)
@@ -133,14 +169,14 @@ public class CameraHistogramViewRanged extends CameraHistogramView implements Mo
 	 */
 	public void moveLimit(MouseEvent e)
 		{
-		int mx=toScreenX(e.getX());
-		int xLower=toScreenX(lower);
-		int xUpper=toScreenX(upper);
+		int mx=toWorldX(e.getX());
+//		int xLower=toScreenX(lower);
+	//	int xUpper=toScreenX(upper);
 		
-		if(Math.abs(mx-xLower) < Math.abs(mx-xUpper))
-			lower=toWorldX(mx);
+		if(Math.abs(mx-lower) < Math.abs(mx-upper))
+			lower=mx;
 		else
-			upper=toWorldX(mx);
+			upper=mx;
 		
 		if(lower<0)
 			lower=0;

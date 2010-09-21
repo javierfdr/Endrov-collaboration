@@ -77,6 +77,7 @@ public class IsosurfaceExtension implements ModelWindowExtension
 			return iso;
 			}
 		
+		
 		public Collection<Double> adjustScale()
 			{
 			List<Double> scale=new LinkedList<Double>();
@@ -91,12 +92,16 @@ public class IsosurfaceExtension implements ModelWindowExtension
 				scale.add(s.autoCenterMid());
 			return scale;
 			}
-		public Collection<Double> autoCenterRadius(Vector3d mid, double FOV)
+		public double autoCenterRadius(Vector3d mid)
 			{
-			List<Double> scale=new LinkedList<Double>();
+			double r=0;
 			for(IsosurfaceRenderer s:getSurfaces())
-				scale.add(s.autoCenterRadius(mid, FOV));
-			return scale;
+				{
+				double nr=s.autoCenterRadius(mid);
+				if(nr>r)
+					r=nr;
+				}
+			return r;
 			}
 		public boolean canRender(EvObject ob){return false;}
 		public void displayInit(GL gl){}
@@ -122,7 +127,7 @@ public class IsosurfaceExtension implements ModelWindowExtension
 		
 		private EvDecimal getFrame()
 			{
-			return this.w.frameControl.getFrame();
+			return this.w.getFrame();
 			}
 
 		
@@ -359,12 +364,13 @@ public class IsosurfaceExtension implements ModelWindowExtension
 						final int numSlices=stack.getDepth();
 						int curslice=0;
 						if(stack!=null)
-							for(final EvDecimal i:stack.keySet())
+							for(int az=0;az<stack.getDepth();az++)
+							//for(final EvDecimal i:stack.keySet())
 								{
 								if(shouldStop()) return;
-								pm.set(i.multiply(totalPartLoading).intValue()/numSlices);
+								pm.set(az*totalPartLoading/numSlices);
 
-								EvImage evim=stack.get(i);
+								EvImage evim=stack.getInt(az);
 								BufferedImage bim=evim.getPixels().quickReadOnlyAWT();
 
 								//Blur the image
@@ -381,9 +387,9 @@ public class IsosurfaceExtension implements ModelWindowExtension
 									pixelsH=bim.getHeight();
 									pixelsD=stack.getDepth();
 									//realw=(float)bim.getWidth()/(float)(stack.resX/stack.binning);
-									realw=(float)bim.getWidth()/(float)stack.getResbinX();
+									realw=(float)bim.getWidth()*(float)stack.resX;
 									//realh=(float)bim.getHeight()/(float)(stack.resY/stack.binning);
-									realh=(float)bim.getHeight()/(float)stack.getResbinY();
+									realh=(float)bim.getHeight()*(float)stack.resY;
 									reald=(float)pixelsD;//(float)resZ;
 									ptScalarField=new float[pixelsW*pixelsH*pixelsD];
 									System.out.println("alloc "+pixelsW+" "+pixelsH+" "+pixelsD);

@@ -52,6 +52,7 @@ public class Slice3DExtension implements ModelWindowExtension
 			}
 		
 		
+ 		
 		public Collection<Double> adjustScale()
 			{
 			List<Double> col=new LinkedList<Double>();
@@ -63,12 +64,16 @@ public class Slice3DExtension implements ModelWindowExtension
 			{
 			return Collections.emptySet();
 			}
-		public Collection<Double> autoCenterRadius(Vector3d mid, double FOV)
+		public double autoCenterRadius(Vector3d mid)
 			{
-			List<Double> col=new LinkedList<Double>();
+			double r=0;
 			for(ToolIsolayer ti:isolayers)
-				col.addAll(ti.slice.autoCenterRadius(mid, FOV));
-			return col;
+				{
+				double nr=ti.slice.autoCenterRadius(mid);
+				if(nr>r)
+					r=nr;
+				}
+			return r;
 			}
 		public boolean canRender(EvObject ob){return false;}
 		public void displayInit(GL gl){}
@@ -94,7 +99,7 @@ public class Slice3DExtension implements ModelWindowExtension
 		
 		private EvDecimal getFrame()
 			{
-			return this.w.frameControl.getFrame();
+			return this.w.getFrame();
 			}
 
 		
@@ -191,17 +196,14 @@ public class Slice3DExtension implements ModelWindowExtension
 					{
 					EvChannel ch=im.getChannel(channelName);
 					EvDecimal cframe=ch.closestFrame(getFrame());
-					EvDecimal zplane=new EvDecimal((Integer)zplaneSpinner.getModel().getValue());
+					int zplane=(Integer)zplaneSpinner.getModel().getValue();
 
 					//Create surface if it wasn't there before
 					if(slice.needBuild(cframe))
 						slice.build(gl, cframe, im, ch, zplane);
 					
 					//Finally render
-					EvDecimal z=EvDecimal.ZERO;
-					if(!zProject.isSelected())
-						z=zplane;
-					slice.render(gl,colorCombo.getColor(), z);
+					slice.render(gl,colorCombo.getColor(), zProject.isSelected());
 					}
 				}
 			

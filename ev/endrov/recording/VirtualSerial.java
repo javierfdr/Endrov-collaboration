@@ -15,7 +15,8 @@ import java.util.*;
 
 import javax.swing.*;
 
-import endrov.hardware.PropertyType;
+import endrov.hardware.DevicePropertyType;
+import endrov.hardware.EvDeviceObserver;
 import endrov.util.EvSwingUtil;
 
 /**
@@ -177,9 +178,9 @@ public abstract class VirtualSerial implements HWSerial
 		TreeMap<String, String> m=new TreeMap<String, String>();
 		return m;
 		}
-	public SortedMap<String, PropertyType> getPropertyTypes()
+	public SortedMap<String, DevicePropertyType> getPropertyTypes()
 		{
-		TreeMap<String, PropertyType> m=new TreeMap<String, PropertyType>();
+		TreeMap<String, DevicePropertyType> m=new TreeMap<String, DevicePropertyType>();
 		return m;
 		}
 	public String getPropertyValue(String prop)
@@ -200,4 +201,15 @@ public abstract class VirtualSerial implements HWSerial
 	
 	public boolean hasConfigureDialog(){return false;}
 	public void openConfigureDialog(){}
+	
+	public EvDeviceObserver event=new EvDeviceObserver();
+	public void addListener(EvDeviceObserver.Listener listener)
+		{
+		event.addWeakListener(listener);
+		}
+	public void removeListener(EvDeviceObserver.Listener listener)
+		{
+		event.remove(listener);
+		}
+
 	}

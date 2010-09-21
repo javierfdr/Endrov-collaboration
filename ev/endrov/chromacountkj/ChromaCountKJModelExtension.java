@@ -86,8 +86,9 @@ public class ChromaCountKJModelExtension implements ModelWindowExtension
 		/**
 		 * Render graphics
 		 */
-		public void displayFinal(GL gl,List<TransparentRender> transparentRenderers)
+		public void displayFinal(GL glin,List<TransparentRender> transparentRenderers)
 			{
+			GL2 gl=glin.getGL2();
 			for(ChromaCountKJ ia:getAnnot())
 				renderOne(gl, ia,transparentRenderers);
 			}
@@ -98,7 +99,7 @@ public class ChromaCountKJModelExtension implements ModelWindowExtension
 		 * Render label of one nucleus
 		 */
 		
-		private void renderOne(GL gl, ChromaCountKJ ia,List<TransparentRender> transparentRenderers)
+		private void renderOne(GL2 gl, ChromaCountKJ ia,List<TransparentRender> transparentRenderers)
 			{
 			//Save world coordinate
 			gl.glPushMatrix();
@@ -151,9 +152,9 @@ public class ChromaCountKJModelExtension implements ModelWindowExtension
 		/**
 		 * Given a middle position, figure out radius required to fit objects
 		 */
-		public Collection<Double> autoCenterRadius(Vector3d mid, double FOV)
+		public double autoCenterRadius(Vector3d mid)
 			{
-			return Collections.emptySet();
+			return 0;
 			}
 		
 		public EvDecimal getFirstFrame(){return null;}

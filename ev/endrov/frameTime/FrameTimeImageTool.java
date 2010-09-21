@@ -5,6 +5,7 @@
  */
 package endrov.frameTime;
 
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,8 +26,8 @@ import endrov.util.EvDecimal;
  */
 public class FrameTimeImageTool implements ImageWindowTool
 	{
-	private final ImageWindow w;
-	public FrameTimeImageTool(ImageWindow w)
+	private final ImageWindowInterface w;
+	public FrameTimeImageTool(ImageWindowInterface w)
 		{
 		this.w=w;
 		}
@@ -49,12 +50,12 @@ public class FrameTimeImageTool implements ImageWindowTool
 		{
 		JMenuItem mi=new JMenuItem("Frametime/Set current");
 		mi.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e){mouseClicked(null);}
+			public void actionPerformed(ActionEvent e){mouseClicked(null, null);}
 		});
 		return mi;
 		}
 	
-	public void mouseClicked(MouseEvent e)
+	public void mouseClicked(MouseEvent e, Component invoker)
 		{
 		String frametimes=JOptionPane.showInputDialog("What is the current time?");
 		if(frametimes!=null)
@@ -63,7 +64,7 @@ public class FrameTimeImageTool implements ImageWindowTool
 			for(FrameTime f:rec.getObjects(FrameTime.class))
 				{
 				EvDecimal frametime=new EvDecimal(frametimes);
-				f.add(w.frameControl.getFrame(), frametime); 
+				f.add(w.getFrame(), frametime); 
 				BasicWindow.updateWindows();
 				}
 			}

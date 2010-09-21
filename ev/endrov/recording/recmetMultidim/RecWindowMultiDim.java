@@ -7,7 +7,6 @@ package endrov.recording.recmetMultidim;
 
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +16,13 @@ import org.jdom.*;
 
 import endrov.basicWindow.*;
 import endrov.data.EvData;
+import endrov.recording.EvAcquisition;
+import endrov.recording.widgets.RecWidgetChannel;
+import endrov.recording.widgets.RecWidgetOrder;
+import endrov.recording.widgets.RecWidgetPositions;
+import endrov.recording.widgets.RecWidgetRecDesc;
+import endrov.recording.widgets.RecWidgetSlices;
+import endrov.recording.widgets.RecWidgetTimes;
 import endrov.util.EvSwingUtil;
 
 /**
@@ -30,48 +36,75 @@ public class RecWindowMultiDim extends BasicWindow
 	 *****************************************************************************************************/
 	static final long serialVersionUID=0;
 
-	
+	private EvMultidimAcquisition acq=new EvMultidimAcquisition();
 
+	
+	private RecWidgetSlices wslices=new RecWidgetSlices();
+	private RecWidgetTimes wtimes=new RecWidgetTimes();
+	private RecWidgetChannel wchans=new RecWidgetChannel();
+	private RecWidgetOrder worder=new RecWidgetOrder();
+	private RecWidgetPositions wpos=new RecWidgetPositions();
+	private RecWidgetRecDesc wdesc=new RecWidgetRecDesc();
+	private RecWidgetAcquire wacq=new RecWidgetAcquire()
+		{
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public EvAcquisition getAcquisition()
+			{
+			return acq;
+			}
+		@Override
+		public boolean getAcquisitionSettings()
+			{
+			acq.order=worder.getSettings();
+			acq.channel=wchans.getSettings();
+			acq.desc=wdesc.getSettings();
+			acq.slices=wslices.getSettings();
+			acq.times=wtimes.getSettings();
+			acq.positions=wpos.getSettings();
+			return true;
+			}
+		};
+	
 	public RecWindowMultiDim()
 		{
-		this(new Rectangle(400,300));
+		this(new Rectangle(800,660));
 		}
 	
 	public RecWindowMultiDim(Rectangle bounds)
 		{
-		RecWidgetSlices wslices=new RecWidgetSlices();
-		RecWidgetTimes wtimes=new RecWidgetTimes();
-		RecWidgetChannels wchans=new RecWidgetChannels();
-		RecWidgetOrder worder=new RecWidgetOrder();
-		RecWidgetPositions wpos=new RecWidgetPositions();
-		RecWidgetRecDesc wdesc=new RecWidgetRecDesc();
-		RecWidgetAcquireMultidim wacq=new RecWidgetAcquireMultidim();
-		
-
-		JPanel leftright=new JPanel(new GridLayout(1,2));
-		leftright.add(EvSwingUtil.layoutCompactVertical(wslices,worder,wpos));
-		leftright.add(EvSwingUtil.layoutCompactVertical(wtimes,wacq));
-		
 		setLayout(new BorderLayout());
-		add(EvSwingUtil.layoutCompactVertical(
-				leftright,wchans
-				),BorderLayout.NORTH);
-		add(
-				wdesc
-				,BorderLayout.CENTER);
 
+		add(
+				EvSwingUtil.layoutCompactVertical(
+					wslices,wtimes,worder,wacq
+					),
+				BorderLayout.EAST);
+		add(
+				EvSwingUtil.layoutACB(
+					EvSwingUtil.layoutCompactVertical(wchans,wpos), 
+					wdesc, 
+					null),
+				BorderLayout.CENTER);
+		
 		
 		//Window overall things
 		setTitleEvWindow("Multidimensional acquisition");
-		packEvWindow();
+		setBoundsEvWindow(800, null);
 		setVisibleEvWindow(true);
-//		setBoundsEvWindow(bounds);
 		}
 	
 	
 	
 	/**
+	 * also: compensate for light loss in Z?
+	 * 
+	 * 
 	 * lacking, from micromanager:
+	 * 
+	 * 
+	 * 
 	 * 
 	 * positions: 
 	 * 		edit XY list
@@ -134,7 +167,9 @@ public class RecWindowMultiDim extends BasicWindow
 	
 	public void dataChangedEvent()
 		{
-		
+		wchans.dataChangedEvent();
+		wpos.dataChangedEvent();
+		wacq.dataChangedEvent();
 		}
 
 	public void loadedFile(EvData data){}

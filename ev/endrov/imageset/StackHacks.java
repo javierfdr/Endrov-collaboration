@@ -5,8 +5,6 @@
  */
 package endrov.imageset;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import endrov.util.EvDecimal;
 
@@ -40,8 +38,11 @@ public class StackHacks
 			{
 			//EvDecimal frame=se.getKey();
 			int zi=0;
-			for(Map.Entry<EvDecimal, EvImage> ze:se.getValue().entrySet())
+			EvStack stack=se.getValue();
+			for(int az=0;az<stack.getDepth();az++)
+			//for(Map.Entry<EvDecimal, EvImage> ze:stack.entrySet())
 				{
+				EvImage evim=stack.getInt(az);
 				//EvDecimal z=ze.getKey();
 				EvStack newStack=newch.imageLoader.get(new EvDecimal(zi));
 				if(newStack==null)
@@ -49,7 +50,7 @@ public class StackHacks
 					newch.imageLoader.put(new EvDecimal(zi),newStack=new EvStack());
 					newStack.getMetaFrom(se.getValue());
 					}
-				newStack.put(new EvDecimal(si), ze.getValue());
+				newStack.putInt(si, evim);
 				zi++;
 				}
 			si++;
@@ -73,22 +74,25 @@ public class StackHacks
 	/**
 	 * Set spatial resolution
 	 */
-	public static void setResXYZ(EvChannel ch, double resX, double resY, EvDecimal resZ)
+	public static void setResXYZ(EvChannel ch, double resX, double resY, double resZ)
 		{
 		for(Map.Entry<EvDecimal, EvStack> se:ch.imageLoader.entrySet())
 			{
 			EvStack stack=se.getValue();
 			stack.resX=resX;
 			stack.resY=resY;
+			stack.resZ=resZ;
 			//TODO stack.resZ=resZ;
-			
-			List<EvImage> images=new ArrayList<EvImage>();
+
+			//Below will not be needed in the future once the loader is an array!!!
+			/*
+			 List<EvImage> images=new ArrayList<EvImage>();
 			for(EvImage im:stack.getImages())
 				images.add(im);
-			
-			stack.entrySet().clear();
+			stack.clearStack();
 			for(int i=0;i<images.size();i++)
-				stack.put(resZ.multiply(i), images.get(i));
+				stack.putInt(i, images.get(i));
+				*/
 			}
 		}
 	

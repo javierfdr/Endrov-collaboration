@@ -12,7 +12,8 @@ import java.net.Socket;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import endrov.hardware.PropertyType;
+import endrov.hardware.DevicePropertyType;
+import endrov.hardware.EvDeviceObserver;
 import endrov.recording.HWSerial;
 
 /**
@@ -88,9 +89,9 @@ public class EvSerialTCP implements HWSerial
 		return map;
 		}
 
-	public SortedMap<String, PropertyType> getPropertyTypes()
+	public SortedMap<String, DevicePropertyType> getPropertyTypes()
 		{
-		TreeMap<String, PropertyType> map=new TreeMap<String, PropertyType>();
+		TreeMap<String, DevicePropertyType> map=new TreeMap<String, DevicePropertyType>();
 		return map;
 		}
 
@@ -115,5 +116,16 @@ public class EvSerialTCP implements HWSerial
 	
 	public boolean hasConfigureDialog(){return false;}
 	public void openConfigureDialog(){}
+
+	
+	public EvDeviceObserver event=new EvDeviceObserver();
+	public void addListener(EvDeviceObserver.Listener listener)
+		{
+		event.addWeakListener(listener);
+		}
+	public void removeListener(EvDeviceObserver.Listener listener)
+		{
+		event.remove(listener);
+		}
 
 	}

@@ -1,3 +1,8 @@
+/***
+ * Copyright (C) 2010 Johan Henriksson
+ * This code is under the Endrov / BSD license. See www.endrov.net
+ * for the full text and how to cite.
+ */
 package endrov.roi.newer;
 
 import java.util.HashSet;
@@ -38,7 +43,7 @@ public class BitmapROI extends ROI
 
 	@Override
 	public LineIterator getLineIterator(EvStack stack, EvImage im,
-			String channel, EvDecimal frame, EvDecimal z)
+			String channel, EvDecimal frame, double z)
 		{
 		// TODO Auto-generated method stub
 		return null;
@@ -66,14 +71,15 @@ public class BitmapROI extends ROI
 		return new JPanel();
 		}
 
+	/*
 	@Override
-	public Set<EvDecimal> getSlice(Imageset rec, String channel, EvDecimal frame)
+	public Set<Integer> getSlice(Imageset rec, String channel, EvDecimal frame)
 		{
 		return bitmap.imageLoader.get(frame).keySet();
-		}
+		}*/
 
 	@Override
-	public boolean imageInRange(String channel, EvDecimal frame, EvDecimal z)
+	public boolean imageInRange(String channel, EvDecimal frame, double z)
 		{
 		if(bitmap.imageLoader.containsKey(frame))
 			{
@@ -109,6 +115,13 @@ public class BitmapROI extends ROI
 	public String saveMetadata(Element e)
 		{
 		return metaType;
+		}
+
+	@Override
+	public boolean pointInRange(String channel,	EvDecimal frame, double x, double y, double z)
+		{
+		// TODO Auto-generated method stub
+		return false;
 		}
 
 	}

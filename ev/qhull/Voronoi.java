@@ -10,6 +10,8 @@ import java.util.*;
 
 import javax.vecmath.Vector3d;
 
+import endrov.util.EvFileUtil;
+
 /**
  * Interface to Qhull - Voronoi
  * 
@@ -28,14 +30,16 @@ public class Voronoi
 		center=points;
 		
 		String platform;
-		if(endrov.ev.EV.isMac())
+		if(endrov.starter.EvSystemUtil.isMac())
 			platform="mac";
-		else if(endrov.ev.EV.isWindows())
+		else if(endrov.starter.EvSystemUtil.isWindows())
 			throw new Exception("QHULL Platform not supported");
 		else //assume linux?
 			platform="linux";
 		
-		File dir=new File(Voronoi.class.getResource(".").getFile());
+		//File dir=new File(Voronoi.class.getResource(".").getFile());
+		File dir=EvFileUtil.getFileFromURL(Voronoi.class.getResource(".").toURI().toURL());
+		
 		File executable=new File(new File(dir,"bin_"+platform),"qvoronoi");
 		
 		//String execString=executable.toString();

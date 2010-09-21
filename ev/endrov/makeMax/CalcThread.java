@@ -60,8 +60,9 @@ public final class CalcThread extends BatchThread
 				
 				//should anything else be copied? copy entire meta? TODO
 				chto.chBinning=chfrom.chBinning;
-				chto.defaultDispX=chfrom.defaultDispX;
-				chto.defaultDispY=chfrom.defaultDispY;
+				
+//				chto.defaultDispX=chfrom.defaultDispX;
+//				chto.defaultDispY=chfrom.defaultDispY;
 				}
 			else
 				throw new Exception("Max-channel already exists");
@@ -89,6 +90,11 @@ public final class CalcThread extends BatchThread
 					
 					EvStack s=chfrom.getFrame(curframe);
 					EvStack max=new EvOpProjectMaxZ().project(s);
+					
+					//Pick out only one slice - in case we resave to disk
+					/*EvStack maxOneLayer=new EvStack();
+					maxOneLayer.getMetaFrom(max);
+					max.putInt(0, max.getInt(0));*/
 
 
 					/*

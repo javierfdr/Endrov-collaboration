@@ -173,9 +173,10 @@ public class BoxROI extends ROI
 	/**
 	 * Get slices that at least are partially selected
 	 */
-	public Set<EvDecimal> getSlice(Imageset rec, String channel, EvDecimal frame)
+	/*
+	public Set<Integer> getSlice(Imageset rec, String channel, EvDecimal frame)
 		{
-		TreeSet<EvDecimal> c=new TreeSet<EvDecimal>();
+		TreeSet<Integer> c=new TreeSet<Integer>();
 		EvChannel ch=rec.getChannel(channel);
 		if(ch!=null)
 			{
@@ -186,20 +187,22 @@ public class BoxROI extends ROI
 						c.add(f);
 			}
 		return c;
-		}
+		}*/
 	
 	
 	
 
-	public boolean imageInRange(String channel, EvDecimal frame, EvDecimal z)
+	public boolean imageInRange(String channel, EvDecimal frame, double z)
 		{
-		return regionChannels.channelInRange(channel) && regionFrames.inRange(frame) && regionZ.inRange(z);
+		//System.out.println("inrange "+regionChannels.channelInRange(channel) +"  "+regionFrames.inRange(frame) +"   "+ regionZ.inRange(z));
+		
+		return /*regionChannels.channelInRange(channel) &&*/ regionFrames.inRange(frame) && regionZ.inRange(z);
 		}
 	
 	/**
 	 * Get iterator over one image
 	 */
-	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final EvDecimal z)
+	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final double z)
 		{
 		if(imageInRange(channel, frame, z))
 			{
@@ -219,6 +222,12 @@ public class BoxROI extends ROI
 				{
 				int rXstart=(int)stack.transformWorldImageX(regionX.start.doubleValue());
 				int rXend=(int)stack.transformWorldImageX(regionX.end.doubleValue());
+				if(rXstart>rXend)
+					{
+					int temp=rXstart;
+					rXstart=rXend;
+					rXend=temp;
+					}
 				if(it.startX<rXstart)	it.startX=rXstart;
 				if(it.endX>rXend) it.endX=rXend;
 				}
@@ -226,11 +235,15 @@ public class BoxROI extends ROI
 				{
 				int rYstart=(int)stack.transformWorldImageY(regionY.start.doubleValue());
 				int rYend=(int)stack.transformWorldImageY(regionY.end.doubleValue());
+				if(rYstart>rYend)
+					{
+					int temp=rYstart;
+					rYstart=rYend;
+					rYend=temp;
+					}
 				if(it.y<rYstart)	it.y=rYstart;
 				if(it.endY>rYend) it.endY=rYend;
 				}
-			
-//			System.out.println("newit: "+it.startX+" "+it.endX+" "+it.y+" "+it.endY+"");
 			
 			//Sanity check
 			if(it.y>it.endY || it.startX>it.endX)
@@ -245,6 +258,49 @@ public class BoxROI extends ROI
 		else
 			return new EmptyLineIterator();
 		}
+	
+	
+	@Override
+	public boolean pointInRange(String channel,
+			EvDecimal frame, double x, double y, double z)
+		{
+		if(imageInRange(channel, frame, z))
+			{
+			if(!regionX.all)
+				{
+				double rXstart=regionX.start.doubleValue();
+				double rXend=regionX.end.doubleValue();
+				if(rXstart>rXend)
+					{
+					double temp=rXstart;
+					rXstart=rXend;
+					rXend=temp;
+					}
+				if(x<rXstart)
+					return false;
+				else if(x>rXend)
+					return false;
+				}
+			if(!regionY.all)
+				{
+				double rYstart=regionY.start.doubleValue();
+				double rYend=regionY.end.doubleValue();
+				if(rYstart>rYend)
+					{
+					double temp=rYstart;
+					rYstart=rYend;
+					rYend=temp;
+					}
+				if(y<rYstart)
+					return false;
+				else if(y>rYend)
+					return false;
+				}
+			return true;
+			}
+		return false;
+		}
+
 	
 
 	/**
@@ -298,10 +354,20 @@ public class BoxROI extends ROI
 		regionX.all=false;
 		regionY.all=false;
 		regionChannels.add(chan);
-		regionFrames.set(frame);
+		//regionFrames.set(frame);
 		regionZ.set(z);
 		}
 	
+	/*
+	public void moveROI(EvDecimal dx, EvDecimal dy, EvDecimal dz)
+		{
+		regionX.start=regionX.start.add(dx);
+		regionX.end=regionX.end.add(dx);
+		regionY.start=regionY.start.add(dy);
+		regionY.end=regionY.end.add(dy);
+		regionZ.start=regionZ.start.add(dz);
+		regionZ.end=regionZ.end.add(dz);
+		}*/
 	
 	public Vector<ROI> getSubRoi()
 		{

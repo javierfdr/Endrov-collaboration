@@ -65,7 +65,7 @@ public class DiffROI extends CompoundROI
 				}
 			}
 		
-		public ThisLineIterator(EvImage im, LineIterator ita, LineIterator itb, String channel, EvDecimal frame, EvDecimal z)
+		public ThisLineIterator(EvImage im, LineIterator ita, LineIterator itb, String channel, EvDecimal frame, double z)
 			{
 			this.z=z;
 			this.ita=new OneIt(ita);
@@ -212,17 +212,18 @@ public class DiffROI extends CompoundROI
 	/**
 	 * Get slices that at least are partially selected
 	 */
+	/*
 	public Set<EvDecimal> getSlice(Imageset rec, String channel, EvDecimal frame)
 		{
 		TreeSet<EvDecimal> c=new TreeSet<EvDecimal>();
 		for(ROI roi:getSubRoi())
 			c.addAll(roi.getSlice(rec, channel, frame));
 		return c;
-		}
+		}*/
 	
 	
 
-	public boolean imageInRange(String channel, EvDecimal frame, EvDecimal z)
+	public boolean imageInRange(String channel, EvDecimal frame, double z)
 		{
 		for(ROI roi:getSubRoi())
 			if(roi.imageInRange(channel, frame, z))
@@ -233,7 +234,7 @@ public class DiffROI extends CompoundROI
 	/**
 	 * Get iterator over one image
 	 */
-	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final EvDecimal z)
+	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final double z)
 		{
 		Collection<ROI> subRoi=getSubRoi();
 		if(imageInRange(channel, frame, z) && !subRoi.isEmpty())
@@ -249,6 +250,16 @@ public class DiffROI extends CompoundROI
 			return new EmptyLineIterator();
 		}
 	
+	@Override
+	public boolean pointInRange(String channel,	EvDecimal frame, double x, double y, double z)
+		{
+		int count=0;
+		for(ROI roi:getSubRoi())
+			if(roi.pointInRange(channel, frame, x, y, z))
+				count++;
+		return count%2==1;
+		//http://en.wikipedia.org/wiki/Symmetric_difference
+		}
 	
 	
 	public String saveMetadata(Element e)
