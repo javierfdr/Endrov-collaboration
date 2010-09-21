@@ -7,9 +7,6 @@ import java.util.Iterator;
 
 import endrov.util.Vector2i;
 import endrov.util.curves.WrongParameterSplineException;
-import endrov.worms.WormPixelMatcher;
-import endrov.worms.skeleton.WormSkeleton;
-
 import com.graphbuilder.curve.CardinalSpline;
 import com.graphbuilder.curve.ControlPath;
 import com.graphbuilder.curve.GroupIterator;
