@@ -14,8 +14,15 @@ import endrov.util.curves.EvCardinalSpline;
 import endrov.worms.skeleton.SkeletonUtils;
 import endrov.worms.skeleton.WormSkeleton;
 
+/**
+ * Defines a worm shape as the contour and area of the shape.
+ * 
+ * @author Javier Fernandez
+ */
+
 public class WormShape
 	{
+
 	ArrayList<Integer> wormContour;
 	ArrayList<Integer> wormArea;
 	WormPixelMatcher wpm;
@@ -150,6 +157,10 @@ public class WormShape
 		return isWormArea;
 		}
 
+	/**
+	 * Given the pixels belonging to the area of the worm shape, the contour
+	 * is calculated
+	 */
 	private static ArrayList<Integer> contourFromArea(ArrayList<Integer> area,
 			boolean isArea[], WormPixelMatcher wpm)
 		{
@@ -243,6 +254,10 @@ public class WormShape
 		return contourPoints;
 		}
 
+	/**
+	 * Returns the pixels belonging to the area of the worm defined
+	 * by the calling worm descriptor
+	 */
 	public static ArrayList<Integer> rasterizeWorm(
 			ArrayList<Integer> wormContour, WormPixelMatcher wpm)
 		{
@@ -270,32 +285,11 @@ public class WormShape
 		return sub;
 		}
 
-	private static ArrayList<Integer> getIntegerSubList(
-			ArrayList<Integer> pointList, int init, int end)
-		{
-		Iterator<Integer> pit = pointList.iterator();
-		ArrayList<Integer> sub = new ArrayList<Integer>();
-		int count = 0;
-		while (pit.hasNext()&&count<init)
-			{
-			pit.next();
-			count++;
-			}
-		while (pit.hasNext()&&count<=end)
-			{
-			sub.add(pit.next());
-			count++;
-			}
-		return sub;
-		}
 
 	public static ArrayList<Integer> contourPercentage(
 			ArrayList<Integer> wormContour, WormPixelMatcher wpm, double numPointsPerc)
 		{
-
-		ArrayList<Integer> basePoints = new ArrayList<Integer>();
 		return takeNIntegerPoints(wormContour, numPointsPerc);
-
 		}
 
 	public static ArrayList<Integer> twoSplineContour(

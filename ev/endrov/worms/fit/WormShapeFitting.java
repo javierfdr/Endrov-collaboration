@@ -43,16 +43,25 @@ import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.skeleton.WormSkeleton;
 import endrov.worms.utils.greedyNonBipartiteAssignment;
 
+/**
+ * Class defining a series of methods to fit the shape of worms 
+ * in digital images, once having the skeleton conformation
+ * and the distribution of the worms in the image. 
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public class WormShapeFitting
 	{
 
+	/**
+	 * Given a skeleton of an isolated worm, the corresponding contour
+	 * is traced.
+	 */
 	public static ArrayList<Integer> fitIsolatedWorm(WormClusterSkeleton wc,
 			WormPixelMatcher wpm, WormProfile wprof, int[] dtArray,
 			int minSkeletonLength)
 		{
-
-		ArrayList<Integer> wormContour = SkeletonTransform.getShapeContour(wc,
-				minSkeletonLength);
 		WormSkeleton ws = null;
 		try
 			{
@@ -64,11 +73,24 @@ public class WormShapeFitting
 			e.printStackTrace();
 			}
 
+		ArrayList<Integer> wormContour = SkeletonTransform.getShapeContour(wc,
+				minSkeletonLength);
 		wormContour = WormShape.ensureCounterClockwise(wormContour, wprof, ws,
 				dtArray);
 		return wormContour;
 		}
-
+/**
+ * Calculates the set of possible worm conformations that can be detected
+ * in the worm cluster 'wc', and returns a matching dictionary that assigns
+ * to every worm endpoint belonging to the cluster, the list of feasible worm
+ * conformations starting from the corresponding endpoint.
+ * 
+ * A worm conformation is represented as a 3-tuple of double values, this way:
+ * <other-endpoint, opt-energy-value, conformation-index>. Where other-endpoint is
+ * the opposite worm endpoint. Opt-energy-value is the value of the objective 
+ * function that corresponds to the conformation. And, conformation-index is the
+ * index of the conformation in the list of accumulated conformations. 
+ */
 	public static Hashtable<Integer, ArrayList<Vector3d>> fitWormCluster(
 			WormShapeOptimization optMethod, WormClusterSkeleton wc,
 			WormProfile wprof, int[] dtArray, EvPixels inputImage, int wormLength,
@@ -98,9 +120,8 @@ public class WormShapeFitting
 
 		Iterator<WormSkeleton> wit = skList.iterator();
 		int count = 0;
-		int index = matchedShapes.size(); // IMPORTANT THIS WAS CHANGED TO FIT WORM
-																			// SHAPES ORDER. index = 0
-
+		int index = matchedShapes.size(); 
+		
 		// For every base a list containing receiving base, optimization value and
 		// matched array position is stored
 		Hashtable<Integer, ArrayList<Vector3d>> matchDic = new Hashtable<Integer, ArrayList<Vector3d>>();
@@ -151,7 +172,12 @@ public class WormShapeFitting
 		// return matchedShapes;
 		};
 
-	private static boolean skeletonMatchingOpt(WormShapeOptimization optMethod,
+	/**
+	 * Calculates the best conformation corresponding to 'ws' and 'wprof' following
+	 * the bendingOptimization(...) method, and adds it to the 
+	 * dictionary of matches.
+	 */
+		private static boolean skeletonMatchingOpt(WormShapeOptimization optMethod,
 			WormSkeleton ws, WormProfile wprof, int[] dtArray, WormPixelMatcher wpm,
 			ArrayList<WormShape> matchedShapes,
 			Hashtable<Integer, ArrayList<Vector3d>> matchDic, int index,
@@ -159,7 +185,6 @@ public class WormShapeFitting
 		{
 
 		// Optimize WormSkeleton shape
-
 		double[] optValue =
 			{ -1 };
 		// System.out.println("Starting bending");
@@ -255,7 +280,11 @@ public class WormShapeFitting
 			}
 		return true;
 		}
-
+		/**
+		 * Calculates the best worm conformation that can be obtained by deforming the worm 
+		 * shape constructed through the worm skeleton 'ws' and the profile 'wprof', following 
+		 * the optimization method defined by 'optMethod'
+		 */
 	private static ArrayList<Integer> bendingOptimization(
 			WormShapeOptimization optMethod, WormSkeleton ws, WormProfile wprof,
 			int[] dtArray, double[] optValue)

@@ -23,17 +23,51 @@ import endrov.worms.skeleton.Thickening;
 import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.skeleton.WormSkeleton;
 
+/**
+ * Defines a numerical profile of a worm shape
+ * 
+ * @author Javier Fernandez
+ */
+
+
 public class WormProfile
 	{
+
 	public WormPixelMatcher wpm;
 	public double[] thickness;
 
+	/**
+	 * Creates a worm profile given the thickness set and a WormPixelMatcher 'wpm'
+	 */
 	public WormProfile(WormPixelMatcher wpm, double[] thickness)
 		{
 		this.thickness = thickness.clone();
 		this.wpm = wpm;
 		}
 
+	/**
+	 * Calculates the profile of a single worm
+	 * @param ws Skeleton of the profiling worm
+	 * @param consectPts indicates whether the given skeleton stores consecutive points
+	 * @param numPoints number of control points
+	 * @param dtArray distance transform array
+	 */
+	public WormProfile(WormSkeleton ws, boolean consecPts, int numPoints,
+			int[] dtArray)
+		{
+		this.wpm = ws.getPixelMatcher();
+		double[] thickness = getThickness(dtArray, ws, consecPts, numPoints);
+		this.thickness = thickness;
+		}
+	
+	/**
+	 * Calculates a generic worm profile by calculating the individual profiles of a set of
+	 * worm skeletons given by 'worms', and finding an average thickness distribution.
+	 * @param ws Skeleton of the profiling worm
+	 * @param consectPts indicates whether the given skeleton stores consecutive points
+	 * @param numPoints number of control points
+	 * @param dtArray distance transform array 
+	 */
 	public WormProfile(ArrayList<WormSkeleton> worms, boolean consecPts,
 			int numPoints, int[] dtArray)
 		{
@@ -65,14 +99,8 @@ public class WormProfile
 			}
 		}
 
-	public WormProfile(WormSkeleton ws, boolean consecPts, int numPoints,
-			int[] dtArray)
-		{
-		this.wpm = ws.getPixelMatcher();
-		double[] thickness = getThickness(dtArray, ws, consecPts, numPoints);
-		this.thickness = thickness;
-		}
-
+	
+	
 	/**
 	 * Calculates the thickness associated to the consecutive skeleton points of
 	 * the isolated worm given by skPoints.
@@ -220,6 +248,72 @@ public class WormProfile
 	/**
 	 * Calculates the worm shape contour points over the given control points
 	 * based on the worm profile thickness. The size of controlPoints must be the
+	 * same as the thickness variable, and must be ordered consecutively.
+	 */
+	public static ArrayList<Integer> constructShape(int[] controlPoints,
+			WormProfile wp, int numPoints, int[] wormDT)
+		{
+
+		ArrayList<Point> base;
+		int[] baseA = new int[2];
+		ArrayList<ArrayList<Integer>> contourP = getContourPoints(controlPoints,
+				wp, wormDT);
+		ArrayList<Integer> shapePoints = new ArrayList<Integer>();
+		ArrayList<Integer> sidePoints;
+		CardinalSpline skSpline;
+		HashSet<Integer> hash = new HashSet<Integer>();
+		Iterator<Integer> it;
+		int next;
+		boolean newAdded;
+
+		// North Spline
+		baseA[0] = controlPoints[0];
+		baseA[1] = controlPoints[controlPoints.length-1];
+		base = wp.wpm.baseToPoint(baseA);
+		skSpline = EvCardinalSpline.getShapeSpline(base, wp.wpm
+				.pixelListToPoint(contourP.get(0)), 0.5, 0.9);
+		sidePoints = wp.wpm.pointListToPixelList(EvCardinalSpline
+				.getCardinalPoints(skSpline, numPoints));
+
+		it = sidePoints.iterator();
+		// it=contourP.get(0).iterator();
+		while (it.hasNext())
+			{
+			next = it.next();
+			newAdded = hash.add(next);
+			if (newAdded)
+				{
+				shapePoints.add(next);
+				}
+			}
+
+		// South Spline
+		baseA[0] = controlPoints[controlPoints.length-1];
+		baseA[1] = controlPoints[0];
+		base = wp.wpm.baseToPoint(baseA);
+		skSpline = EvCardinalSpline.getShapeSpline(base, wp.wpm
+				.pixelListToPoint(contourP.get(1)), 0.5, 0.9);
+		sidePoints = wp.wpm.pointListToPixelList(EvCardinalSpline
+				.getCardinalPoints(skSpline, numPoints));
+
+		it = sidePoints.iterator();
+		// it=contourP.get(1).iterator();
+		while (it.hasNext())
+			{
+			next = it.next();
+			newAdded = hash.add(next);
+			if (newAdded)
+				{
+				shapePoints.add(next);
+				}
+			}
+		return shapePoints;
+		}
+
+	
+	/**
+	 * Calculates the worm shape contour points over the given control points
+	 * based on the worm profile thickness. The size of controlPoints must be the
 	 * same as the thickness variable, and must be ordered consecutively. The
 	 * contour points are expanded or contracted slightly to meet the contour
 	 * points defined by the distance transformation 'wormDT'
@@ -284,121 +378,6 @@ public class WormProfile
 		return shapePoints;
 		}
 
-	/**
-	 * Calculates the worm shape contour points over the given control points
-	 * based on the worm profile thickness. The size of controlPoints must be the
-	 * same as the thickness variable, and must be ordered consecutively.
-	 */
-	public static ArrayList<Integer> constructShape(int[] controlPoints,
-			WormProfile wp, int numPoints, int[] wormDT)
-		{
-
-		ArrayList<Point> base;
-		int[] baseA = new int[2];
-		ArrayList<ArrayList<Integer>> contourP = getContourPoints(controlPoints,
-				wp, wormDT);
-		ArrayList<Integer> shapePoints = new ArrayList<Integer>();
-		ArrayList<Integer> sidePoints;
-		CardinalSpline skSpline;
-		HashSet<Integer> hash = new HashSet<Integer>();
-		Iterator<Integer> it;
-		int next;
-		boolean newAdded;
-
-		// North Spline
-		baseA[0] = controlPoints[0];
-		baseA[1] = controlPoints[controlPoints.length-1];
-		base = wp.wpm.baseToPoint(baseA);
-		skSpline = EvCardinalSpline.getShapeSpline(base, wp.wpm
-				.pixelListToPoint(contourP.get(0)), 0.5, 0.9);
-		sidePoints = wp.wpm.pointListToPixelList(EvCardinalSpline
-				.getCardinalPoints(skSpline, numPoints));
-
-		it = sidePoints.iterator();
-		// it=contourP.get(0).iterator();
-		while (it.hasNext())
-			{
-			next = it.next();
-			newAdded = hash.add(next);
-			if (newAdded)
-				{
-				shapePoints.add(next);
-				}
-			}
-
-		// South Spline
-		baseA[0] = controlPoints[controlPoints.length-1];
-		baseA[1] = controlPoints[0];
-		base = wp.wpm.baseToPoint(baseA);
-		skSpline = EvCardinalSpline.getShapeSpline(base, wp.wpm
-				.pixelListToPoint(contourP.get(1)), 0.5, 0.9);
-		sidePoints = wp.wpm.pointListToPixelList(EvCardinalSpline
-				.getCardinalPoints(skSpline, numPoints));
-
-		it = sidePoints.iterator();
-		// it=contourP.get(1).iterator();
-		while (it.hasNext())
-			{
-			next = it.next();
-			newAdded = hash.add(next);
-			if (newAdded)
-				{
-				shapePoints.add(next);
-				}
-			}
-		return shapePoints;
-		}
-
-	private static double distBestLinePoint(int[] wormDT, WormPixelMatcher wpm,
-			Line l1, ArrayList<Integer> contourPoints)
-		{
-		ArrayList<Integer> linePoints = l1.getLinePoints(wpm.w);
-		Iterator<Integer> lit = linePoints.iterator();
-		int bestPixel = -1;
-		int bestDT = Integer.MAX_VALUE;
-		int next;
-		lit.next();// Avoid skPoint
-		while (lit.hasNext())
-			{
-			next = lit.next();
-			if (wormDT[next]>1&&wormDT[next]<=bestDT)
-				{
-				bestPixel = next;
-				bestDT = wormDT[next];
-				contourPoints.add(next);
-				}
-			}
-		// assign last pixel if not dt found (case for non-steep slopes)
-		if (bestPixel==-1)
-			{
-			bestPixel = linePoints.get(linePoints.size()-1);
-			if (wormDT[bestPixel]==0)
-				bestDT = Integer.MAX_VALUE;
-			else
-				bestDT = wormDT[bestPixel];
-			}
-		// Check if there is a better pixel around
-		boolean newpixel = true;
-		while (newpixel)
-			{
-			int[] neigh = SkeletonUtils.getCircularNeighbors(bestPixel, wpm.w);
-			newpixel = false;
-			for (int i = 0; i<neigh.length; i++)
-				{
-				if (wormDT[neigh[i]]<bestDT&&wormDT[neigh[i]]!=0)
-					{
-					bestDT = wormDT[neigh[i]];
-					bestPixel = neigh[i];
-					newpixel = true;
-					}
-				}
-			}
-		contourPoints.add(bestPixel);
-		Vector2i bp = wpm.getPixelPos(bestPixel);
-		// Calculate distance
-		return Math.sqrt(Math.pow(bp.x-l1.p1.x, 2)+Math.pow(bp.y-l1.p1.y, 2));
-
-		}
 
 	/**
 	 * Returns the extreme points defined by the bisector placed at p2 of length
@@ -648,5 +627,58 @@ public class WormProfile
 
 		return (average/lengthList.size());
 		}
+	
+
+	private static double distBestLinePoint(int[] wormDT, WormPixelMatcher wpm,
+			Line l1, ArrayList<Integer> contourPoints)
+		{
+		ArrayList<Integer> linePoints = l1.getLinePoints(wpm.w);
+		Iterator<Integer> lit = linePoints.iterator();
+		int bestPixel = -1;
+		int bestDT = Integer.MAX_VALUE;
+		int next;
+		lit.next();// Avoid skPoint
+		while (lit.hasNext())
+			{
+			next = lit.next();
+			if (wormDT[next]>1&&wormDT[next]<=bestDT)
+				{
+				bestPixel = next;
+				bestDT = wormDT[next];
+				contourPoints.add(next);
+				}
+			}
+		// assign last pixel if not dt found (case for non-steep slopes)
+		if (bestPixel==-1)
+			{
+			bestPixel = linePoints.get(linePoints.size()-1);
+			if (wormDT[bestPixel]==0)
+				bestDT = Integer.MAX_VALUE;
+			else
+				bestDT = wormDT[bestPixel];
+			}
+		// Check if there is a better pixel around
+		boolean newpixel = true;
+		while (newpixel)
+			{
+			int[] neigh = SkeletonUtils.getCircularNeighbors(bestPixel, wpm.w);
+			newpixel = false;
+			for (int i = 0; i<neigh.length; i++)
+				{
+				if (wormDT[neigh[i]]<bestDT&&wormDT[neigh[i]]!=0)
+					{
+					bestDT = wormDT[neigh[i]];
+					bestPixel = neigh[i];
+					newpixel = true;
+					}
+				}
+			}
+		contourPoints.add(bestPixel);
+		Vector2i bp = wpm.getPixelPos(bestPixel);
+		// Calculate distance
+		return Math.sqrt(Math.pow(bp.x-l1.p1.x, 2)+Math.pow(bp.y-l1.p1.y, 2));
+
+		}
+
 
 	}

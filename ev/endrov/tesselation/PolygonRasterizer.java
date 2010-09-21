@@ -9,6 +9,12 @@ import endrov.roi.newer.FlipCodeTessellate;
 import endrov.roi.newer.TriangulationException;
 import endrov.util.Vector2i;
 
+/**
+ * Rasterization of polygons, by triangulating and then rasterizing individual
+ * triangles
+ * 
+ * @author Javier Fernandez
+ */
 public abstract class PolygonRasterizer
 	{
 	

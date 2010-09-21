@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import endrov.util.Vector2i;
-
+/**
+ * Tools for skeleton manipulation based on Euclidean Distance Transform
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public final class EuclideanSkeletonTransform extends SkeletonTransform
 	{
 

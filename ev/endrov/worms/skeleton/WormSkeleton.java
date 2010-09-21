@@ -10,7 +10,9 @@ import endrov.worms.skeleton.NotWormException;
 
 /**
  * Class representing a 1 worm skeleton, conformed by its base points, and
- * skeleton points *
+ * skeleton points 
+ * 
+ * @author Javier Fernandez
  */
 public class WormSkeleton extends Skeleton
 	{

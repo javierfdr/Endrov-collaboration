@@ -5,13 +5,20 @@ import java.util.ArrayList;
 import endrov.util.Vector2i;
 import endrov.worms.WormDescriptor;
 
+/**
+ * Minimization method based on finding the best individual in the neighborhood until
+ * a local or global optimum is reached
+ * 
+ * @author Javier Fernandez
+ */
 public class BestNeighborOptimization extends WormShapeOptimization
 	{
-
+		
 	public BestNeighborOptimization()
 		{
 		super();
 		}
+	
 
 	@Override
 	public double run(WormDescriptor wd)

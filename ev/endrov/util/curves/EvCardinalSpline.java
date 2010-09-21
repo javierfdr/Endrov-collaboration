@@ -16,6 +16,12 @@ import com.graphbuilder.curve.GroupIterator;
 import com.graphbuilder.curve.Point;
 import com.graphbuilder.curve.ShapeMultiPath;
 
+/**
+ * Cardinal Spline for Endrov, based on Curve Api library.
+ * 
+ * @author Javier Fernandez
+ *  
+ */
 public class EvCardinalSpline
 	{
 	CardinalSpline cs;

@@ -12,13 +12,19 @@ import endrov.worms.WormShape;
 import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.utils.greedyNonBipartiteAssignment;
 
+
+/**
+ * Utils for worm fitting methods
+ * @author Javier Fernandez
+ *
+ */
 public class WormFitUtils
 	{
 
 	/**
 	 * Filter the table of possible matchings finding the lowest cost assignment
-	 * the maximizes the number of base points taken. Its implemented following
-	 * the Hungarian Algorithm for the assignment problem in a bipartite graph.
+	 * the maximizes the number of base points taken. Follows a greedy algorithm
+	 * for lowest total cost assignment
 	 */
 
 	public static ArrayList<WormShape> filterFittingDictionary(

@@ -56,8 +56,9 @@ public class PolygonROI
 
 	/**
 	 * Get tesselation, calculate if needed
+	 * @throws TriangulationException 
 	 */
-	public Tessellation getTessellation()
+	public Tessellation getTessellation() throws TriangulationException
 		{
 		if(userTessellation!=null)
 			return userTessellation;

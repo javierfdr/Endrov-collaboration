@@ -8,6 +8,13 @@ import endrov.imageset.EvPixelsType;
 import endrov.util.Vector2i;
 import endrov.worms.WormPixelMatcher;
 
+/**
+ * Utils for morphological skeleton calculation and associated information
+ * calculation
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public class SkeletonUtils
 	{
 

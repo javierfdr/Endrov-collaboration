@@ -4,16 +4,29 @@ import java.util.ArrayList;
 import endrov.util.Vector2i;
 import endrov.tesselation.utils.Line;
 
+/**
+ * Rasterization of individual triangles
+ * 
+ * @author Javier Fernandez
+ */
 public class TriangleRasterizer
 	{
 	final int BG_COLOR = 0;
 
+	/**
+	 * Raterizes the triangle defined by 'vertices' and stores
+	 * the pixels belonging to the triangle area in 'rasterArea' 
+	 */
 	public static void rasterizeTriangle(int width, int height,
 			Vector2i vertices[], ArrayList<Integer> rasterArea)
 		{
 		rasterize(width, height, vertices, rasterArea);
 		}
 
+	/**
+	 * Raterizes the triangle defined by 'vertices', returning
+	 * the list of pixels belonging to the triangle. 
+	 */
 	public static ArrayList<Integer> rasterizeTriangle(int width, int height,
 			Vector2i vertices[])
 		{

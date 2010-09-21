@@ -5,6 +5,13 @@ import java.util.Iterator;
 
 import endrov.worms.skeleton.SkeletonTransform;
 
+/**
+ * Thinning algorithm for skeletonization. Based on T.Y. Zhang and C.Y. Suen 
+ * thinning algorithm
+ * 
+ * @author Javier Fernandez
+ */
+
 public class Thinning
 	{
 
@@ -168,7 +175,7 @@ public class Thinning
 		}
 
 	/**
-	 * Applies T.Y. Zhang and C.Y. Suen thinning algorithm iteratively calling the
+	 * Applies T.Y. Zhang and C.Y. Suen thinning-skeletonization algorithm iteratively calling the
 	 * thinContour method,until reaching a 1-pixel width image.
 	 * 
 	 * @param dtImage

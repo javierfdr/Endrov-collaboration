@@ -19,6 +19,14 @@ import endrov.worms.paths.WormPathUtils;
 
 import java.util.Hashtable;
 
+/**
+ * Abstract definition for a morphological skeleton based on distance
+ * transform, and associated tools for distance-transform-based 
+ * skeleton manipulations
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public abstract class SkeletonTransform
 	{
 	final static int[] diagDic =
@@ -45,164 +53,6 @@ public abstract class SkeletonTransform
 	 * Checks whether pixel is a connected pixel in skeleton.
 	 */
 	abstract public boolean nonConnectedPixel(boolean[] skeleton, int w, int pixel);
-
-	/**
-	 * Finds all the base or extreme points given the binary representation
-	 * isShape. A base point is such that, in a 1-pixel width skeleton, has only
-	 * one neighbor or has two neighbors in the same direction
-	 * 
-	 * @param isShape
-	 *          Matrix-like array, true for every position that belongs to the
-	 *          shape
-	 * @param w
-	 *          Width of the image matrix represented in isSkeleton
-	 * @param shapePoints
-	 *          List of the pixels that belong to the shape represented in isShape
-	 * @return
-	 */
-	private static ArrayList<Integer> detectBasePoints(boolean[] isShape, int w,
-			ArrayList<Integer> shapePoints)
-		{
-		ArrayList<Integer> basePoints = new ArrayList<Integer>();
-		Iterator<Integer> it = shapePoints.iterator();
-		int pixel;
-		int neigh[];
-		int totalNeigh;
-		int totalHitAreas;
-
-		while (it.hasNext())
-			{
-			pixel = it.next();
-			neigh = SkeletonUtils.getCircularNeighbors(pixel, w);
-			totalNeigh = 0;
-			totalHitAreas = 0;
-
-			for (int i = 0; i<7; i++)
-				{
-				if (isShape[neigh[i]]&&isShape[neigh[i+1]])
-					totalHitAreas++;
-				if (isShape[neigh[i]])
-					totalNeigh++;
-				}
-			if (isShape[neigh[7]]&&isShape[neigh[0]])
-				totalHitAreas++;
-			if (isShape[neigh[7]])
-				totalNeigh++;
-
-			if (totalNeigh==1||(totalHitAreas==1&&totalNeigh==2))
-				{
-				basePoints.add(pixel);
-				}
-			}
-		return basePoints;
-		}
-
-	/**
-	 * Expands the skeleton extremes (which are not the worm extreme points) to
-	 * match the worm extremes
-	 */
-	private static void expandToWormBase(int[] dtArray, int w,
-			boolean[] isSkPoint, ArrayList<Integer> skPoints,
-			ArrayList<Integer> basePoints)
-		{
-		int current;
-		int previous;
-		int move;
-		Vector2i next;
-		int len;
-		int[] neigh;
-		int pIndex = -1;
-		ArrayList<Integer> newBases = new ArrayList<Integer>(basePoints.size());
-		int[] dic =
-			{ 4, 6, 0, 2 };// opposite direction
-		int extra;
-
-		// Procedure: Follow Max directional neighbor until a
-		// 1-value pixel is found or until the neighbor is out of the
-		// shape (picking the last one)
-
-		Iterator<Integer> bIt = basePoints.iterator();
-		previous = -1;
-		while (bIt.hasNext())
-			{
-			current = bIt.next();
-			// Already border pixel
-			if (dtArray[current]==1)
-				{
-				newBases.add(current);
-				continue;
-				}
-			// Find previous skeleton pixel
-			neigh = SkeletonUtils.getCrossNeighbors(current, w);
-			for (int i = 0; i<4; i++)
-				{
-				if (isSkPoint[neigh[i]])
-					{
-					previous = neigh[i];
-					pIndex = i;
-					}
-				}
-			if (previous==-1)
-				{
-				newBases.add(current);
-				continue;
-				}
-			move = dic[pIndex];
-
-			// Follow best neighbor until background or border pixel is found
-			while (true)
-				{
-				next = SkeletonUtils.getMaxDirectionalNeighbor(dtArray, w, current,
-						move);
-				previous = current;
-				current = next.x;
-				move = next.y;
-
-				if (dtArray[current]==1)
-					{
-					newBases.add(current);
-					skPoints.add(current);
-					isSkPoint[current] = true;
-
-					if (diagDic[move]!=-1)
-						{
-						extra = SkeletonUtils.getNeighbor(previous, diagDic[move], w);
-						skPoints.add(extra);
-						isSkPoint[extra] = true;
-						}
-					break;
-					}
-				else if (dtArray[current]==0)
-					{
-					newBases.add(previous);
-					skPoints.add(previous);
-					isSkPoint[previous] = true;
-					break;
-					}
-				// Add Path
-				skPoints.add(current);
-				isSkPoint[current] = true;
-
-				if (diagDic[move]!=-1)
-					{
-					extra = SkeletonUtils.getNeighbor(previous, diagDic[move], w);
-					skPoints.add(extra);
-					isSkPoint[extra] = true;
-					}
-				}
-			}
-		// Set new bases points
-		int b = 0;
-		int base;
-		bIt = newBases.iterator();
-		while (bIt.hasNext())
-			{
-			base = bIt.next();
-			isSkPoint[base] = true;
-			basePoints.set(b, base);
-			b++;
-			}
-		}
 
 	/**
 	 * Calculates the skeleton associated with the input distance transform image
@@ -237,6 +87,7 @@ public abstract class SkeletonTransform
 		return skImage;
 		}
 
+	
 	/**
 	 * Calculates the general skeleton associated with distance transform image
 	 * (dt) taken from image and returns a list containing the isolated Worm
@@ -468,4 +319,165 @@ public abstract class SkeletonTransform
 		return matching;
 		}
 
+
+	/**
+	 * Finds all the base or extreme points given the binary representation
+	 * isShape. A base point is such that, in a 1-pixel width skeleton, has only
+	 * one neighbor or has two neighbors in the same direction
+	 * 
+	 * @param isShape
+	 *          Matrix-like array, true for every position that belongs to the
+	 *          shape
+	 * @param w
+	 *          Width of the image matrix represented in isSkeleton
+	 * @param shapePoints
+	 *          List of the pixels that belong to the shape represented in isShape
+	 * @return
+	 */
+	private static ArrayList<Integer> detectBasePoints(boolean[] isShape, int w,
+			ArrayList<Integer> shapePoints)
+		{
+		ArrayList<Integer> basePoints = new ArrayList<Integer>();
+		Iterator<Integer> it = shapePoints.iterator();
+		int pixel;
+		int neigh[];
+		int totalNeigh;
+		int totalHitAreas;
+
+		while (it.hasNext())
+			{
+			pixel = it.next();
+			neigh = SkeletonUtils.getCircularNeighbors(pixel, w);
+			totalNeigh = 0;
+			totalHitAreas = 0;
+
+			for (int i = 0; i<7; i++)
+				{
+				if (isShape[neigh[i]]&&isShape[neigh[i+1]])
+					totalHitAreas++;
+				if (isShape[neigh[i]])
+					totalNeigh++;
+				}
+			if (isShape[neigh[7]]&&isShape[neigh[0]])
+				totalHitAreas++;
+			if (isShape[neigh[7]])
+				totalNeigh++;
+
+			if (totalNeigh==1||(totalHitAreas==1&&totalNeigh==2))
+				{
+				basePoints.add(pixel);
+				}
+			}
+		return basePoints;
+		}
+
+	/**
+	 * Expands the skeleton extremes (which are not the worm extreme points) to
+	 * match the worm extremes
+	 */
+	private static void expandToWormBase(int[] dtArray, int w,
+			boolean[] isSkPoint, ArrayList<Integer> skPoints,
+			ArrayList<Integer> basePoints)
+		{
+		int current;
+		int previous;
+		int move;
+		Vector2i next;
+		int len;
+		int[] neigh;
+		int pIndex = -1;
+		ArrayList<Integer> newBases = new ArrayList<Integer>(basePoints.size());
+		int[] dic =
+			{ 4, 6, 0, 2 };// opposite direction
+		int extra;
+
+		// Procedure: Follow Max directional neighbor until a
+		// 1-value pixel is found or until the neighbor is out of the
+		// shape (picking the last one)
+
+		Iterator<Integer> bIt = basePoints.iterator();
+		previous = -1;
+		while (bIt.hasNext())
+			{
+			current = bIt.next();
+			// Already border pixel
+			if (dtArray[current]==1)
+				{
+				newBases.add(current);
+				continue;
+				}
+			// Find previous skeleton pixel
+			neigh = SkeletonUtils.getCrossNeighbors(current, w);
+			for (int i = 0; i<4; i++)
+				{
+				if (isSkPoint[neigh[i]])
+					{
+					previous = neigh[i];
+					pIndex = i;
+					}
+				}
+			if (previous==-1)
+				{
+				newBases.add(current);
+				continue;
+				}
+			move = dic[pIndex];
+
+			// Follow best neighbor until background or border pixel is found
+			while (true)
+				{
+				next = SkeletonUtils.getMaxDirectionalNeighbor(dtArray, w, current,
+						move);
+				previous = current;
+				current = next.x;
+				move = next.y;
+
+				if (dtArray[current]==1)
+					{
+					newBases.add(current);
+					skPoints.add(current);
+					isSkPoint[current] = true;
+
+					if (diagDic[move]!=-1)
+						{
+						extra = SkeletonUtils.getNeighbor(previous, diagDic[move], w);
+						skPoints.add(extra);
+						isSkPoint[extra] = true;
+						}
+					break;
+					}
+				else if (dtArray[current]==0)
+					{
+					newBases.add(previous);
+					skPoints.add(previous);
+					isSkPoint[previous] = true;
+					break;
+					}
+				// Add Path
+				skPoints.add(current);
+				isSkPoint[current] = true;
+
+				if (diagDic[move]!=-1)
+					{
+					extra = SkeletonUtils.getNeighbor(previous, diagDic[move], w);
+					skPoints.add(extra);
+					isSkPoint[extra] = true;
+					}
+				}
+			}
+		// Set new bases points
+		int b = 0;
+		int base;
+		bIt = newBases.iterator();
+		while (bIt.hasNext())
+			{
+			base = bIt.next();
+			isSkPoint[base] = true;
+			basePoints.set(b, base);
+			b++;
+			}
+		}
+
+	
+	
 	}

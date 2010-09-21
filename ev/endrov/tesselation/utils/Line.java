@@ -5,6 +5,12 @@ import java.util.ArrayList;
 import endrov.util.Vector2i;
 import endrov.worms.WormPixelMatcher;
 
+/**
+ * A 2d line definition
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public class Line
 	{
 	public Vector2i p1;

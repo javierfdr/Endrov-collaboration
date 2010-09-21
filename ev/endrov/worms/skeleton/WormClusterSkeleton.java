@@ -8,6 +8,13 @@ import endrov.imageset.EvPixels;
 import endrov.util.Vector2i;
 import endrov.worms.WormPixelMatcher;
 
+/**
+ * Class defining a morphological skeleton of a worm cluster
+ * 
+ * @author stormeagle
+ *
+ */
+
 public final class WormClusterSkeleton extends Skeleton
 	{
 	public ArrayList<Integer> basePoints;

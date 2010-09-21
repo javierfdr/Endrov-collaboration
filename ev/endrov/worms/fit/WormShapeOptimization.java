@@ -6,6 +6,13 @@ import java.util.Iterator;
 import endrov.util.Vector2i;
 import endrov.worms.WormDescriptor;
 
+/**
+ * Abstract definition of optimization methods for
+ * worm shape deformations
+ * 
+ * @author Javier Fernandez
+ */
+
 public abstract class WormShapeOptimization
 	{
 

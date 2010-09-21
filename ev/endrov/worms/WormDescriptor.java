@@ -17,6 +17,13 @@ import javax.vecmath.Vector2d;
 import com.graphbuilder.curve.CardinalSpline;
 import com.graphbuilder.curve.Point;
 
+/**
+ * Geometrical descriptor for worm shapes
+ * 
+ * @author Javier Fernandez
+ *
+ */
+
 public class WormDescriptor implements Cloneable
 	{
 
@@ -121,6 +128,10 @@ public class WormDescriptor implements Cloneable
 
 		}
 
+	/**
+	 * Returns the pixels belonging to the area of the worm defined
+	 * by the calling worm descriptor
+	 */
 	public ArrayList<Integer> rasterizeWorm()
 		{
 		ArrayList<Integer> skp = WormProfile.constructShape(controlPoints, wprof,
@@ -129,6 +140,14 @@ public class WormDescriptor implements Cloneable
 		return PolygonRasterizer.rasterize(wpm.w, wpm.h, tpv);
 		}
 
+	/**
+	 * Returns the pixels belonging to the area of the worm defined
+	 * by the calling worm descriptor. The contour of the worm 
+	 * is initially generated following the worm descriptor, and then the
+	 * control-contour points are expanded or contracted to fit the contours
+	 * defined by the distance transform, to obtain a more realistic and less
+	 * generic worm shape. 
+	 */
 	public ArrayList<Integer> fitAndRasterizeWorm()
 		{
 		ArrayList<Integer> skp = WormProfile.expandingConstructShape(controlPoints,
@@ -138,6 +157,9 @@ public class WormDescriptor implements Cloneable
 		return PolygonRasterizer.rasterize(wpm.w, wpm.h, tpv);
 		}
 
+	/**
+	 * Draws the worm descriptor indicating bisectors and angles.
+	 */
 	public ArrayList<Integer> drawAngles()
 		{
 		ArrayList<Integer> points = new ArrayList<Integer>();

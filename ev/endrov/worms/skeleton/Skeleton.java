@@ -2,6 +2,11 @@ package endrov.worms.skeleton;
 
 import endrov.imageset.EvPixels;
 
+/**
+ * Abstract definition of a morphological skeleton
+ * @author Javier Fernandez
+ *
+ */
 public abstract class Skeleton
 	{
 	public EvPixels image;

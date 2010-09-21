@@ -65,19 +65,16 @@ public class WormPathGuessing
 		 * (int)(minMaxWormLength.y*0.8)); wormPaths.add(newPath);
 		 * wc.basePoints.add(newPath.get(newPath.size()-1)); } }
 		 */
-		// Discard to short paths
+		// Discard too short paths
 		Iterator<ArrayList<Integer>> wit = wormPaths.iterator();
 		int wormLength;
 		while (wit.hasNext())
 			{
-			// wormLength = wit.next().size();
 			wormLength = SkeletonUtils.calculatePathLength(wit.next(), wc
 					.getPixelMatcher());
-			// System.out.println("WL: "+wormLength+" MIN-MAX: "+minMaxWormLength);
 			if (wormLength<minMaxWormLength.x)
 				{
 				wit.remove();
-				// System.out.println("Remove");
 				}
 			}
 

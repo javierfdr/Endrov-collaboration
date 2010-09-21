@@ -11,8 +11,10 @@ import endrov.util.Vector2i;
 import endrov.util.curves.PointFactory;
 
 /**
- * Class that represents a matching matrix that contains the corresponding (x,y)
+ * Class that represents a matching matrix containing the corresponding (x,y)
  * coordinates of an EvPixels array point.
+ * 
+ * @author Javier Fernandez
  */
 public class WormPixelMatcher
 	{

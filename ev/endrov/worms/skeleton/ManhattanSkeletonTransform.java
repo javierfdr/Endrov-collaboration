@@ -5,6 +5,12 @@ import java.util.Iterator;
 
 import endrov.util.Vector2i;
 
+/**
+ * Tools for skeleton manipulation based on Manhattan Distance Transform
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public final class ManhattanSkeletonTransform extends SkeletonTransform
 	{
 	@Override
