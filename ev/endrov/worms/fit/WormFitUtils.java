@@ -5,7 +5,8 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import endrov.quickhull3d.Vector3d;
+//import endrov.quickhull3d.Vector3d;
+import javax.vecmath.Vector3d;
 import endrov.util.Vector2i;
 import endrov.worms.WormPixelMatcher;
 import endrov.worms.WormShape;

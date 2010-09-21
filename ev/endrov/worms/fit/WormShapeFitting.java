@@ -8,7 +8,7 @@ import java.util.Hashtable;
 import com.graphbuilder.curve.CardinalSpline;
 
 import endrov.imageset.EvPixels;
-import endrov.quickhull3d.Vector3d;
+import javax.vecmath.Vector3d;
 
 import endrov.util.curves.EvCardinalSpline;
 import endrov.worms.WormDescriptor;
