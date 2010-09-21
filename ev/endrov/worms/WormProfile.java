@@ -4,23 +4,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-
-import javax.vecmath.Vector2d;
 
 import com.graphbuilder.curve.CardinalSpline;
 import com.graphbuilder.curve.Point;
 
-import endrov.tesselation.PolygonRasterizer;
 import endrov.tesselation.utils.Line;
 import endrov.util.ImVector2;
 import endrov.util.Vector2i;
 import endrov.util.curves.EvCardinalSpline;
-import endrov.worms.skeleton.SkeletonTransform;
 import endrov.worms.skeleton.SkeletonUtils;
-import endrov.worms.skeleton.Thickening;
-import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.skeleton.WormSkeleton;
 
 /**

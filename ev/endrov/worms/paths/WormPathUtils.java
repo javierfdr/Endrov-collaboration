@@ -2,6 +2,12 @@ package endrov.worms.paths;
 
 import java.util.ArrayList;
 
+/**
+ * Utils for worm path guessing and tracking
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public class WormPathUtils
 	{
 

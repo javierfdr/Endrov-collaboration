@@ -5,11 +5,9 @@ import endrov.tesselation.utils.Line;
 import endrov.util.ImVector2;
 import endrov.util.Vector2i;
 import endrov.util.curves.EvCardinalSpline;
-import endrov.util.curves.WrongParameterSplineException;
 import endrov.worms.skeleton.WormSkeleton;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.vecmath.Vector2d;

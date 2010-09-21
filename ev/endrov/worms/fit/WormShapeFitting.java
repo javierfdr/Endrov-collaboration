@@ -1,47 +1,25 @@
 package endrov.worms.fit;
 
-import java.awt.image.RasterOp;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Hashtable;
-import java.util.Scanner;
-
-import javax.vecmath.Vector2d;
 
 import com.graphbuilder.curve.CardinalSpline;
-import com.graphbuilder.curve.Point;
 
 import endrov.imageset.EvPixels;
 import endrov.quickhull3d.Vector3d;
-import endrov.roi.newer.TriangulationException;
-import endrov.tesselation.PolygonRasterizer;
-import endrov.util.Vector2i;
-import endrov.util.Vector3i;
+
 import endrov.util.curves.EvCardinalSpline;
 import endrov.worms.WormDescriptor;
 import endrov.worms.WormPixelMatcher;
 import endrov.worms.WormProfile;
 import endrov.worms.WormShape;
 import endrov.worms.paths.WormPathGuessing;
-import endrov.worms.paths.WormPathTracking;
 import endrov.worms.skeleton.NotWormException;
 import endrov.worms.skeleton.SkeletonTransform;
-import endrov.worms.skeleton.SkeletonUtils;
 import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.skeleton.WormSkeleton;
-import endrov.worms.utils.greedyNonBipartiteAssignment;
 
 /**
  * Class defining a series of methods to fit the shape of worms 
@@ -97,7 +75,7 @@ public class WormShapeFitting
 			ArrayList<WormShape> matchedShapes, double guessPower)
 		{
 
-		ArrayList<ArrayList<Integer>> shapeList = new ArrayList<ArrayList<Integer>>();
+		//ArrayList<ArrayList<Integer>> shapeList = new ArrayList<ArrayList<Integer>>();
 		WormPixelMatcher wpm = wprof.wpm;
 
 		// Guessing worm paths

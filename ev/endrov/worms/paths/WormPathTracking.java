@@ -12,6 +12,12 @@ import endrov.worms.skeleton.SkeletonUtils;
 import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.skeleton.WormSkeleton;
 
+/**
+ * Set of tools for tracking and analysis of paths belonging to worm skeletons.
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public class WormPathTracking
 	{
 

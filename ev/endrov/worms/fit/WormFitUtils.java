@@ -37,8 +37,6 @@ public class WormFitUtils
 		ArrayList<WormShape> clusterBestMatch = new ArrayList<WormShape>();
 		ArrayList<Integer> basePoints = wc.getBasePoints();
 
-		HashSet<Integer> matchedHistory = new HashSet<Integer>(matchedIndex);
-
 		HashSet<Integer> nonConflictingShapes = new HashSet<Integer>();
 		HashSet<Integer> nonConflictingBases = new HashSet<Integer>();
 		ArrayList<Integer> conflictingBases = detectConflictingBases(fitDic,
@@ -206,7 +204,6 @@ public class WormFitUtils
 			{
 			base = bit.next();
 			matches = fitDic.get(base);
-			boolean isNew = true;
 			if (matches!=null)
 				{
 				min = Double.MAX_VALUE;

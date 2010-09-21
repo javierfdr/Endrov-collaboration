@@ -8,6 +8,8 @@ import endrov.imageset.EvPixelsType;
  * transformation implementing the two scan distance transformation developed
  * by Frank Y.Shih and Yi-Ta Wu and presented in 'Fast Euclidean distance 
  * transformation in two scans using a 3x3 neighborhood'. 
+ * 
+ * @author Javier Fernandez
  */
 
 public abstract class TwoScanDiscreteTransform extends DistanceTransform

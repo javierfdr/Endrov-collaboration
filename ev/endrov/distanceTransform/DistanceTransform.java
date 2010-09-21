@@ -7,6 +7,8 @@ import endrov.imageset.EvPixelsType;
  * General representation of a distance transformation class.
  * Each subclass must be constructed providing a binary image
  * and implement the scanImage method.
+ * 
+ * @author Javier Fernandez
  */
 public abstract class DistanceTransform
 	{

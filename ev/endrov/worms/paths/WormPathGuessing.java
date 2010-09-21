@@ -14,6 +14,12 @@ import endrov.worms.skeleton.SkeletonUtils;
 import endrov.worms.skeleton.WormClusterSkeleton;
 import endrov.worms.skeleton.WormSkeleton;
 
+/**
+ * Set of tools for heuristical guessing of most likely worm paths
+ * 
+ * @author Javier Fernandez
+ *
+ */
 public class WormPathGuessing
 	{
 

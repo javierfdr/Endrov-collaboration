@@ -45,7 +45,6 @@ public class BestNeighborOptimization extends WormShapeOptimization
 			{
 			best = WormShapeOptimization.objFunction(rastShape, wd.getDtArray());
 			}
-		double initBest = best;
 		boolean newBend = true;
 		double currentValue = -1;
 		Vector2i bestPert = new Vector2i();
