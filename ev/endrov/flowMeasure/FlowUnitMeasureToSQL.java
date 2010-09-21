@@ -6,6 +6,7 @@
 package endrov.flowMeasure;
 
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -29,6 +30,7 @@ import endrov.flow.FlowType;
 import endrov.flow.FlowUnitBasic;
 import endrov.flow.FlowUnitDeclaration;
 import endrov.flow.ui.FlowPanel;
+import endrov.util.EvSwingUtil;
 
 /**
  * Flow unit: Store measure result in SQL

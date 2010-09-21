@@ -34,7 +34,7 @@ public class EvOpAverageZ extends EvOpStack1
 	
 	public static EvStack averageZ(EvStack in)
 		{
-		EvImage proto=in.getFirstImage();
+		EvImage proto=in.firstEntry().snd();
 		
 		EvStack out=new EvStack();
 

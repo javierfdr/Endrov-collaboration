@@ -53,16 +53,16 @@ public class IntersectROI extends CompoundROI
 				oneItRanges.addAll(it.ranges);
 				oneItY=it.y;
 				}
-			/*public void copyRange()
+			public void copyRange()
 				{
 				ranges.clear();
 				ranges.addAll(oneItRanges);
 				y=oneItY;
 				next();
-				}*/
+				}
 			}
 		
-		public ThisLineIterator(EvImage im, LineIterator ita, LineIterator itb, String channel, EvDecimal frame, double z)
+		public ThisLineIterator(EvImage im, LineIterator ita, LineIterator itb, String channel, EvDecimal frame, EvDecimal z)
 			{
 			this.z=z;
 			this.ita=new OneIt(ita);
@@ -70,11 +70,11 @@ public class IntersectROI extends CompoundROI
 			}
 		
 		
-		/*public void addRest(LinkedList<LineRange> to, Iterator<LineRange> from)
+		public void addRest(LinkedList<LineRange> to, Iterator<LineRange> from)
 			{
 			while(from.hasNext())
 				to.add(from.next());
-			}*/
+			}
 		
 		public boolean next()
 			{
@@ -198,18 +198,17 @@ public class IntersectROI extends CompoundROI
 	/**
 	 * Get slices that at least are partially selected
 	 */
-	/*
 	public Set<EvDecimal> getSlice(Imageset rec, String channel, EvDecimal frame)
 		{
 		TreeSet<EvDecimal> c=new TreeSet<EvDecimal>();
 		for(ROI roi:getSubRoi())
 			c.addAll(roi.getSlice(rec, channel, frame));
 		return c;
-		}*/
+		}
 	
 	
 
-	public boolean imageInRange(String channel, EvDecimal frame, double z)
+	public boolean imageInRange(String channel, EvDecimal frame, EvDecimal z)
 		{
 		for(ROI roi:getSubRoi())
 			if(roi.imageInRange(channel, frame, z))
@@ -220,7 +219,7 @@ public class IntersectROI extends CompoundROI
 	/**
 	 * Get iterator over one image
 	 */
-	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final double z)
+	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final EvDecimal z)
 		{
 		List<ROI> subRoi=getSubRoi();
 		if(imageInRange(channel, frame, z) && !subRoi.isEmpty())
@@ -233,16 +232,7 @@ public class IntersectROI extends CompoundROI
 		else
 			return new EmptyLineIterator();
 		}
-
-	@Override
-	public boolean pointInRange(String channel,	EvDecimal frame, double x, double y, double z)
-		{
-		for(ROI roi:getSubRoi())
-			if(!roi.pointInRange(channel, frame, x, y, z))
-				return false;
-		return true;
-		}
-
+	
 	
 	public String saveMetadata(Element e)
 		{

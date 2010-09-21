@@ -17,7 +17,6 @@ import org.jdom.*;
 
 
 import endrov.basicWindow.*;
-import endrov.basicWindow.EvColor.ColorMenuListener;
 import endrov.basicWindow.icon.BasicIcon;
 import endrov.consoleWindow.*;
 import endrov.data.EvContainer;
@@ -26,7 +25,6 @@ import endrov.data.EvObject;
 import endrov.ev.*;
 import endrov.keyBinding.*;
 import endrov.modelWindow.basicExt.CrossHandler;
-import endrov.starter.EvSystemUtil;
 import endrov.util.EvDecimal;
 import endrov.util.EvSwingUtil;
 import endrov.util.EvXmlUtil;
@@ -53,12 +51,14 @@ public class ModelWindow extends BasicWindow
 	 *                               Instance                                                             *
 	 *****************************************************************************************************/
 
+	
 	private void setPersonalConfig(Element e)
 		{
 		try
 			{
 			Rectangle r=BasicWindow.getXMLbounds(e);
 			setBoundsEvWindow(r);
+			
 			frameControl.setGroup(e.getAttribute("group").getIntValue());
 			
 			for(ModelWindowHook hook:modelWindowHooks)
@@ -82,14 +82,10 @@ public class ModelWindow extends BasicWindow
 	private final JPanel bottomPanel=new JPanel(new GridBagLayout());
 	private JPanel bottomMain=new JPanel(new GridBagLayout());
 	
-	private JProgressBar progress=new JProgressBar(0,1000);	
-	public final ModelView view;
-	private final FrameControlModel frameControl;
-	private SnapBackSlider barZoom=new SnapBackSlider(JScrollBar.VERTICAL,0,1000);
-	private SnapBackSlider barRotate=new SnapBackSlider(JScrollBar.VERTICAL,0,1000);	
-	private ObjectDisplayList objectDisplayList=new ObjectDisplayList();
-	public final CrossHandler crossHandler=new CrossHandler();
+	private JProgressBar progress=new JProgressBar(0,1000);
 	
+	public final ModelView view;
+	public final FrameControlModel frameControl;
 	private final EvComboObject metaCombo=new EvComboObject(new LinkedList<EvObject>(),true,false)
 		{
 		static final long serialVersionUID=0;
@@ -101,7 +97,8 @@ public class ModelWindow extends BasicWindow
 	private final JButton buttonCenter=new JButton("Center");
 	private final EvHidableSidePaneRight sidePanelSplitPane;
 	
-	public JMenu menuModel=new JMenu("ModelWindow");	
+	public JMenu menuModel=new JMenu("ModelWindow");
+	
 	private JMenu miView=new JMenu("Default views");
 	private JMenuItem miViewFront=new JMenuItem("Front");
 	private JMenuItem miViewBack=new JMenuItem("Back");
@@ -109,12 +106,21 @@ public class ModelWindow extends BasicWindow
 	private JMenuItem miViewBottom=new JMenuItem("Bottom");
 	private JMenuItem miViewLeft=new JMenuItem("Left");
 	private JMenuItem miViewRight=new JMenuItem("Right");
+
 	private JMenu miWindowState=new JMenu("Window State");
 	private JMenuItem miCopyState=new JMenuItem("Copy");
 	private JMenuItem miPasteState=new JMenuItem("Paste");
+
 	private JCheckBoxMenuItem miShowAxis=new JCheckBoxMenuItem("Show axis directions");
+
 	private JMenu miSetBGColor=makeSetBGColorMenu();
 
+	private SnapBackSlider barZoom=new SnapBackSlider(JScrollBar.VERTICAL,0,1000);
+	private SnapBackSlider barRotate=new SnapBackSlider(JScrollBar.VERTICAL,0,1000);
+	
+	private ObjectDisplayList objectDisplayList=new ObjectDisplayList();
+	
+	public final CrossHandler crossHandler=new CrossHandler();
 	
 	
 	private List<ModelWindowMouseListener> modelWindowMouseListeners=new LinkedList<ModelWindowMouseListener>();
@@ -224,6 +230,7 @@ public class ModelWindow extends BasicWindow
 		
 		toolPanel.setMinimumSize(new Dimension(250,20));
 		toolPanel.setMaximumSize(new Dimension(250,20));
+//		updateToolPanels();
 
 		JPanel zoomrotPanel=new JPanel(new GridLayout(2,1));
 		zoomrotPanel.add(EvSwingUtil.layoutACB(new JLabel(BasicIcon.iconLabelZoom), barZoom, null));
@@ -251,7 +258,6 @@ public class ModelWindow extends BasicWindow
 		
 		setLayout(new BorderLayout());
 		add(sidePanelSplitPane,BorderLayout.CENTER);
-		//add(view,BorderLayout.CENTER);
 		add(bottomPanel,BorderLayout.SOUTH);
 		add(zoomrotPanel,BorderLayout.EAST);
 		
@@ -262,17 +268,15 @@ public class ModelWindow extends BasicWindow
 		
 		//Window overall things
 		setTitleEvWindow("Model Window");
-		packEvWindow();                       // problem causer if GLcanvas!!!!
-		setBoundsEvWindow(bounds);			// problem causer!!!
-
+		packEvWindow();
 		setVisibleEvWindow(true);
-		
+		setBoundsEvWindow(bounds);
 		attachDragAndDrop(this);
 		view.autoCenter();
 		view.renderAxisArrows=miShowAxis.isSelected();
+		
 		//TODO dangerous, might be called before constructed
 		attachJinputListener(this);
-		
 		}
 	
 	
@@ -281,17 +285,27 @@ public class ModelWindow extends BasicWindow
 	private JMenu makeSetBGColorMenu()
 		{
 		JMenu m=new JMenu("Set background color");
-		EvColor.addColorMenuEntries(m, new ColorMenuListener()
+		for(final EvColor c:EvColor.colorList)
 			{
-			public void setColor(EvColor c)
-				{
-				view.bgColor=c.c;
-				view.repaint();
-				}
+			JMenuItem mi=new JMenuItem(c.name);
+			mi.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e)
+					{
+					view.bgColor=c.c;
+					view.repaint();
+					}
 			});
+			m.add(mi);
+			}
 		return m;
 		}
 
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -300,8 +314,6 @@ public class ModelWindow extends BasicWindow
 	 */
 	public void updateToolPanels()
 		{
-		//EV.printStackTrace("test");
-
 		System.out.println("updating tool panels");
 		sidePanelItems.clear();
 		bottomPanelItems.clear();
@@ -322,7 +334,7 @@ public class ModelWindow extends BasicWindow
 			}
 		GridBagConstraints cg=new GridBagConstraints();	cg.gridy=counta;	cg.fill=GridBagConstraints.HORIZONTAL;	cg.weightx=1;
 		sidePanel.add(objectDisplayList,cg);
-
+		
 		//Assemble bottom panel
 		int countb=0;
 		bottomPanel.removeAll();
@@ -545,22 +557,15 @@ public class ModelWindow extends BasicWindow
 		}
 	
 	
+	/*
+	 * (non-Javadoc)
+	 * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
+	 */
 	public void stateChanged(ChangeEvent e)
 		{
 		dataChangedEvent();
 		}
 
-	
-	public EvDecimal getFrame()
-		{
-		return frameControl.getFrame();
-		}
-	
-	
-	public void setFrame(EvDecimal frame)
-		{
-		frameControl.setFrame(frame);
-		}
 	
 	
 	/*
@@ -569,7 +574,6 @@ public class ModelWindow extends BasicWindow
 	 */
 	public void dataChangedEvent()
 		{
-		
 		metaCombo.updateList();
 		objectDisplayList.setData(metaCombo.getSelectedObject());
 		objectDisplayList.updateList();
@@ -581,7 +585,6 @@ public class ModelWindow extends BasicWindow
 			view.repaint(); //TODO modw repaint
 			//System.out.println("repainting");
 			}
-			
 		}
 
 	/**

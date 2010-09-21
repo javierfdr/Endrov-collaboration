@@ -64,7 +64,7 @@ public class MakeMaxWindow extends BasicWindow implements ActionListener
 	private SpinnerModel startModel  =new SpinnerNumberModel(0,0,1000000,1);
 	private JSpinner spinnerStart    =new JSpinner(startModel);
 	
-	private SpinnerModel endModel    =new SpinnerNumberModel(1000000,0,1000000,1);
+	private SpinnerModel endModel    =new SpinnerNumberModel(100000,0,1000000,1);
 	private JSpinner spinnerEnd      =new JSpinner(endModel);
 
 //	private SpinnerModel qualityModel    =new SpinnerNumberModel(0.99,0.0,1.0,0.01);
@@ -76,7 +76,7 @@ public class MakeMaxWindow extends BasicWindow implements ActionListener
 	 */
 	public MakeMaxWindow()
 		{
-		this(600,300,500,300);
+		this(600,300,500,150);
 		}
 	
 	/**
@@ -90,7 +90,7 @@ public class MakeMaxWindow extends BasicWindow implements ActionListener
 		//Put GUI together
 		setLayout(new BorderLayout());
 	
-		JPanel bottom=new JPanel(new GridLayout(4,2));
+		JPanel bottom=new JPanel(new GridLayout(2,4));
 		add(bottom, BorderLayout.CENTER);
 		
 		bottom.add(new JLabel("Start frame:"));

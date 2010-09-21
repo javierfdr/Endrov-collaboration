@@ -77,25 +77,15 @@ public class EvComboColor extends JComboBox
 		}
 
 	
-
-	/**
-	 * Constructor
-	 * @param showText If the combo should also show the name of the color
-	 */
-	public EvComboColor(boolean showText, EvColor[] colorList, EvColor select)
-		{
-		super(colorList);
-		setRenderer(new Renderer(showText));	
-		setSelectedItem(select);
-		}
-	
 	/**
 	 * Constructor
 	 * @param showText If the combo should also show the name of the color
 	 */
 	public EvComboColor(boolean showText)
 		{
-		this(showText,EvColor.colorList,EvColor.grayMedium);
+		super(EvColor.colorList);
+		setRenderer(new Renderer(showText));	
+		setSelectedItem(EvColor.grayMedium);
 		}
 	
 	/**
@@ -112,14 +102,6 @@ public class EvComboColor extends JComboBox
 	public EvColor getEvColor()
 		{
 		return (EvColor)getSelectedItem();
-		}
-	
-	/**
-	 * Set the currently selected color
-	 */
-	public void setColor(EvColor c)
-		{
-		setSelectedItem(c);
 		}
 	
 	

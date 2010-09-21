@@ -229,12 +229,10 @@ public class LineageView extends JPanel
 		{
 		NucLineage lin=getLineage();
 		LinState linstate=getLinState(lin);
-		Vector2d uv=xyToUV(new Vector2d(mx,my));
-		return new EvDecimal(linstate.cam.toWorldX(uv.x));
-/*		if(showHorizontalTree)
-			return new EvDecimal(linstate.cam.toWorldX(mx));
+		if(showHorizontalTree)
+			return new EvDecimal(linstate.cam.toWorldY(my));
 		else
-			return new EvDecimal(linstate.cam.toWorldX(my));*/
+			return new EvDecimal(linstate.cam.toWorldX(my));
 		}
 	
 	
@@ -246,43 +244,11 @@ public class LineageView extends JPanel
 		{
 		NucLineage lin=getLineage();
 		LinState linstate=getLinState(lin);
-	//	Vector2d duv=xyToUV(new Vector2d(dx,dy));
-		
-		if(showHorizontalTree)
-			{
-			linstate.cam.cameraX-=linstate.cam.scaleScreenDistX(dx);
-			linstate.cam.cameraY-=linstate.cam.scaleScreenDistY(dy);
-			}
-		else
-			{
-			linstate.cam.cameraX-=linstate.cam.scaleScreenDistX(dy);
-			linstate.cam.cameraY+=linstate.cam.scaleScreenDistY(dx);
-			}
-//		linstate.cam.cameraX-=linstate.cam.scaleScreenDistX(duv.x);
-//		linstate.cam.cameraY-=linstate.cam.scaleScreenDistY(duv.y);
+		linstate.cam.cameraX-=linstate.cam.scaleScreenDistX(dx);
+		linstate.cam.cameraY-=linstate.cam.scaleScreenDistY(dy);
 		}
 
 
-	/**
-	 * UV are coordinates after the tree has optionally been rotated.
-	 * untested!!
-	 */
-	public Vector2d xyToUV(Vector2d v)
-		{
-		if(showHorizontalTree)
-			return v;
-		else
-			return new Vector2d(v.y,v.x);
-		}
-	public Vector2d uvToXY(Vector2d v)
-		{
-		if(showHorizontalTree)
-			return v;
-		else
-			return new Vector2d(v.y,v.x);
-		}
-		
-	
 	/**
 	 * General zooming relative to a point on the screen
 	 */
@@ -326,8 +292,7 @@ public class LineageView extends JPanel
 		{
 		NucLineage lin=getLineage();
 		LinState linstate=getLinState(lin);
-		linstate.cam.panCorrespondenceX(getRotatedWidthHeight().fst()/2, frame);
-		repaint();
+		linstate.cam.panCorrespondenceX(getRotatedWidthHeight().fst(), frame);
 		}
 	
 	
@@ -365,7 +330,7 @@ public class LineageView extends JPanel
 	public void goToSelected()
 		{
 		LinState linstat=getLinState(currentLin);
-		HashSet<NucSel> selectedNuclei=NucCommonUI.getSelectedNuclei();
+		HashSet<NucSel> selectedNuclei=NucLineage.getSelectedNuclei();
 		Vector2d v=new Vector2d();
 		int cnt=0;
 		NucSel sel=selectedNuclei.iterator().next();
@@ -644,35 +609,21 @@ public class LineageView extends JPanel
 		//Only recurse if children are visible
 		if(thisInternal.isExpanded && !nuc.child.isEmpty())
 			{
-			
-			
-			
 			//Sum up total width for children
 			for(String cName:nuc.child)
 				{
 				double newDisp=layoutTreeRecursive(lin, cName,linstate, curChildOffset, thisDrawNode);
 				curChildOffset=newDisp;
 				}
-			
-			
-			//Set displacement of this node
+			//Set displacements
+			/*
 			if(nuc.child.size()==1)
 				{
-				//
-				thisInternal.centerY=linstate.nucInternal.get(nuc.child.first()).centerY+sizeOfBranch/2;
-				curChildOffset+=sizeOfBranch/2;
-				
-				//curChildOffset+sizeOfBranch/2;
-				
-				
-				//curChildOffset+=sizeOfBranch;
-				fontHeightAvailable=sizeOfBranch;
-				
-//				Internal cInternal=linstate.getNucinfo(nuc.child.first());
-	//			thisInternal.centerY=cInternal.centerY; //TODO handle 1 child
+				Internal cInternal=linstate.getNucinfo(nuc.child.first());
+				thisInternal.centerY=cInternal.centerY; //TODO handle 1 child
 				}
-			else
-				{
+			else*/
+			
 				//Use the average
 				double sum=0;
 				double miny=Double.MAX_VALUE;
@@ -686,8 +637,6 @@ public class LineageView extends JPanel
 					}
 				thisInternal.centerY=sum/nuc.child.size();
 				fontHeightAvailable=maxy-miny;
-				}
-			
 			}
 		else
 			{
@@ -939,10 +888,7 @@ public class LineageView extends JPanel
 		if(r!=null)
 			r.clickRegion(e);
 		else if(SwingUtilities.isLeftMouseButton(e))
-			{
 			EvSelection.unselectAll();
-			BasicWindow.updateWindows();
-			}
 			//NucLineage.selectedNuclei.clear();
 		}
 
@@ -991,7 +937,7 @@ public class LineageView extends JPanel
 				//System.out.println("here "+nucname+"   "+SwingUtilities.isLeftMouseButton(e)+"  "+currentLin);
 				//long startTime=System.currentTimeMillis();
 				if(SwingUtilities.isLeftMouseButton(e))
-					NucCommonUI.mouseSelectNuc(new NucSel(currentLin, nucname), (e.getModifiersEx() & MouseEvent.SHIFT_DOWN_MASK)!=0);
+					NucLineage.mouseSelectNuc(new NucSel(currentLin, nucname), (e.getModifiersEx() & MouseEvent.SHIFT_DOWN_MASK)!=0);
 				//System.out.println("time "+(System.currentTimeMillis()-startTime));
 				}
 			}

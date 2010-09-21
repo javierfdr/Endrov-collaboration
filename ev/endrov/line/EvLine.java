@@ -16,8 +16,6 @@ import javax.vecmath.Vector4d;
 import endrov.data.*;
 import endrov.imageWindow.ImageWindow;
 import endrov.imageWindow.ImageWindowExtension;
-import endrov.imageWindow.ImageWindowInterface;
-import endrov.imageWindow.ImageWindowRendererExtension;
 import endrov.modelWindow.ModelWindow;
 import endrov.util.EvDecimal;
 
@@ -25,7 +23,7 @@ import endrov.util.EvDecimal;
  * Meta object: Line 
  * @author Johan Henriksson
  */
-public class EvLine extends EvObject 
+public class EvLine extends EvObject implements Cloneable
 	{
 	/******************************************************************************************************
 	 *                               Static                                                               *
@@ -47,7 +45,6 @@ public class EvLine extends EvObject
 	/******************************************************************************************************
 	 *                               Instance NucLineage                                                  *
 	 *****************************************************************************************************/
-	
 	
 	public static class Pos3dt
 		{
@@ -72,34 +69,10 @@ public class EvLine extends EvObject
 			this.frame=frame;
 			}
 
-		public Pos3dt clone()
-			{
-			Pos3dt p=new Pos3dt();
-			p.v=new Vector3d(v);
-			p.frame=frame;
-			return p;
-			}
-		
-		@Override
-		public String toString()
-			{
-			return "("+v+","+frame+")";
-			}
 		}
 	
 	/** Positions, in space and time (w) */
 	public Vector<Pos3dt> pos=new Vector<Pos3dt>();
-	
-	
-
-	
-	public EvLine clone()
-		{
-		EvLine l=new EvLine();
-		for(Pos3dt p:pos)
-			l.pos.add(p);
-		return l;
-		}
 	
 	/**
 	 * Calculate length of each segment
@@ -200,21 +173,11 @@ public class EvLine extends EvObject
 			{
 			public void newImageWindow(ImageWindow w)
 				{
-				EvLineImageRenderer r=new EvLineImageRenderer(w);
-				w.addImageWindowTool(new ToolMakeLine(w,r));
-				w.addImageWindowRenderer(r);
-				//w.addImageWindowTool(new ToolMakeLine(w));
-				}
-			});
-
-		ImageWindow.addImageWindowRendererExtension(new ImageWindowRendererExtension()
-			{
-			public void newImageWindow(ImageWindowInterface w)
-				{
-				EvLineImageRenderer r=new EvLineImageRenderer(w);
+				EvLineRenderer r=new EvLineRenderer(w);
+				w.imageWindowTools.add(new ToolMakeLine(w,r));
 				w.addImageWindowRenderer(r);
 				}
 			});
-
+			
 		}
 	}

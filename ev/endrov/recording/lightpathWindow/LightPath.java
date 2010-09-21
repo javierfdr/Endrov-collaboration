@@ -13,7 +13,7 @@ import javax.swing.JMenu;
 import org.jdom.Element;
 
 import endrov.data.EvObject;
-import endrov.hardware.EvDevicePath;
+import endrov.hardware.DevicePath;
 
 
 /**
@@ -30,7 +30,7 @@ public class LightPath extends EvObject
 	{
 	private static final String metaType="lightpath";
 	
-	public Map<EvDevicePath,UnitInfo> units=new HashMap<EvDevicePath, UnitInfo>();
+	public Map<DevicePath,UnitInfo> units=new HashMap<DevicePath, UnitInfo>();
 	
 	public static class UnitInfo
 		{
@@ -40,7 +40,7 @@ public class LightPath extends EvObject
 	
 	public static class Light
 		{
-		public EvDevicePath fromUnit, toUnit;
+		public DevicePath fromUnit, toUnit;
 		public String fromConn, toConn;
 		}
 

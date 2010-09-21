@@ -130,7 +130,6 @@ public class Imageset extends EvObject
 	/**
 	 * Get access to an image
 	 */
-	/*
 	public EvImage getImageLoader(String channel, EvDecimal frame, EvDecimal z)
 		{
 		EvChannel chim=getChannel(channel);
@@ -138,7 +137,7 @@ public class Imageset extends EvObject
 			return chim.getImageLoader(frame, z);
 		else
 			return null;
-		}*/
+		}
 
 
 	/** Additions to the object-specific menu */
@@ -175,7 +174,6 @@ public class Imageset extends EvObject
 		}
 	
 	
-	
 	/**
 	 * Save down data
 	 */
@@ -208,25 +206,21 @@ public class Imageset extends EvObject
 	 */
 	private static void saveFrameMetadata(HashMap<EvDecimal,HashMap<String,String>> fd, Element e)
 		{
-		for(EvDecimal fid:new TreeSet<EvDecimal>(fd.keySet()))
+		for(EvDecimal fid:fd.keySet())
 			{
-			//Avoid storing empty frame containers
+			Element frameEl=new Element("frame");
+			frameEl.setAttribute("frame", fid.toString());
+			
 			HashMap<String,String> frame=fd.get(fid);
-			if(!frame.isEmpty())
+			for(String field:frame.keySet())
 				{
-				Element frameEl=new Element("frame");
-				frameEl.setAttribute("frame", fid.toString());
-				
-				for(String field:frame.keySet())
-					{
-					String value=frame.get(field);
-					Element fieldEl=new Element(field);
-					fieldEl.addContent(value);
-					frameEl.addContent(fieldEl);
-					}
-				
-				e.addContent(frameEl);
+				String value=frame.get(field);
+				Element fieldEl=new Element(field);
+				fieldEl.addContent(value);
+				frameEl.addContent(fieldEl);
 				}
+			
+			e.addContent(frameEl);
 			}
 		}
 	

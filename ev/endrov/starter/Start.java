@@ -22,6 +22,8 @@ import endrov.ev.EvBuild;
  */
 public class Start
 	{
+	private static boolean printJar=false;	
+	
 	public static void main(String[] args)
 		{
 		new Start().run(args);
@@ -38,8 +40,8 @@ public class Start
 
 	private String javaexe="java";
 	private LinkedList<String> platformExt=new LinkedList<String>();
-	public LinkedList<String> jarfiles=new LinkedList<String>();
-	public LinkedList<String> binfiles=new LinkedList<String>();
+	public List<String> jarfiles=new LinkedList<String>();
+	public List<String> binfiles=new LinkedList<String>();
 
 	
 	public void collectSystemInfo(String path)
@@ -59,8 +61,6 @@ public class Start
 			platformExt.add("ppc");
 		else if(arch.equals("x86_64") || arch.equals("amd64")) 
 			platformExt.add("amd64");
-		else if(arch.equals("sparc"))
-			platformExt.add("sparc");
 		else
 			platformExt.add("x86");
 		
@@ -71,7 +71,7 @@ public class Start
 			platformExt.add("windows");
 		else if(OS.startsWith("linux"))
 			platformExt.add("linux");
-		else if(OS.startsWith("sunos"))
+		else if(OS.startsWith("solaris"))
 			platformExt.add("solaris");
 		else
 			{
@@ -82,8 +82,6 @@ public class Start
 			System.exit(1);
 			}
 
-		
-		
 		/**
 		 * Have to add system extensions and libraries as well when the system class loader is not used
 		 */
@@ -96,6 +94,7 @@ public class Start
 				String s=stok.nextToken();
 				if(!s.equals("."))          //TODO: or path? 
 					{
+					binfiles.add(s);
 					File root=new File(s);
 					if(root.exists())
 						for(File f:root.listFiles())
@@ -104,31 +103,11 @@ public class Start
 					}
 				}
 			}
-
-
+		
 		//Collect jarfiles
 		jarfiles.add(path.getAbsolutePath());
 		collectJars(jarfiles, binfiles, new File(path,"libs"), platformExt);
-
-		if(libpath!=null)
-			{
-			StringTokenizer stok=new StringTokenizer(libpath,File.pathSeparator);
-			while(stok.hasMoreTokens())
-				{
-				String s=stok.nextToken();
-				if(!s.equals("."))          //TODO: or path? 
-					{
-					binfiles.add(s);
-/*					File root=new File(s);
-					if(root.exists())
-						for(File f:root.listFiles())
-							if(f.getName().endsWith(".jar") || f.getName().endsWith(".zip")) //QTJava is .zip
-								jarfiles.add(f.getAbsolutePath());*/
-					}
-				}
-			}
-
-		
+		//System.out.println(binfiles);
 		}
 	
 	/**
@@ -166,16 +145,18 @@ public class Start
 	/**
 	 * Add jar file to list. Show it if requested
 	 */
-	private static void addJar(LinkedList<String> v, String toadd)
+	private static void addJar(List<String> v, String toadd)
 		{
-		v.addFirst(toadd);
+		v.add(toadd);
+		if(printJar)
+			System.out.println("Adding java library: "+toadd);
 		}
 	
 	/**
 	 * Get all jars and add them with path to vector. 
 	 * Recurses when it finds a directory ending with _inc.
 	 */
-	private static void collectJars(LinkedList<String> v,LinkedList<String> binfiles,File p, Collection<String> platformExt)
+	private static void collectJars(List<String> v,List<String> binfiles,File p, Collection<String> platformExt)
 		{
 		if(p.exists())
 			for(File sub:p.listFiles())
@@ -195,10 +176,9 @@ public class Start
 							{
 							if(line.startsWith("j:"))
 								addJar(v,line.substring(2)); //j:
-							else if(line.startsWith("b:"))
+							else
 								binfiles.add(line.substring(2)); //b:
 							}
-						input.close();
 						}
 					catch (Exception e)
 						{
@@ -215,6 +195,8 @@ public class Start
 							collectJars(v,binfiles, sub, platformExt);
 							String toadd=sub.getAbsolutePath();
 							binfiles.add(toadd);
+							if(printJar)
+								System.out.println("Adding binary directory: "+toadd);
 							}
 					}
 				}
@@ -246,6 +228,15 @@ public class Start
 			
 			if(curarg.equals("--printcommand"))
 				printCommand=true;
+			else if(curarg.equals("--printjar"))
+				printJar=true;
+			/*
+			 * else if(curarg.equals("--macstarter"))
+				{
+				//Override detection to spit out mac directories
+				OS="mac os x"; 
+				printMacStarter=true;
+				}*/
 			else if(args.contains("--version"))
 				{
 				//Print current version. need to be put in starter jar to work
@@ -285,17 +276,11 @@ public class Start
 				{
 				//Show info about the system
 				System.out.println("This system runs OS:"+OS+" with java:"+javaver+" on arch:"+arch);
-				System.exit(0);
 				}
 			else if(curarg.equals("--classload"))
 				useClassLoader=true;
 			else if(curarg.equals("--printcp"))
 				printClassPath=true;
-			else if(curarg.equals("--help"))
-				{
-				System.out.println("--printcommand, version, cp2, libpath2, basedir, main, javaenv, archinfo, classload, printcp, help");
-				System.exit(0);
-				}
 			else
 				{
 				if(!curarg.startsWith("--"))
@@ -372,7 +357,6 @@ public class Start
 						System.out.println("Java environment flag: "+tok);
 						}
 					}
-				envReader.close();
 				}
 			System.out.println("Using environment: "+javaenvFile);
 			
@@ -474,9 +458,6 @@ public class Start
 
 			//Important: Must NOT use the system class loader - it will take over for current directory
 			//and fail to load JAR files
-			
-			System.out.println("Bin files: "+binfiles);
-			
 			ResourceClassLoader cload=new ResourceClassLoader(urls.toArray(new URL[]{}),binfiles, null);
 
 			Class<?> cl=cload.loadClass(mainClass);

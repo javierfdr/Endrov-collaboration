@@ -13,12 +13,11 @@ import java.util.TreeMap;
 
 import org.jdom.Element;
 
-import endrov.hardware.EvDevice;
-import endrov.hardware.EvDeviceObserver;
+import endrov.hardware.Device;
 import endrov.hardware.EvHardware;
-import endrov.hardware.EvDevicePath;
-import endrov.hardware.EvDeviceProvider;
-import endrov.hardware.DevicePropertyType;
+import endrov.hardware.DevicePath;
+import endrov.hardware.DeviceProvider;
+import endrov.hardware.PropertyType;
 import endrov.recording.HWSerial;
 import endrov.recording.HWStage;
 
@@ -30,7 +29,7 @@ import endrov.recording.HWStage;
  * @author Johan Henriksson
  *
  */
-public class ITKCorvus extends EvDeviceProvider implements EvDevice
+public class ITKCorvus extends DeviceProvider implements Device
 	{
 	private final static String sendNewLine=" "; //\r for terminal mode
 	private final static String recvNewLine="\r\n";  
@@ -42,7 +41,7 @@ public class ITKCorvus extends EvDeviceProvider implements EvDevice
 	 * I/O is blocking. hence the GUI dies upon init (most likely)
 	 */
 	
-	public HWSerial serial=(HWSerial)EvHardware.getDevice(new EvDevicePath("mm.com2"));
+	public HWSerial serial=(HWSerial)EvHardware.getDevice(new DevicePath("mm.com2"));
 	//new VirtualSerialBasic();
 	
 	
@@ -124,6 +123,14 @@ public class ITKCorvus extends EvDeviceProvider implements EvDevice
 			return ITKCorvus.this.getNumAxis();
 			}
 		
+		public int getCurrentStateHW()
+			{
+			return 0;
+			}
+
+		public void setCurrentStateHW(int state)
+			{
+			}
 
 		public String[] getAxisName()
 			{
@@ -184,7 +191,7 @@ public class ITKCorvus extends EvDeviceProvider implements EvDevice
 			}
 	
 		public SortedMap<String, String> getPropertyMap(){return new TreeMap<String, String>();}
-		public SortedMap<String, DevicePropertyType> getPropertyTypes(){return new TreeMap<String, DevicePropertyType>();}
+		public SortedMap<String, PropertyType> getPropertyTypes(){return new TreeMap<String, PropertyType>();}
 		public String getPropertyValue(String prop){return null;}
 		public Boolean getPropertyValueBoolean(String prop){return null;}
 		public void setPropertyValue(String prop, boolean value){}
@@ -192,33 +199,13 @@ public class ITKCorvus extends EvDeviceProvider implements EvDevice
 		
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-		
-		public boolean hasSampleLoadPosition(){return false;}
-		public void setSampleLoadPosition(boolean b){}
-		public boolean getSampleLoadPosition(){return false;}
-
-		public void stop()
-			{
-			}
-
-		}
+	}
 	
 	
 	
 	
 
-	public Set<EvDevice> autodetect()
+	public Set<Device> autodetect()
 		{
 		/**
 		 * The command "identify" will return something like "Corvus ...".
@@ -239,7 +226,7 @@ public class ITKCorvus extends EvDeviceProvider implements EvDevice
 		{
 		return null;
 		}
-	public EvDevice newProvided(String s)
+	public Device newProvided(String s)
 		{
 		return null; //TODO
 		}
@@ -258,9 +245,9 @@ public class ITKCorvus extends EvDeviceProvider implements EvDevice
 		return new TreeMap<String, String>();
 		}
 
-	public SortedMap<String, DevicePropertyType> getPropertyTypes()
+	public SortedMap<String, PropertyType> getPropertyTypes()
 		{
-		return new TreeMap<String, DevicePropertyType>();
+		return new TreeMap<String, PropertyType>();
 		}
 
 	public String getPropertyValue(String prop)
@@ -284,24 +271,5 @@ public class ITKCorvus extends EvDeviceProvider implements EvDevice
 	
 	public boolean hasConfigureDialog(){return false;}
 	public void openConfigureDialog(){}
-	
-	public EvDeviceObserver event=new EvDeviceObserver();
-	public void addListener(EvDeviceObserver.Listener listener)
-		{
-		event.addWeakListener(listener);
-		}
-	public void removeListener(EvDeviceObserver.Listener listener)
-		{
-		event.remove(listener);
-		}
-
-
-	public boolean hasSampleLoadPosition(){return false;}
-	public void setSampleLoadPosition(boolean b){}
-	public boolean gsetSampleLoadPosition(){return false;}
-	
-	public void stop()
-		{
-		}
 
 	}

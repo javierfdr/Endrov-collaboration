@@ -18,9 +18,6 @@ import mmcorej.*;
  */
 public class MMutil
 	{
-	/**
-	 * STL vector to list of strings
-	 */
 	public static List<String> convVector(StrVector v)
 		{
 		ArrayList<String> al=new ArrayList<String>((int)v.size());
@@ -29,9 +26,6 @@ public class MMutil
 		return al;
 		}
 	
-	/**
-	 * STL vector to string
-	 */
 	public static String convVector(CharVector v)
 		{
 		StringBuffer bf=new StringBuffer();
@@ -39,10 +33,7 @@ public class MMutil
 			bf.append(v.get(j));
 		return bf.toString();
 		}
-
-	/**
-	 * Produce STL vector
-	 */
+	
 	public static CharVector convString(String s)
 		{
 		CharVector v=new CharVector();
@@ -64,73 +55,15 @@ public class MMutil
 		return map;
 		}
 	
-	/**
-	 * Snap one image
-	 */
-	public static CameraImage snap(CMMCore core, String device) throws Exception
+	public static CameraImage snap(CMMCore core) throws Exception
 		{
-		if(!core.getCameraDevice().equals(device))
-			core.setCameraDevice(device);
-
-		int bpp=(int)core.getBytesPerPixel();
-		int numComponent=(int)core.getNumberOfComponents();
-		
-		//bug workaround???
-		String p=core.getProperty(device, "PixelType");
-		if(p.equals("32bitRGB"))
-			numComponent=3;
-		
+		CameraImage im=new CameraImage();
 		core.snapImage();
-
-		Object arr;
-		if(core.getNumberOfComponents()==1)
-			arr=core.getImage();//core.getLastImage();//;
-		else
-			arr=core.getRGB32Image();
-		
-		CameraImage im=new CameraImage(
-				(int)core.getImageWidth(),
-				(int)core.getImageHeight(),
-				bpp,
-				arr,
-				numComponent
-				);
+		im.w = (int)core.getImageWidth();
+		im.h = (int)core.getImageHeight();
+		im.bytesPerPixel=(int)core.getBytesPerPixel();
+		im.pixels=core.getImage();
 		return im;
 		}
-	
-	
-	/**
-	 * Snap one image
-	 */
-	public static CameraImage snapSequence(CMMCore core, String device) throws Exception
-		{
-		if(!core.getCameraDevice().equals(device))
-			core.setCameraDevice(device);
-
-		if(core.getRemainingImageCount()==0)
-			return null;
-		
-		int bpp=(int)core.getBytesPerPixel();
-		int numComponent=(int)core.getNumberOfComponents();
-		
-		//bug workaround???
-		String p=core.getProperty(device, "PixelType");
-		if(p.equals("32bitRGB"))
-			numComponent=3;
-		
-		Object arr=core.popNextImage();
-		if(arr==null)
-			return null;
-
-		CameraImage im=new CameraImage(
-				(int)core.getImageWidth(),
-				(int)core.getImageHeight(),
-				bpp,
-				arr,
-				numComponent
-				);
-		return im;
-		}
-
 	
 	}

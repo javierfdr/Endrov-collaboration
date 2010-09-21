@@ -38,6 +38,7 @@ public class PLUGIN extends PluginDef
 	
 	public Class<?>[] getInitClasses()
 		{
+//		return new Class[]{};
 		return new Class[]{IsosurfaceExtension.class,Slice3DExtension.class,VoxelExtension.class};
 		}
 	

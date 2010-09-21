@@ -16,15 +16,15 @@ import mmcorej.PropertyPair;
 import org.jdom.Element;
 
 import endrov.driverMicromanager.conf.ConfiguratorDlg;
+import endrov.ev.EV;
 import endrov.hardware.*;
-import endrov.starter.EvSystemUtil;
 
 /**
  * Micromanager hardware interface
  * @author Johan Henriksson
  *
  */
-public class MicroManager extends EvDeviceProvider implements EvDevice
+public class MicroManager extends DeviceProvider implements Device
 	{
 	
 	
@@ -42,7 +42,7 @@ public class MicroManager extends EvDeviceProvider implements EvDevice
 			//core.enableStderrLog(true);
 			core.enableDebugLog(false);
 			
-			File fMMconfig1=new File(EvSystemUtil.getGlobalConfigEndrovDir(),"MMConfig.cfg");
+			File fMMconfig1=new File(EV.getGlobalConfigEndrovDir(),"MMConfig.cfg");
 			File fMMconfig=fMMconfig1;
 			fMMconfig.getParentFile().mkdirs();
 			if(!fMMconfig.exists())
@@ -50,7 +50,7 @@ public class MicroManager extends EvDeviceProvider implements EvDevice
 			if(!fMMconfig.exists())
 				{
 				System.out.println("No config file found ("+fMMconfig1+" nor "+fMMconfig+")");
-				configFile=new File(EvSystemUtil.getGlobalConfigEndrovDir(),"MMConfig.cfg");
+				configFile=new File(EV.getGlobalConfigEndrovDir(),"MMConfig.cfg");
 				configFile.createNewFile();
 				return;
 				}
@@ -108,7 +108,7 @@ public class MicroManager extends EvDeviceProvider implements EvDevice
 			for(String devName:MMutil.convVector(core.getLoadedDevices()))
 				{
 				//Device fundamentals
-				EvDevice adp;
+				MMDeviceAdapter adp;
 				if(isCamera.contains(devName))
 					adp=new MMCamera(this,devName);
 				//else if(isMagnifier.contains(devName))
@@ -173,7 +173,7 @@ public class MicroManager extends EvDeviceProvider implements EvDevice
 		}
 	
 	
-	public Set<EvDevice> autodetect()
+	public Set<Device> autodetect()
 		{
 		return null;
 		}
@@ -194,7 +194,7 @@ public class MicroManager extends EvDeviceProvider implements EvDevice
 		
 		return list;
 		}
-	public EvDevice newProvided(String s)
+	public Device newProvided(String s)
 		{
 		return null;
 		}
@@ -208,13 +208,13 @@ public class MicroManager extends EvDeviceProvider implements EvDevice
 
 	public SortedMap<String, String> getPropertyMap()
 		{
-		return new TreeMap<String, String>();
+		return null;
 		}
 
 
-	public SortedMap<String, DevicePropertyType> getPropertyTypes()
+	public SortedMap<String, PropertyType> getPropertyTypes()
 		{
-		return new TreeMap<String, DevicePropertyType>();
+		return null;
 		}
 
 
@@ -246,21 +246,6 @@ public class MicroManager extends EvDeviceProvider implements EvDevice
 		ConfiguratorDlg dlg=new ConfiguratorDlg(core,configFile.getAbsolutePath());
 		dlg.setVisible(true);
 		populateFromCore();
-		}
-
-	
-	
-	public EvDeviceObserver event=new EvDeviceObserver();
-	
-	public void addListener(EvDeviceObserver.Listener listener)
-		{
-		event.addWeakListener(listener);
-		}
-	
-	
-	public void removeListener(EvDeviceObserver.Listener listener)
-		{
-		event.remove(listener);
 		}
 
 	

@@ -5,7 +5,6 @@
  */
 package endrov.macBinding;
 import endrov.ev.*;
-import endrov.starter.EvSystemUtil;
 
 public class PLUGIN extends PluginDef
 	{
@@ -26,7 +25,7 @@ public class PLUGIN extends PluginDef
 	
 	public boolean systemSupported()
 		{
-		return EvSystemUtil.isMac();
+		return EV.isMac();
 		}
 	
 	public String cite()

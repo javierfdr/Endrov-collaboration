@@ -34,14 +34,10 @@ public class ImageWindowExtensionROI implements ImageWindowExtension
 		JMenu miROI=new JMenu("ROI");
 		w.addMenubar(miROI);
 
-		//final ImageRendererROI renderer=new ImageRendererROI(w);
-		//w.addImageWindowRenderer(renderer);
-		
-		
-		w.addImageWindowTool(new ImageWindowToolROI(w));
+		final ImageRendererROI renderer=new ImageRendererROI(w);
+		w.addImageWindowRenderer(renderer);
+		w.imageWindowTools.add(new ImageToolROI(w,renderer));
 
-		
-		
 		//ROI
 		JMenu miNew=new JMenu("New");
 		JMenu miModify=new JMenu("Modify");
@@ -68,11 +64,7 @@ public class ImageWindowExtensionROI implements ImageWindowExtension
 				else
 					miNewROIthis=new JMenuItem(rt.name(),rt.getIcon());
 				miNewROIthis.addActionListener(new ActionListener()
-					{public void actionPerformed(ActionEvent e)
-						{
-						ImageRendererROI renderer=w.getRendererClass(ImageRendererROI.class);
-						w.setTool(new ToolDragCreateROI(w,rt.makeInstance(),renderer));
-						}});
+					{public void actionPerformed(ActionEvent e){w.setTool(new ToolDragCreateROI(w,rt.makeInstance(),renderer));}});
 				BasicWindow.addMenuItemSorted(miNew, miNewROIthis);
 				}
 			}

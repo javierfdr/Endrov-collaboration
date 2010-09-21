@@ -16,11 +16,8 @@ import endrov.basicWindow.EvDecimalEditor;
 import endrov.basicWindow.FrameControl;
 import endrov.basicWindow.icon.BasicIcon;
 import endrov.frameTime.*;
-import endrov.imageset.EvChannel;
-import endrov.imageset.EvStack;
 import endrov.imageset.Imageset;
 import endrov.util.EvDecimal;
-import endrov.util.EvMathUtil;
 import endrov.util.EvSwingUtil;
 
 
@@ -119,13 +116,11 @@ public class FrameControlImage extends JPanel implements ActionListener, ChangeL
 		public Object getNextValue()
 			{
 			EvDecimal i=nextUp();
-			System.out.println("nextup "+i);
 			if(i==null)	return z;	else return i;
 			}
 		public Object getPreviousValue()
 			{
 			EvDecimal i=nextDown();
-			System.out.println("nextdown "+i);
 			if(i==null)	return z;	else return i;
 			}
 		public Object getValue(){return z;}
@@ -391,20 +386,8 @@ public class FrameControlImage extends JPanel implements ActionListener, ChangeL
 		}
 	private EvDecimal nextUp()
 		{
-		EvChannel ch=getImageset().getChannel(channel);
-		if(ch!=null)
-			{
-			EvStack stack=ch.getFrame(getFrame());
-			if(stack!=null)
-				{
-				double nextZ=Math.round(stack.transformWorldImageZ(getZ().doubleValue())-1);
-				if(nextZ<0)
-					nextZ=0;
-				return new EvDecimal(stack.transformImageWorldZ(nextZ));
-				}
-			else
-				return null;
-			}
+		if(channel!=null && getImageset().getChannel(channel)!=null)
+			return getImageset().getChannel(channel).closestZBelow(getFrame(),getZ());
 		else
 			return null;
 		}
@@ -418,21 +401,8 @@ public class FrameControlImage extends JPanel implements ActionListener, ChangeL
 		}
 	private EvDecimal nextDown()
 		{
-		EvChannel ch=getImageset().getChannel(channel);
-		if(ch!=null)
-			{
-			EvStack stack=ch.getFrame(getFrame());
-			if(stack!=null)
-				{
-				double nextZ=Math.round(stack.transformWorldImageZ(getZ().doubleValue())+1);
-				if(nextZ>stack.getDepth()-1)
-					nextZ=stack.getDepth()-1;
-				return new EvDecimal(stack.transformImageWorldZ(nextZ));
-//				return stack.closestZAbove(getZ());
-				}
-			else
-				return null;
-			}
+		if(channel!=null && getImageset().getChannel(channel)!=null)
+			return getImageset().getChannel(channel).closestZAbove(getFrame(),getZ());
 		else
 			return null;
 		}
@@ -453,18 +423,10 @@ public class FrameControlImage extends JPanel implements ActionListener, ChangeL
 	 */
 	public void setAll(EvDecimal frame, EvDecimal z)
 		{
-		//Find the closest z for this controller. Maybe one should just keep the value as-is?
-		EvChannel ch=getImageset().getChannel(channel);
-		if(ch!=null)
+		if(channel!=null && getImageset().getChannel(channel)!=null)
 			{
-			frame=ch.closestFrame(frame);
-			EvStack stack=ch.getFrame(frame);
-			if(stack!=null)
-				{
-				double curz=Math.round(stack.transformWorldImageZ(z.doubleValue()));
-				z=new EvDecimal(stack.transformImageWorldZ(curz));
-//				z=stack.resZ.multiply(stack.closestZint(z.doubleValue())).add(stack.dispZ);
-				}
+			frame=getImageset().getChannel(channel).closestFrame(frame);
+			z=getImageset().getChannel(channel).closestZ(frame, z);
 			}
 		removeChangeListener();
 		spinnerFrame.setValue(frame);
@@ -491,15 +453,8 @@ public class FrameControlImage extends JPanel implements ActionListener, ChangeL
 		
 		if(channel!=null && getImageset().getChannel(channel)!=null)
 			{
-			EvChannel ch=getImageset().getChannel(channel);
-			frame=ch.closestFrame(frame);
-			EvStack stack=ch.getFrame(frame);
-			
-			slicenum=new EvDecimal(stack.transformImageWorldZ(
-			EvMathUtil.clamp(Math.round(stack.transformWorldImageZ(z.doubleValue())), 0, stack.getDepth()-1)
-					));
-//			slicenum=stack.resZ.multiply(stack.closestZint(z.doubleValue()));
-			//slicenum=ch.closestZ(frame, slicenum);
+			frame=getImageset().getChannel(channel).closestFrame(frame);
+			slicenum=getImageset().getChannel(channel).closestZ(frame, slicenum);
 			}
 		removeChangeListener();
 		spinnerFrame.setValue(frame);

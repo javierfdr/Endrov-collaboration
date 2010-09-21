@@ -83,6 +83,7 @@ public class ModwPanelExpPattern extends JPanel implements ActionListener, SnapB
 	public void setAvailableExpressions(Collection<String> exps)
 		{
 		//Check if anything is different. Otherwise don't update
+		//Untested
 		if(!avail.equals(exps))
 			{
 			avail.clear();

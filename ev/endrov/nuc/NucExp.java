@@ -21,7 +21,7 @@ public class NucExp implements Cloneable
 	/**
 	 * Make a deep copy 
 	 */
-	public NucExp clone()
+	public Object clone()
 		{
 		NucExp exp=new NucExp();
 		for(Map.Entry<EvDecimal, Double> e:level.entrySet())

@@ -7,11 +7,13 @@ package endrov.roi;
 
 import java.util.LinkedList;
 
+import endrov.util.EvDecimal;
+
 //or should one at least supply scanlines? much less overhead. channel,frame,z,y -> [x]
 public abstract class LineIterator
 	{
 	public int y;
-	public double z;
+	public EvDecimal z;
 	
 	//new elements must be generated for every next
 	public LinkedList<LineRange> ranges=new LinkedList<LineRange>();

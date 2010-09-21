@@ -119,12 +119,12 @@ public class AutolineageJHdic1 extends LineageAlgorithmDef
 		
 		private double scaleSigmaXY2radius(double sigma)
 			{	
-			return sigma*newSigmaXY2radiusFactor*resXY;
+			return sigma*newSigmaXY2radiusFactor/resXY;
 			}
 		
 		private double scaleRadius2sigmaXY(double radius)
 			{
-			return radius*(1/resXY)/newSigmaXY2radiusFactor;
+			return radius*resXY/newSigmaXY2radiusFactor;
 			}
 		
 		
@@ -532,7 +532,7 @@ public class AutolineageJHdic1 extends LineageAlgorithmDef
 				
 				Vector3d wpos=stackHis.transformImageWorld(new Vector3d(v.x,v.y,v.z));
 				
-				if(shell.isPointInside(new ImVector3d(wpos.x,wpos.y,wpos.z)))
+				if(shell.isInside(new ImVector3d(wpos.x,wpos.y,wpos.z)))
 					{
 					//double bestSigma=Multiscale.findFeatureScale(stackHis.getInt(v.z).getPixels(),sigmaHis1, v.x, v.y);
 //					double bestSigma=Multiscale.findFeatureScale2(stackHis.getInt(v.z).getPixels(), 
@@ -558,16 +558,14 @@ public class AutolineageJHdic1 extends LineageAlgorithmDef
 							new Vector3d(eigvec.getQuick(1, 0),eigvec.getQuick(1, 1),0),
 							new Vector3d(0,0,0)};
 
-					
 					Candidate cand=new Candidate();
-					Vector3d onev=stackHis.transformWorldImage(new Vector3d(cand.wpos.x,cand.wpos.y,cand.wpos.z));
 					cand.id=nextCandidateID++;
 					cand.wpos=wpos;
 					cand.bestSigma=bestSigma;
 					cand.eigval=eigvalv;
 					cand.eigvec=eigvecv;
 					cand.intensity=Multiscale.convolveGaussPoint2D(stackHis.getInt(v.z).getPixels(), 
-							bestSigma, bestSigma, onev.x,onev.y); 
+							bestSigma, bestSigma, stackHis.transformWorldImageX(cand.wpos.x), stackHis.transformWorldImageY(cand.wpos.y)); 
 					//Found bug! the random intensities explained
 					candlist.add(cand);
 					}
@@ -1099,7 +1097,7 @@ public class AutolineageJHdic1 extends LineageAlgorithmDef
 				System.out.println("cur frame "+frame);
 				
 				final EvStack stackHis=channelHis.getFrame(frame);
-				resXY=stackHis.resX;
+				resXY=stackHis.getResbinX();
 
 				//Read parameters from the GUI
 				double expectRadius=Double.parseDouble(inpRadiusExpectedMax.getText());

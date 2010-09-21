@@ -9,36 +9,33 @@ import java.util.*;
 
 import org.jdom.Element;
 
-import endrov.hardware.EvDevice;
-import endrov.hardware.EvDeviceObserver;
+import endrov.hardware.Device;
 import endrov.hardware.EvHardware;
-import endrov.hardware.EvDeviceProvider;
-import endrov.hardware.DevicePropertyType;
+import endrov.hardware.DeviceProvider;
+import endrov.hardware.PropertyType;
 
 /**
  * Native device drivers
  * @author Johan Henriksson
  *
  */
-public class EvNativeHardware extends EvDeviceProvider implements EvDevice
+public class EvNativeHardware extends DeviceProvider implements Device
 	{
-	private static Map<String, Class<? extends EvDevice>> hardwareProvided=new TreeMap<String, Class<? extends EvDevice>>();
+	private static Map<String, Class<? extends Device>> hardwareProvided=new TreeMap<String, Class<? extends Device>>();
 	
 	
 	public EvNativeHardware()
 		{
 		//hw.put("IX", new OlympusIX());
+		hw.put("demo", new DemoScope());
 		
 		//hw.put("ITK", new ITKCorvus());
-		hardwareProvided.put("OlympusIX", OlympusIX.class);
-		//hardwareProvided.put("ITKCorvus", ITKCorvus.class);
-		hardwareProvided.put("Demo", DemoScope.class);
 		
 		}
 		
 	
 	
-	public Set<EvDevice> autodetect()
+	public Set<Device> autodetect()
 		{
 		return null;
 		}
@@ -50,7 +47,7 @@ public class EvNativeHardware extends EvDeviceProvider implements EvDevice
 		{
 		return Arrays.asList("IXvirtual");
 		}
-	public EvDevice newProvided(String s)
+	public Device newProvided(String s)
 		{
 		try
 			{
@@ -80,9 +77,9 @@ public class EvNativeHardware extends EvDeviceProvider implements EvDevice
 		}
 
 
-	public SortedMap<String, DevicePropertyType> getPropertyTypes()
+	public SortedMap<String, PropertyType> getPropertyTypes()
 		{
-		return new TreeMap<String, DevicePropertyType>();
+		return new TreeMap<String, PropertyType>();
 		}
 
 
@@ -108,27 +105,9 @@ public class EvNativeHardware extends EvDeviceProvider implements EvDevice
 		}
 	
 	
-	public boolean hasConfigureDialog()
-		{
-		return true;
-		}
-	public void openConfigureDialog()
-		{
-		hw.put("demo", new DemoScope());
-		}
+	public boolean hasConfigureDialog(){return false;}
+	public void openConfigureDialog(){}
 
-	
-	public EvDeviceObserver event=new EvDeviceObserver();
-	public void addListener(EvDeviceObserver.Listener listener)
-		{
-		event.addWeakListener(listener);
-		}
-	public void removeListener(EvDeviceObserver.Listener listener)
-		{
-		event.remove(listener);
-		}
-
-	
 	/******************************************************************************************************
 	 * Plugin declaration
 	 *****************************************************************************************************/
@@ -139,6 +118,9 @@ public class EvNativeHardware extends EvDeviceProvider implements EvDevice
 		
 		//TODO synchronize needed?
 		
+		hardwareProvided.put("OlympusIX", OlympusIX.class);
+		//hardwareProvided.put("ITKCorvus", ITKCorvus.class);
+		hardwareProvided.put("Demo", DemoScope.class);
 		}
 
 	}

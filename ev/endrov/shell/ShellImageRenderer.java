@@ -18,11 +18,11 @@ import endrov.imageWindow.*;
  */
 public class ShellImageRenderer implements ImageWindowRenderer
 	{
-	private ImageWindowInterface w;
+	private ImageWindow w;
 	
-	public Shell hoverShell=null;
+	public Shell currentShell=null;
 	
-	public ShellImageRenderer(ImageWindowInterface w)
+	public ShellImageRenderer(ImageWindow w)
 		{
 		this.w=w;
 		}
@@ -57,7 +57,7 @@ public class ShellImageRenderer implements ImageWindowRenderer
 		double pshortaxis=projectSphere(s.minor, s.midz);
 
 		//Coordinate transformation
-		Vector2d so=w.transformPointW2S(new Vector2d(s.midx,s.midy)); 
+		Vector2d so=w.transformW2S(new Vector2d(s.midx,s.midy)); 
 		//Note that ellipse fails rotation
 
 		double polarrad=10;
@@ -80,8 +80,7 @@ public class ShellImageRenderer implements ImageWindowRenderer
 	private double projectSphere(double r, double z)
 		{
 		//Currently assumes resx=resy. Maybe this should be specified harder?
-		//double wz=w.frameControl.getModelZ().doubleValue();
-		double wz=w.getZ().doubleValue();
+		double wz=w.frameControl.getModelZ().doubleValue();
 //		w.s2wz(w.frameControl.getZ());
 		double tf=r*r-(z-wz)*(z-wz);
 		if(tf>0)

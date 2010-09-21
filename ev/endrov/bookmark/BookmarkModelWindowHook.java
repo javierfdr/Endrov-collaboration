@@ -18,7 +18,7 @@ import javax.vecmath.Vector3d;
 
 import org.jdom.Element;
 
-import endrov.data.EvContainer;
+import endrov.basicWindow.BasicWindow;
 import endrov.data.EvData;
 import endrov.data.EvObject;
 import endrov.data.EvPath;
@@ -26,7 +26,6 @@ import endrov.modelWindow.Camera;
 import endrov.modelWindow.ModelWindow;
 import endrov.modelWindow.ModelWindowHook;
 import endrov.modelWindow.TransparentRender;
-import endrov.undo.UndoOpPutObject;
 import endrov.util.EvDecimal;
 import endrov.util.EvSwingUtil;
 
@@ -38,7 +37,7 @@ import endrov.util.EvSwingUtil;
 public class BookmarkModelWindowHook implements ModelWindowHook, ActionListener
 	{
 	private final ModelWindow w;
-	private JMenuItem miAddBookmark=new JMenuItem("Add bookmark");
+	private JMenuItem miAddBookmark=new JMenuItem("New");
 	private JMenu miBookmark=new JMenu("Bookmarks");
 	
 	public BookmarkModelWindowHook(ModelWindow w)
@@ -59,9 +58,9 @@ public class BookmarkModelWindowHook implements ModelWindowHook, ActionListener
 		{
 		return Collections.emptySet();
 		}
-	public double autoCenterRadius(Vector3d mid)
+	public Collection<Double> autoCenterRadius(Vector3d mid, double FOV)
 		{
-		return 0;
+		return Collections.emptySet();
 		}
 	public boolean canRender(EvObject ob)
 		{
@@ -87,7 +86,8 @@ public class BookmarkModelWindowHook implements ModelWindowHook, ActionListener
 					{
 					public void actionPerformed(ActionEvent e)
 						{
-						w.setFrame(m.frame);
+						if(w.frameControl!=null)
+							w.frameControl.setFrame(m.frame);
 						if(m.modelCamera!=null)
 							w.view.camera=new Camera(m.modelCamera);
 						w.repaint();
@@ -130,15 +130,38 @@ public class BookmarkModelWindowHook implements ModelWindowHook, ActionListener
 	
 	public void actionPerformed(ActionEvent e)
 		{
-		EvContainer container=w.getSelectedData();
-		String name=Bookmark.addBookmarkDialog(w, container);
-		if(name!=null)
+		//EvContainer data=w.getSelectedData();
+		Bookmark b=Bookmark.addBookmarkDialog(w, w.getSelectedData());
+		if(b!=null)
 			{
-			Bookmark b=new Bookmark();
-			b.frame=w.getFrame();
+			b.frame=w.frameControl.getFrame();
 			b.modelCamera=new Camera(w.view.camera);
-			new UndoOpPutObject("Add bookmark "+name, b, container, name);
+			BasicWindow.updateWindows();
 			}
+/*		
+		if(data==null)
+			BasicWindow.showErrorDialog("No container selected");
+		else
+			{
+			String name=JOptionPane.showInputDialog(w, "Name of bookmark");
+			if(name!=null)
+				{
+				if(data.metaObject.containsKey(name))
+					BasicWindow.showErrorDialog("Object with this name exists already");
+				else
+					{
+					Bookmark b=new Bookmark();
+					b.frame=w.frameControl.getFrame();
+					b.modelCamera=new Camera(w.view.camera);
+					
+					data.metaObject.put(name, b);
+					BasicWindow.updateWindows();
+					}
+				}
+			
+			
+			}
+			*/
 		}
 	
 	

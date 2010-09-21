@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.util.*;
 
 import javax.imageio.ImageIO;
-import javax.vecmath.Vector2d;
-import javax.vecmath.Vector3d;
 
 import endrov.data.*;
 import endrov.ev.*;
@@ -117,15 +115,13 @@ public class CollectImages
 								NucLineage.NucPos pos=e.getValue();
 								
 								frame=ost.getChannel(channelName).closestFrame(frame);
-								//EvDecimal z=ost.getChannel(channelName).closestZ(frame, new EvDecimal(pos.z/**ost.meta.resZ*/));
+								EvDecimal z=ost.getChannel(channelName).closestZ(frame, new EvDecimal(pos.z/**ost.meta.resZ*/));
 								EvStack stack=ost.getChannel(channelName).imageLoader.get(frame);
-								int closestZ=stack.closestZint(pos.z);
-								EvImage im=stack.getInt(closestZ);//ost.getChannel(channelName).getImageLoader(frame, z);
+								EvImage im=stack.get(z);//ost.getChannel(channelName).getImageLoader(frame, z);
 								
-								Vector2d mid=stack.transformWorldImage(new Vector2d(pos.x, pos.y));
-								int midx=(int)mid.x;//stack.transformWorldImageX(pos.x);
-								int midy=(int)mid.y;//stack.transformWorldImageY(pos.y);
-								int r=(int)stack.scaleWorldImage(new Vector3d(pos.r,0,0)).x; //hack
+								int midx=(int)stack.transformWorldImageX(pos.x);
+								int midy=(int)stack.transformWorldImageY(pos.y);
+								int r=(int)stack.scaleWorldImageX(pos.r);
 //								int rr=r+20;
 								int rr=(int)(r*2);
 	

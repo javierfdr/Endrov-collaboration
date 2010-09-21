@@ -7,15 +7,9 @@ package endrov.recording;
 
 import java.util.*;
 
-import endrov.hardware.EvDevice;
+import endrov.hardware.Device;
 
-/**
- * State device: Has only one property and that is the state. It is numeric but can be mapped to labels 
- * 
- * @author Johan Henriksson
- *
- */
-public interface HWState extends EvDevice, HWMagnifier
+public interface HWState extends Device, HWMagnifier
 	{
 
 	public List<String> getStateNames();

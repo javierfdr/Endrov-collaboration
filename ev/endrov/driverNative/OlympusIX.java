@@ -12,10 +12,9 @@ import java.util.TreeMap;
 
 import org.jdom.Element;
 
-import endrov.hardware.EvDevice;
-import endrov.hardware.EvDeviceObserver;
-import endrov.hardware.EvDeviceProvider;
-import endrov.hardware.DevicePropertyType;
+import endrov.hardware.Device;
+import endrov.hardware.DeviceProvider;
+import endrov.hardware.PropertyType;
 import endrov.recording.HWSerial;
 import endrov.recording.HWShutter;
 import endrov.recording.RecordingResource;
@@ -27,7 +26,7 @@ import endrov.recording.VirtualSerial;
  * @author Johan Henriksson
  *
  */
-public class OlympusIX extends EvDeviceProvider implements EvDevice
+public class OlympusIX extends DeviceProvider implements Device
 	{
 	public final static String newLine="\r\n";
 
@@ -115,24 +114,6 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		public double getResMagY(){return 1;}
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-		public boolean isOpen()
-			{
-			return false;
-			}
-		public void setOpen(boolean b)
-			{
-			}
-
 		}
 
 	/** Prism */
@@ -154,17 +135,6 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		public double getResMagY(){return 1;}
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-
 		}
 	
 	
@@ -187,18 +157,6 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		public double getResMagY(){return 1;}
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-
 		}
 	
 	/** Objective */
@@ -220,18 +178,6 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		public double getResMagY(){return RecordingResource.magFromLabel(getCurrentStateLabel());}
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-
 		}
 	
 	/** Condenser */
@@ -253,18 +199,6 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		public double getResMagY(){return 1;}
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-
 		}
 	
 	
@@ -287,18 +221,6 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		public double getResMagY(){return 1;}
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-
 		}
 	
 	/** Lamp intensity */
@@ -324,23 +246,12 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		public double getResMagY(){return 1;}
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-
 		}
 	
 	
 	
 
-	public Set<EvDevice> autodetect()
+	public Set<Device> autodetect()
 		{
 		return null;
 		}
@@ -353,7 +264,7 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		{
 		return null;
 		}
-	public EvDevice newProvided(String s)
+	public Device newProvided(String s)
 		{
 		return null; //TODO
 		}
@@ -372,9 +283,9 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 		return new TreeMap<String, String>();
 		}
 
-	public SortedMap<String, DevicePropertyType> getPropertyTypes()
+	public SortedMap<String, PropertyType> getPropertyTypes()
 		{
-		return new TreeMap<String, DevicePropertyType>();
+		return new TreeMap<String, PropertyType>();
 		}
 
 	public String getPropertyValue(String prop)
@@ -399,16 +310,7 @@ public class OlympusIX extends EvDeviceProvider implements EvDevice
 	public boolean hasConfigureDialog(){return false;}
 	public void openConfigureDialog(){}
 
-	public EvDeviceObserver event=new EvDeviceObserver();
-	public void addListener(EvDeviceObserver.Listener listener)
-		{
-		event.addWeakListener(listener);
-		}
-	public void removeListener(EvDeviceObserver.Listener listener)
-		{
-		event.remove(listener);
-		}
-
+	
 	
 	
 	}

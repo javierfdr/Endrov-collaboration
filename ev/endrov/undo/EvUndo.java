@@ -5,17 +5,10 @@
  */
 package endrov.undo;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 
 import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 
-import endrov.basicWindow.BasicWindow;
 import endrov.data.DataMenuExtension;
 import endrov.data.EvData;
 import endrov.data.EvDataMenu;
@@ -41,41 +34,21 @@ public class EvUndo
 	{
 	static final long serialVersionUID=0;
 	
-	public static LinkedList<UndoOp> undoQueue=new LinkedList<UndoOp>(); //Last is last operation done
-	public static LinkedList<UndoOp> redoQueue=new LinkedList<UndoOp>(); //First operation is to be redone first
+	public static LinkedList<UndoOp> undoQueue=new LinkedList<UndoOp>();
+	public static LinkedList<UndoOp> redoQueue=new LinkedList<UndoOp>();
 
-	public static UndoOp getLastUndo()
+	public UndoOp getLastUndo()
 		{
-		if(undoQueue.isEmpty())
-			return null;
-		else
-			return undoQueue.getLast();
+		return undoQueue.getLast();
 		}
 	
 	/**
-	 * Add undo operation and execute it
+	 * Add undo operation. An operation will not be added if it already is at the end of the list
 	 */
-	public static void executeAndAdd(UndoOp op)
+	public static void addUndo(UndoOp op)
 		{
-		undoQueue.add(op);
-		while(undoQueue.size()>5)
-			undoQueue.removeFirst();
-		redoQueue.clear();
-		op.redo();
-		//TODO update menu 
-		}
-	
-	
-	/**
-	 * Add undo operation and replace the last one on the stack
-	 */
-	public static void executeAndReplaceLast(UndoOp op)
-		{
-		undoQueue.removeLast();
-		undoQueue.add(op);
-		redoQueue.clear();
-		op.redo();
-		//The menu need not be updated in this case
+		if(undoQueue.getLast()!=op)
+			undoQueue.add(op);
 		}
 	
 	
@@ -102,120 +75,8 @@ public class EvUndo
 			{
 			public void buildData(JMenu menu)
 				{
-				boolean supportDifferentOrder=false;
-				
-				
-				//////////////////// Undo //////////////////////
-					
 				final JMenu miUndo=new JMenu("Undo");
 				addMetamenu(menu,miUndo);
-				
-				ArrayList<UndoOp> undoOpsReverse=new ArrayList<UndoOp>(undoQueue);
-				Collections.reverse(undoOpsReverse);
-				int undoEntryCount=0;
-				for(final UndoOp op:undoOpsReverse)
-					{
-					JMenuItem mi;
-					if(undoEntryCount==0)
-						mi=new JMenuItem(op.getOpName());
-					else
-						mi=new JMenuItem("! "+op.getOpName());
-					miUndo.add(mi);
-					final int fcount=undoEntryCount;
-					if(undoEntryCount==0)
-						mi.addActionListener(new ActionListener()
-							{
-							public void actionPerformed(ActionEvent e)
-								{
-								if(op.canUndo())
-									{
-									op.undo();
-									undoQueue.removeLast();
-									redoQueue.addFirst(op);
-									BasicWindow.updateWindows();
-									}
-								else
-									BasicWindow.showInformativeDialog("This operation does not support undo");
-								}
-							});
-					else
-						mi.addActionListener(new ActionListener()
-							{
-							public void actionPerformed(ActionEvent e)
-								{
-								if(op.canUndo())
-									{
-									int state=JOptionPane.showConfirmDialog(null, 
-											"This is not the last operation. Undoing it is can be incredibly unsafe unless you know what you are doing. Sure?", "Undo?", JOptionPane.YES_NO_OPTION);
-									if(state==JOptionPane.YES_OPTION)
-										{
-										op.undo();
-										for(int i=0;i<fcount+1;i++)
-											undoQueue.removeLast();
-										redoQueue.clear();
-										BasicWindow.updateWindows();
-										}
-									}
-								else
-									BasicWindow.showInformativeDialog("This operation does not support undo");
-								}
-							});
-						
-					if(!supportDifferentOrder)
-						break;
-					undoEntryCount++;
-					}
-				
-				//////////////////// Redo //////////////////////
-
-				
-				final JMenu miRedo=new JMenu("Redo");
-				addMetamenu(menu,miRedo);
-				
-				int redoEntryCount=0;
-				for(final UndoOp op:redoQueue)
-					{
-					JMenuItem mi;
-					if(redoEntryCount==0)
-						mi=new JMenuItem(op.getOpName());
-					else
-						mi=new JMenuItem("! "+op.getOpName());
-					miRedo.add(mi);
-					if(redoEntryCount==0)
-						mi.addActionListener(new ActionListener()
-							{
-							public void actionPerformed(ActionEvent e)
-								{
-								undoQueue.add(op);
-								redoQueue.removeFirst();
-								op.redo();
-								BasicWindow.updateWindows(); //Needed?
-								}
-							});
-					else
-						mi.addActionListener(new ActionListener()
-							{
-							public void actionPerformed(ActionEvent e)
-								{
-								int state=JOptionPane.showConfirmDialog(null, 
-										"This is not the first operation. Redoing it can be incredibly unsafe unless you know what you are doing. Sure?", "Redo?", JOptionPane.YES_NO_OPTION);
-								if(state==JOptionPane.YES_OPTION)
-									{
-									undoQueue.addLast(op);
-									redoQueue.clear();
-									op.redo();
-									BasicWindow.updateWindows(); //Needed?
-									}
-
-								}
-							});
-						
-					if(!supportDifferentOrder)
-						break;
-					redoEntryCount++;
-					}
-
-				
 				
 				}
 			public void buildOpen(JMenu menu)

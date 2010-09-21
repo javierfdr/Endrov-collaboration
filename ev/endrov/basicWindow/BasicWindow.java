@@ -6,7 +6,6 @@
 package endrov.basicWindow;
 
 import java.awt.Component;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -28,7 +27,6 @@ import endrov.ev.*;
 import endrov.keyBinding.JInputManager;
 import endrov.keyBinding.JinputListener;
 import endrov.keyBinding.KeyBinding;
-import endrov.starter.EvSystemUtil;
 
 import org.jdom.*;
 
@@ -131,26 +129,6 @@ public abstract class BasicWindow extends JPanel
 		e.setAttribute("w", ""+r.width);
 		e.setAttribute("h", ""+r.height);
 		}
-
-	
-	/**
-	 * Get position of window from XML element. Returns upper-left corner if it fails
-	 */
-	public static Point getXMLposition(Element e) //throws Exception
-		{
-		try
-			{
-			int x = e.getAttribute("x").getIntValue();
-			int y = e.getAttribute("y").getIntValue();
-			return new Point(x, y);
-			}
-		catch (DataConversionException e1)
-			{
-			return new Point(0,0);
-			}
-		}
-
-	
 
 	/**
 	 * Add menu item to a menu, put it in alphabetical order
@@ -433,26 +411,9 @@ public abstract class BasicWindow extends JPanel
 			getEvw().setBounds(r);
 		}
 
-	public void setBoundsEvWindow(Integer w, Integer h)
-		{
-		getEvw().pack();
-		Rectangle r=getEvw().getBounds();
-		if(w==null)
-			w=r.width;
-		if(h==null)
-			h=r.height;
-		getEvw().setBounds(new Rectangle(w,h));
-		}
-	
 	public void setBoundsEvWindow(int x, int y, int width, int height)
 		{
 		getEvw().setBounds(new Rectangle(x, y, width, height));
-		}
-
-	public void setLocationEvWindow(Point p)
-		{
-		if(p!=null)
-			getEvw().setLocation(p.x, p.y);
 		}
 
 	public void setLocationEvWindow(int x, int y)
@@ -584,10 +545,8 @@ public abstract class BasicWindow extends JPanel
 					dialogSysInfo();
 				else if (e.getSource()==miSaveConfig)
 					EV.savePersonalConfig();
-				else if (e.getSource()==miRegInfo)
-					EndrovRegistrationDialog.runDialogNoLock();
 				else if (e.getSource()==miOpenConfig)
-					EV.openExternal(EvSystemUtil.getGlobalConfigEndrovDir());
+					EV.openExternal(EV.getGlobalConfigEndrovDir());
 				else if (e.getSource()==miReportBug)
 					BrowserControl.displayURL("http://sourceforge.net/tracker/?group_id=199554&atid=969958");
 				}
@@ -614,7 +573,6 @@ public abstract class BasicWindow extends JPanel
 	private JMenuItem miWebPlugins = new JMenuItem("Plugins");
 	private JMenuItem miSysInfo = new JMenuItem("System information");
 	private JMenuItem miSaveConfig = new JMenuItem("Save config now");
-	private JMenuItem miRegInfo = new JMenuItem("Change registration information");
 
 	/**
 	 * Add to the menu Window
@@ -682,8 +640,6 @@ public abstract class BasicWindow extends JPanel
 		menuMaintenance.add(miToggleSplash);
 		menuMaintenance.add(miOpenConfig);
 		menuMaintenance.add(miSaveConfig);
-		menuMaintenance.add(miRegInfo);
-		 
 		BasicWindow.addMenuItemSorted(menuFile, miQuit, "zquit");
 
 		for (BasicWindowHook hook : basicWindowExtensionHook.values())
@@ -716,7 +672,6 @@ public abstract class BasicWindow extends JPanel
 		miReportBug.addActionListener(listener);
 		miSysInfo.addActionListener(listener);
 		miSaveConfig.addActionListener(listener);
-		miRegInfo.addActionListener(listener);
 		}
 
 	/**
@@ -871,7 +826,7 @@ public abstract class BasicWindow extends JPanel
 	 * Called to obtain personal settings for that window. Function has to create
 	 * new elements and add them to the given element.
 	 */
-	public abstract void windowSavePersonalSettings(Element root);
+	public abstract void windowSavePersonalSettings(Element e);
 
 	/**
 	 * Called when a file has just been loaded and should be displayed in all

@@ -44,7 +44,7 @@ public class NamebasedImageset implements EvIOData
 	private String channelList="";
 	private double resX=1;
 	private double resY=1;
-	private double resZ=1;
+	private EvDecimal spacingZ=EvDecimal.ONE;
 	
 	
 	/**
@@ -171,7 +171,7 @@ public class NamebasedImageset implements EvIOData
 				channelList=eChannels.getText();
 				resX=Double.parseDouble(eResX.getText());
 				resY=Double.parseDouble(eResY.getText());
-				resZ=Double.parseDouble(eSpacingZ.getText());
+				spacingZ=new EvDecimal(eSpacingZ.getText());
 				NamebasedDatabaseBuilder b=new NamebasedDatabaseBuilder();
 				b.run(data);
 				eLog.setText(b.rebuildLog);
@@ -342,13 +342,17 @@ public class NamebasedImageset implements EvIOData
 				
 				//Plug EVimage
 				EvImage evim=new EvImage();
+				stack.dispX=0;
+				stack.dispY=0;
+				//stack.binning=1;
 				stack.resX=resX; 
 				stack.resY=resY;
-				stack.resZ=resZ;
 				
 				evim.io=new BasicSliceIO(f);
 				
-				stack.putInt(slice, evim); 
+				EvDecimal realSlice=new EvDecimal(slice).multiply(spacingZ);
+				
+				stack.put(realSlice, evim); 
 				String newLogEntry=filename+" Ch: "+channelName+ " Fr: "+frame+" Sl: "+slice+"\n";
 				System.out.println(newLogEntry);
 				rebuildLog+=newLogEntry;

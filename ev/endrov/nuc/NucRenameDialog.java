@@ -125,21 +125,14 @@ public class NucRenameDialog extends JDialog implements ActionListener
 	private void clickOk()
 		{
 		timer=null;
-		final String newName=(String)inputName.getSelectedItem();
+		String newName=(String)inputName.getSelectedItem();
 		if(!newName.equals(""))
 			{
 			if(oldLineage.nuc.containsKey(newName))
 				JOptionPane.showMessageDialog(frame, "Nucleus already exists");
 			else
 				{
-				new UndoOpReplaceAllNuclei("Rename nucleus",oldLineage)
-					{
-					public void redo()
-						{
-						oldLineage.renameNucleus(oldName, newName);
-						}
-					}.execute();
-				
+				oldLineage.renameNucleus(oldName, newName);
 				dispose();
 				BasicWindow.updateWindows();
 				}

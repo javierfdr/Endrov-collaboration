@@ -7,7 +7,6 @@ package endrov.nucLineageWindow;
 
 import java.awt.event.*;
 import java.awt.*;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -464,12 +463,8 @@ public class LineageWindow extends BasicWindow
 		{
 		JPopupMenu popup = new JPopupMenu();
 		
-		//Round frame to something sensible
-		final EvDecimal hoverFrame2=view.getFrameFromCursor(e.getX(),e.getY());
-		final EvDecimal hoverFrame=new EvDecimal(hoverFrame2.toBigDecimal().divideToIntegralValue(BigDecimal.ONE));
-		
-		System.out.println("Hover frame "+hoverFrame);
-		popup.add(new JMenuItem("--Frame: "+FrameControl.formatTime(hoverFrame)));
+		final EvDecimal hoverFrame=view.getFrameFromCursor(e.getX(),e.getY());
+		popup.add(new JMenuItem("--Frame: "+hoverFrame));
 		JMenuItem miGoToFrame=new JMenuItem("Go to frame");
 		popup.add(miGoToFrame);
 		
@@ -587,12 +582,12 @@ public class LineageWindow extends BasicWindow
 			miSetStartFrame.addActionListener(new ActionListener()
 				{
 				public void actionPerformed(ActionEvent e)
-					{NucCommonUI.actionSetStartFrameDialog(Collections.singleton(new NucSel(getLineage(),nucName)));}
+					{NucCommonUI.actionSetStartFrame(Collections.singleton(new NucSel(getLineage(),nucName)));}
 				});
 			miSetEndFrame.addActionListener(new ActionListener()
 				{
 				public void actionPerformed(ActionEvent e)
-					{NucCommonUI.actionSetEndFrameDialog(Collections.singleton(new NucSel(getLineage(),nucName)));}
+					{NucCommonUI.actionSetEndFrame(Collections.singleton(new NucSel(getLineage(),nucName)));}
 				});
 			miRename.addActionListener(new ActionListener()
 				{

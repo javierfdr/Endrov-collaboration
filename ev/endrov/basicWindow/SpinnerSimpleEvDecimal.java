@@ -20,29 +20,19 @@ public class SpinnerSimpleEvDecimal extends JSpinner
 
 	public SpinnerSimpleEvDecimal()
 		{
-		this(new EvDecimal(0));
-		}
-
-	public SpinnerSimpleEvDecimal(EvDecimal value)
-		{
 		setModel(new EvDecimalSpinnerModel());
 		setEditor(new EvDecimalEditor(this));
-		setValue(value);
+		
 		}
 	
 	public EvDecimal getDecimalValue()
 		{
-		return (EvDecimal)super.getValue();
+		return (EvDecimal)getValue();
 		}
-
-	public void setDecimalValue(EvDecimal v)
-		{
-		super.setValue(v);
-		}
-
+	
 	public void setFrame(String f)
 		{
-		setDecimalValue(FrameControl.parseTime(f));
+		setValue(FrameControl.parseTime(f));
 		}
 	
 	}

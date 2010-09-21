@@ -8,7 +8,6 @@ package endrov.starter;
 import endrov.basicWindow.*;
 import endrov.ev.*;
 import endrov.imageWindow.*;
-import endrov.util.RepeatingKeyEventsFixer;
 
 import java.lang.reflect.Method;
 
@@ -28,18 +27,15 @@ public class MW
 	 */
 	public static void main(String[] args)
 		{
-		//This reduces the effect of one VERY annoying swing bug
-		new RepeatingKeyEventsFixer().install();
-
 		EvLog.listeners.add(new EvLogStdout());
-		EvLog.listeners.add(new EvLogFile(EvSystemUtil.getLogFileName()));
+		EvLog.listeners.add(new EvLogFile(EV.getLogFileName()));
 
 		//Log.listeners.add(new SwingLog());
 
 		//This is a hack over the plugin system. For some reason the application must
 		//be registered really early of DnD will fail if the application is not initially
 		//open.
-		if(EvSystemUtil.isMac())
+		if(EV.isMac())
 			{
 			try
 				{
@@ -85,11 +81,6 @@ public class MW
 				{
 				ss.disableLog();
 				ss.dispose();
-				}
-			if(!EndrovRegistrationDialog.hasRegistered())
-				{
-				EndrovRegistrationDialog.runDialog();
-				EndrovRegistrationDialog.connectAndRegister();
 				}
 			}
 		catch (Exception e)

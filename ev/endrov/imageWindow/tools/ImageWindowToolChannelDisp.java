@@ -5,7 +5,6 @@
  */
 package endrov.imageWindow.tools;
 
-import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,12 +15,9 @@ import java.util.Map;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
-import javax.vecmath.Vector2d;
-import javax.vecmath.Vector3d;
 
 import endrov.basicWindow.BasicWindow;
 import endrov.imageWindow.ImageWindow;
-//import endrov.imageWindow.ImageWindowInterface;
 import endrov.imageWindow.ImageWindowTool;
 import endrov.imageset.EvChannel;
 import endrov.imageset.EvStack;
@@ -40,7 +36,6 @@ public class ImageWindowToolChannelDisp implements ImageWindowTool
 		{
 		this.w=w;
 		}
-	
 	public JMenuItem getMenuItem()
 		{
 		JCheckBoxMenuItem mi=new JCheckBoxMenuItem("Channel/Displacement");
@@ -59,22 +54,24 @@ public class ImageWindowToolChannelDisp implements ImageWindowTool
 			Imageset rec=w.getImageset();
 			EvChannel c=w.getSelectedChannel();
 			
-			Vector2d diff=w.transformVectorS2W(new Vector2d(dx,dy));
-			
+			double ddx=dx/w.getZoom(); //To world coordinates
+			double ddy=dy/w.getZoom(); 
 			if(c!=null)
 				{
 				for(Map.Entry<EvDecimal, EvStack> frames:c.imageLoader.entrySet())
 					{
 					EvStack stack=frames.getValue();
-					//Vector3d d=stack.scaleWorldImage(new Vector3d(diff.x,diff.y,0));
+					stack.dispX+=stack.scaleWorldImageX(ddx); 
+					stack.dispY+=stack.scaleWorldImageY(ddy); 
+			
+					//stack.dispX+=ddx;
+					//stack.dispY+=ddy;
 					
-					Vector3d disp=stack.getDisplacement();
-					disp.sub(new Vector3d(diff.x, diff.y, 0));
-					stack.setDisplacement(disp);
-//					stack.dispX+=diff.x;
-//					stack.dispY+=diff.y;
 					
-					//TODO handle rotation of stacks?
+					c.defaultDispX=stack.dispX;
+					c.defaultDispY=stack.dispY;
+					
+					//mark metadata dirty?
 					}
 				
 				BasicWindow.updateWindows();
@@ -82,7 +79,7 @@ public class ImageWindowToolChannelDisp implements ImageWindowTool
 				}
 			}
 		}
-	public void mouseClicked(MouseEvent e, Component invoker) {}
+	public void mouseClicked(MouseEvent e) {}
 	public void mousePressed(MouseEvent e) {}
 	public void mouseReleased(MouseEvent e) {}
 	public void mouseMoved(MouseEvent e, int dx, int dy) {}

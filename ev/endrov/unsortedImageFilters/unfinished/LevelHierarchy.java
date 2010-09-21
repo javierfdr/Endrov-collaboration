@@ -5,11 +5,19 @@
  */
 package endrov.unsortedImageFilters.unfinished;
 
+import java.io.File;
 import java.util.*;
 
+import endrov.data.EvData;
+import endrov.ev.EV;
+import endrov.ev.EvLog;
+import endrov.ev.EvLogStdout;
+import endrov.flowImageStats.EvOpAverageRect;
 import endrov.imageset.EvPixels;
 import endrov.imageset.EvPixelsType;
 import endrov.imageset.EvStack;
+import endrov.imageset.Imageset;
+import endrov.util.EvDecimal;
 import endrov.util.Vector3i;
 
 /**
@@ -312,7 +320,6 @@ public class LevelHierarchy
 		return sum;
 		}
 	
-	/*
 	public static void main(String[] args)
 		{
 		EvLog.listeners.add(new EvLogStdout());
@@ -355,7 +362,7 @@ public class LevelHierarchy
 		
 		System.exit(0);
 		}
-	*/
+	
 	
 	
 	}

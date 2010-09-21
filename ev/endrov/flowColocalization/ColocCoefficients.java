@@ -31,74 +31,34 @@ public class ColocCoefficients
 	public double sumXminusY2;
 	public double sumXcoloc, sumYcoloc;
 	public int n;
-
+	
 	
 	/**
-	 * Compare several pixels
-	 */
-	public void add(int[] arrX, int[] arrY)
-		{
-		if(arrX.length!=arrY.length)
-			throw new RuntimeException("coloc arrays have different length");
-		for(int i=0;i<arrX.length;i++)
-			{
-			int x=arrX[i];
-			int y=arrY[i];
-			add(x,y);
-			}
-		}
-	
-	/**
-	 * Compare several pixels
+	 * Add pixels from arrays
 	 */
 	public void add(double[] arrX, double[] arrY)
 		{
-		if(arrX.length!=arrY.length)
-			throw new RuntimeException("coloc arrays have different length");
 		for(int i=0;i<arrX.length;i++)
 			{
 			double x=arrX[i];
 			double y=arrY[i];
-			add(x,y);
+			
+			sumX+=x;
+			sumY+=y;
+			sumXX+=x*x;
+			sumXY+=x*y;
+			sumYY+=y*y;
+			double dx=x-y;
+			sumXminusY2+=dx*dx;
+			
+			if(!isBackground(y))
+				sumXcoloc+=x;
+			if(!isBackground(x))
+				sumYcoloc+=y;
 			}
+		n+=arrX.length;
 		}
 	
-	
-	/**
-	 * Compare several pixels
-	 */
-	public void add(float[] arrX, float[] arrY)
-		{
-		if(arrX.length!=arrY.length)
-			throw new RuntimeException("coloc arrays have different length");
-		for(int i=0;i<arrX.length;i++)
-			{
-			double x=arrX[i];
-			double y=arrY[i];
-			add(x,y);
-			}
-		}
-	
-	/**
-	 * Compare one pixel
-	 */
-	public void add(double x, double y)
-		{
-		sumX+=x;
-		sumY+=y;
-		sumXX+=x*x;
-		sumXY+=x*y;
-		sumYY+=y*y;
-		double dx=x-y;
-		sumXminusY2+=dx*dx;
-		
-		if(!isBackground(y))
-			sumXcoloc+=x;
-		if(!isBackground(x))
-			sumYcoloc+=y;
-		
-		n++;
-		}
 	
 	private boolean isBackground(double v)
 		{

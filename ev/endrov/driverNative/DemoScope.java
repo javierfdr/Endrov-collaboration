@@ -16,10 +16,9 @@ import java.util.TreeMap;
 
 import org.jdom.Element;
 
-import endrov.hardware.EvDevice;
-import endrov.hardware.EvDeviceObserver;
-import endrov.hardware.EvDeviceProvider;
-import endrov.hardware.DevicePropertyType;
+import endrov.hardware.Device;
+import endrov.hardware.DeviceProvider;
+import endrov.hardware.PropertyType;
 import endrov.recording.CameraImage;
 import endrov.recording.HWCamera;
 import endrov.recording.HWStage;
@@ -34,7 +33,7 @@ import endrov.util.EvMathUtil;
  * @author Johan Henriksson
  *
  */
-public class DemoScope extends EvDeviceProvider implements EvDevice
+public class DemoScope extends DeviceProvider implements Device
 	{
 
 	
@@ -76,7 +75,14 @@ public class DemoScope extends EvDeviceProvider implements EvDevice
 			
 			g.fillOval(100-r, 100-r, 2*r, 2*r);
 			
-			CameraImage cim=new CameraImage(im.getWidth(), im.getHeight(), 1, im, 1);
+			CameraImage cim=new CameraImage();
+			cim.bytesPerPixel=1;
+			cim.w=im.getWidth();
+			cim.h=im.getHeight();
+
+			cim.pixels=im;
+			
+			
 			
 			/*
 			int[] allpi=new int[im.getWidth()];
@@ -97,7 +103,7 @@ public class DemoScope extends EvDeviceProvider implements EvDevice
 			return "Demo camera";
 			}
 		public SortedMap<String, String> getPropertyMap(){return new TreeMap<String, String>();}
-		public SortedMap<String, DevicePropertyType> getPropertyTypes(){return new TreeMap<String, DevicePropertyType>();}
+		public SortedMap<String, PropertyType> getPropertyTypes(){return new TreeMap<String, PropertyType>();}
 		public String getPropertyValue(String prop){return null;}
 		public Boolean getPropertyValueBoolean(String prop){return null;}
 		public void setPropertyValue(String prop, boolean value){}
@@ -113,49 +119,6 @@ public class DemoScope extends EvDeviceProvider implements EvDevice
 		
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
-		
-		
-		
-		
-		//TODO all below
-		
-		public double getSequenceCapacityFree()
-			{
-			return 1;
-			}
-		public boolean isDoingSequenceAcq()
-			{
-			// TODO Auto-generated method stub
-			return false;
-			}
-		public CameraImage snapSequence() throws Exception
-			{
-			// TODO Auto-generated method stub
-			return null;
-			}
-		public void startSequenceAcq(double interval)
-				throws Exception
-			{
-			// TODO Auto-generated method stub
-			
-			}
-		public void stopSequenceAcq()
-			{
-			// TODO Auto-generated method stub
-			
-			}
-		
-		
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-
 		}
 
 	/**
@@ -192,7 +155,7 @@ public class DemoScope extends EvDeviceProvider implements EvDevice
 			return "Demo stage";
 			}
 		public SortedMap<String, String> getPropertyMap(){return new TreeMap<String, String>();}
-		public SortedMap<String, DevicePropertyType> getPropertyTypes(){return new TreeMap<String, DevicePropertyType>();}
+		public SortedMap<String, PropertyType> getPropertyTypes(){return new TreeMap<String, PropertyType>();}
 		public String getPropertyValue(String prop){return null;}
 		public Boolean getPropertyValueBoolean(String prop){return null;}
 		public void setPropertyValue(String prop, boolean value){}
@@ -201,30 +164,12 @@ public class DemoScope extends EvDeviceProvider implements EvDevice
 		public boolean hasConfigureDialog(){return false;}
 		public void openConfigureDialog(){}
 
-		public EvDeviceObserver event=new EvDeviceObserver();
-		public void addListener(EvDeviceObserver.Listener listener)
-			{
-			event.addWeakListener(listener);
-			}
-		public void removeListener(EvDeviceObserver.Listener listener)
-			{
-			event.remove(listener);
-			}
-
-		public boolean hasSampleLoadPosition(){return false;}
-		public void setSampleLoadPosition(boolean b){}
-		public boolean getSampleLoadPosition(){return false;}
-		
-		public void stop()
-			{
-			}
-
 		}
 
 
 
 
-	public Set<EvDevice> autodetect()
+	public Set<Device> autodetect()
 		{
 		return null;
 		}
@@ -237,7 +182,7 @@ public class DemoScope extends EvDeviceProvider implements EvDevice
 		{
 		return null;
 		}
-	public EvDevice newProvided(String s)
+	public Device newProvided(String s)
 		{
 		return null; //TODO
 		}
@@ -256,9 +201,9 @@ public class DemoScope extends EvDeviceProvider implements EvDevice
 		return new TreeMap<String, String>();
 		}
 
-	public SortedMap<String, DevicePropertyType> getPropertyTypes()
+	public SortedMap<String, PropertyType> getPropertyTypes()
 		{
-		return new TreeMap<String, DevicePropertyType>();
+		return new TreeMap<String, PropertyType>();
 		}
 
 	public String getPropertyValue(String prop)
@@ -287,14 +232,5 @@ public class DemoScope extends EvDeviceProvider implements EvDevice
 	
 	public void openConfigureDialog(){}
 
-
-	public EvDeviceObserver event=new EvDeviceObserver();
-	public void addListener(EvDeviceObserver.Listener listener)
-		{
-		event.addWeakListener(listener);
-		}
-	public void removeListener(EvDeviceObserver.Listener listener)
-		{
-		event.remove(listener);
-		}
+	
 	}

@@ -83,18 +83,10 @@ public class EvListUtil
 	 */
 	public static Integer findPercentileInt(int[] list, double perc)
 		{
-		return findPercentileInt(list, perc, list.length);
+		int size=(int)(perc*(list.length-1));
+		return findRankInt(list,list.length, size);
 		}
-	
-	/**
-	 * Find percentile. q<-[0,1].
-	 * O(n)
-	 */
-	public static Integer findPercentileInt(int[] list, double perc, int listLength)
-		{
-		int size=(int)(perc*(listLength-1));
-		return findRankInt(list,listLength, size);
-		}
+
 	
 	/**
 	 * Find value of given rank q (=value at position q in sorted list). O(n)
@@ -166,7 +158,7 @@ public class EvListUtil
 	/**
 	 * Convert to scalar array
 	 */
-	public static int[] toIntArray(Collection<Integer> set)
+	public static int[] toDoubleArray(Collection<Integer> set)
 		{
 		int[] out=new int[set.size()];
 		int i=0;
@@ -313,21 +305,6 @@ public class EvListUtil
 		return index;
 		}
 
-	
-
-	/**
-	 * Get the product set, given two sets
-	 */
-	public static <E,F> Collection<Tuple<E,F>> productSet(Collection<E> a, Collection<F> b)
-		{
-		List<Tuple<E,F>> list=new LinkedList<Tuple<E,F>>();
-		for(E aa:a)
-			for(F bb:b)
-				list.add(Tuple.make(aa, bb));
-		return list;
-		}
-	
-	
 	public static void main(String[] args)
 		{
 		LinkedList<Integer> list=new LinkedList<Integer>();
@@ -346,6 +323,5 @@ public class EvListUtil
 		*/
 		//System.out.println(findRankInt(list, 10));
 		}
-
 	
 	}

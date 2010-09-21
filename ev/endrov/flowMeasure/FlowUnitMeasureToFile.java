@@ -18,6 +18,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeListener;
+
 import org.jdom.Element;
 
 import endrov.flow.Flow;

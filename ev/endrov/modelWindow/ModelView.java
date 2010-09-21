@@ -13,13 +13,11 @@ import java.awt.Font;
 import java.nio.*;
 
 import javax.media.opengl.*;
-import javax.media.opengl.awt.GLCanvas;
-import javax.media.opengl.awt.GLJPanel;
 import javax.media.opengl.glu.*;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Vector3d;
 
-import com.sun.opengl.util.awt.TextRenderer;
+import com.sun.opengl.util.j2d.*;
 
 import endrov.coordinateSystem.CoordinateSystem;
 import endrov.ev.*;
@@ -36,19 +34,12 @@ import endrov.util.EvDecimal;
 /**
  * A panel for displaying the model
  */
-public class ModelView extends GLJPanel //GLCanvas
+public class ModelView extends GLCanvas
 	{
 	public static final long serialVersionUID=0;
 	
 	//method: display(). faster than repaint.
 	
-  private static GLCapabilities caps;
-
-	static
-	{
-	caps = new GLCapabilities(GLProfile.get(GLProfile.GL2));
-  caps.setAlphaBits(8);
-	}
 	
 	/** Number of clipping planes supported by this context */
 	public int numClipPlanesSupported;
@@ -132,7 +123,7 @@ public class ModelView extends GLJPanel //GLCanvas
 		byte colG=(byte)((selectColorNum>>7 ) & 0x7F);
 		byte colB=(byte)((selectColorNum>>14));
 //		System.out.println("out "+selectColorNum+" "+colR+" "+colG+" "+colB);
-		gl.getGL2().glColor3ub(colR,colG,colB);
+		gl.glColor3ub(colR,colG,colB);
 		}
 	
 	
@@ -152,44 +143,37 @@ public class ModelView extends GLJPanel //GLCanvas
 			{
 			//Get debug info
 			if(EV.debugMode)
-				drawable.setGL(new DebugGL2(drawable.getGL().getGL2()));
+				{
+				drawable.setGL(new DebugGL(drawable.getGL()));
+				GL gl = drawable.getGL();
+				}
 			
 			//Get GL context
-			GL2 gl = drawable.getGL().getGL2();
+			GL gl = drawable.getGL();
 
-			checkerr(gl);
-			
 			//Switch off vertical synchronization. Might speed up
 			gl.setSwapInterval(1);
 		
 			//GL states that won't change
-			gl.glEnable(GL2.GL_CULL_FACE);
-			gl.glEnable(GL2.GL_DEPTH_TEST);
-			gl.glEnable(GL2.GL_NORMALIZE);
-			gl.glShadeModel(GL2.GL_SMOOTH);
-			
-			checkerr(gl);
+			gl.glEnable(GL.GL_CULL_FACE);
+			gl.glEnable(GL.GL_DEPTH_TEST);
+			gl.glEnable(GL.GL_NORMALIZE);
+			gl.glShadeModel(GL.GL_SMOOTH);
 			
 	    renderer = new TextRenderer(new Font("SansSerif", Font.PLAIN, 72));
 
 	    //Number of clipping planes
 	    int[] queryArr=new int[1];
-	    gl.glGetIntegerv(GL2.GL_MAX_CLIP_PLANES, queryArr, 0);
+	    gl.glGetIntegerv(GL.GL_MAX_CLIP_PLANES, queryArr, 0);
 	    numClipPlanesSupported=queryArr[0];
-
-	    checkerr(gl);
-
+	    
 	    //3D texture support
-	    gl.glGetIntegerv(GL2.GL_MAX_3D_TEXTURE_SIZE, queryArr, 0);
+	    gl.glGetIntegerv(GL.GL_MAX_3D_TEXTURE_SIZE, queryArr, 0);
 	    max3DTextureSize=queryArr[0];
 
-	    checkerr(gl);
-
 	    //Texture units
-	    gl.glGetIntegerv(GL2.GL_MAX_TEXTURE_UNITS, queryArr, 0);
+	    gl.glGetIntegerv(GL.GL_MAX_TEXTURE_UNITS, queryArr, 0);
 	    numTextureUnits=queryArr[0];
-	    
-	    checkerr(gl);
 	    
 	    //VBO support
 	    VBOsupported= 
@@ -214,31 +198,34 @@ public class ModelView extends GLJPanel //GLCanvas
 	    	{
 	    	//crashed here, started working after syso. postpone swing?
 				EvLog.printLog("Chosen GLCapabilities: " + drawable.getChosenGLCapabilities());
-				EvLog.printLog("GL_VENDOR: " + gl.glGetString(GL2.GL_VENDOR));
-				EvLog.printLog("GL_RENDERER: " + gl.glGetString(GL2.GL_RENDERER));
-				EvLog.printLog("GL_VERSION: " + gl.glGetString(GL2.GL_VERSION));
+				EvLog.printLog("GL_VENDOR: " + gl.glGetString(GL.GL_VENDOR));
+				EvLog.printLog("GL_RENDERER: " + gl.glGetString(GL.GL_RENDERER));
+				EvLog.printLog("GL_VERSION: " + gl.glGetString(GL.GL_VERSION));
 				EvLog.printLog("clipping planes supported: "+numClipPlanesSupported);
 				EvLog.printLog("max 3D texture size: "+max3DTextureSize);
 				EvLog.printLog("num texture units: "+numTextureUnits);
 				EvLog.printLog("VBO supported: "+VBOsupported);
 	    	}
-	    
-	    checkerr(gl);
 			}
 
 		
+
+		public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged)
+			{
+			}
+		
 		/**
-		 * Called when component is resized. Adjust OpenGL2.
+		 * Called when component is resized. Adjust OpenGL.
 		 */
 		public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height)
 			{
-			GL2 gl = drawable.getGL().getGL2();
-			gl.glMatrixMode(GL2.GL_PROJECTION);
+			GL gl = drawable.getGL();
+			gl.glMatrixMode(GL.GL_PROJECTION);
 			gl.glLoadIdentity();
 			GLU glu=new GLU();
 			glu.gluPerspective(FOV*180.0/Math.PI,(float)width/(float)height,0.1,30000);
 			
-			gl.glMatrixMode(GL2.GL_MODELVIEW);
+			gl.glMatrixMode(GL.GL_MODELVIEW);
 			gl.glLoadIdentity();
 			}
 		
@@ -249,7 +236,7 @@ public class ModelView extends GLJPanel //GLCanvas
 		 */
 		public void display(GLAutoDrawable drawable)
 			{
-			//System.out.println("render model");
+			System.out.println("render model");
 			if(force)
 				System.out.println("===forced set===");
 			force=false;
@@ -274,16 +261,13 @@ public class ModelView extends GLJPanel //GLCanvas
 			//Here it would be possible to auto-center the camera if it is totally out of range
 			
 			
-			
 			//Store away unaffected matrix
-			GL2 gl = drawable.getGL().getGL2();
+			GL gl = drawable.getGL();
 			gl.glPushMatrix();
-			
-			checkerr(gl); //TODO upon start getting this
 			
 			 //Set light to follow camera
 			float light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, light_position,0); //have no idea what 0 does
+			gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, light_position,0); //have no idea what 0 does
 	    ModelView.setupLight(gl);
 			
 			//Get camera into position
@@ -315,7 +299,7 @@ public class ModelView extends GLJPanel //GLCanvas
 				
 				//Clear buffers
 				gl.glClearColor(0f,0f,0f,0f);
-				gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+				gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 				resetSelectColor();
 				
 				//Render extensions
@@ -331,7 +315,7 @@ public class ModelView extends GLJPanel //GLCanvas
 				
 				//Figure out where the mouse is
 				ByteBuffer rpix=ByteBuffer.allocate(3);
-				gl.glReadPixels(mouseX,getHeight()-mouseY,1,1,GL2.GL_RGB, GL2.GL_UNSIGNED_BYTE, rpix);
+				gl.glReadPixels(mouseX,getHeight()-mouseY,1,1,GL.GL_RGB, GL.GL_UNSIGNED_BYTE, rpix);
 				int colR=rpix.get(0);
 				int colG=rpix.get(1)<<7;
 				int colB=rpix.get(2)<<14;
@@ -351,7 +335,7 @@ public class ModelView extends GLJPanel //GLCanvas
 
 			//Clear buffers
 			gl.glClearColor((float)bgColor.getRed()/255.0f,(float)bgColor.getGreen()/255.0f,(float)bgColor.getBlue()/255.0f,0.0f);
-			gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+			gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
 			
 			
@@ -404,22 +388,21 @@ public class ModelView extends GLJPanel //GLCanvas
 			if(renderAxisArrows)
 				renderAxisArrows(gl);
 			
-			checkerr(gl);
-			//System.out.println("end of render");
+			System.out.println("end of render");
 			}
 
 		
-		private void renderAxisArrows(GL2 gl)
+		private void renderAxisArrows(GL gl)
 			{
-			gl.glMatrixMode(GL2.GL_PROJECTION);
+			gl.glMatrixMode(GL.GL_PROJECTION);
 			gl.glPushMatrix();
 			gl.glLoadIdentity();
 			GLU glu=new GLU();
 			gl.glTranslatef(-0.9f,-0.9f,0);
 			glu.gluPerspective(FOV*180.0/Math.PI,(float)getWidth()/(float)getHeight(),0.1,30000);
 			//glu.gluOrtho2D(arg0, arg1, arg2, arg3)
-			gl.glMatrixMode(GL2.GL_MODELVIEW);
-			gl.glClear(GL2.GL_DEPTH_BUFFER_BIT);
+			gl.glMatrixMode(GL.GL_MODELVIEW);
+			gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
 			
 			gl.glColor3f(1,1,1);
 			Matrix3d camMat=new Matrix3d(camera.getRotationMatrixReadOnly());
@@ -433,7 +416,7 @@ public class ModelView extends GLJPanel //GLCanvas
 			camMat.transform(axisY);
 			camMat.transform(axisZ);
 			gl.glLineWidth(1);
-			gl.glBegin(GL2.GL_LINES);
+			gl.glBegin(GL.GL_LINES);
 			gl.glVertex3f(0.0f,0.0f,-1.0f);
 			gl.glVertex3f((float)axisX.x*axisScale,(float)axisX.y*axisScale,(float)(axisX.z*axisScale-1));
 			gl.glVertex3f(0.0f,0.0f,-1.0f);
@@ -445,7 +428,7 @@ public class ModelView extends GLJPanel //GLCanvas
 			gl.glLineWidth(3f);
 			float fsize=0.007f;
 			gl.glColor3f(1,0,0);
-			gl.glBegin(GL2.GL_LINES);
+			gl.glBegin(GL.GL_LINES);
 			gl.glVertex3f((float)axisX.x-fsize,(float)axisX.y-fsize,(float)(axisX.z-1));
 			gl.glVertex3f((float)axisX.x+fsize,(float)axisX.y+fsize,(float)(axisX.z-1));
 			gl.glVertex3f((float)axisX.x+fsize,(float)axisX.y-fsize,(float)(axisX.z-1));
@@ -464,15 +447,9 @@ public class ModelView extends GLJPanel //GLCanvas
 			gl.glVertex3f((float)axisZ.x+fsize,(float)axisZ.y+fsize,(float)(axisZ.z-1));
 			gl.glEnd();
 			
-			gl.glMatrixMode(GL2.GL_PROJECTION);
+			gl.glMatrixMode(GL.GL_PROJECTION);
 			gl.glPopMatrix();
-			gl.glMatrixMode(GL2.GL_MODELVIEW);
-			}
-
-
-
-		public void dispose(GLAutoDrawable arg0)
-			{
+			gl.glMatrixMode(GL.GL_MODELVIEW);
 			}
 		
 		};
@@ -503,21 +480,16 @@ public class ModelView extends GLJPanel //GLCanvas
 		mid.scale(1.0/center.size());
 
 		//Figure out required distance
-		
-//		return Collections.singleton((Double)maxr/Math.sin(FOV));
-
-		
 		double dist=0;
 		for(ModelWindowHook h:window.modelWindowHooks)
 			{
-			double nrad=h.autoCenterRadius(mid);
-			if(nrad>dist)
-				dist=nrad;
+			for(Double newDist:h.autoCenterRadius(mid,FOV))
+				if(dist<newDist)
+					dist=newDist;
 			}
 		//Avoid divison by zero at least
 		if(dist==0)
 			dist=1;
-		dist/=Math.sin(FOV);
 
 		//Set camera
 		camera.center.x=mid.x;
@@ -538,7 +510,7 @@ public class ModelView extends GLJPanel //GLCanvas
 	public static boolean checkerr(GL gl, Object data)
 		{
 		int errcode=gl.glGetError();
-		if(errcode!=GL2.GL_NO_ERROR)
+		if(errcode!=GL.GL_NO_ERROR)
 			{
 			try
 				{
@@ -581,18 +553,16 @@ public class ModelView extends GLJPanel //GLCanvas
 	/**
 	 * Render text in 3D
 	 */
-	public void renderString(GL2 gl, List<TransparentRender> transparentRenderers, final float textScaleFactor, final String text)
+	public void renderString(GL gl, List<TransparentRender> transparentRenderers, final float textScaleFactor, final String text)
 		{
 		final float[] matarray=new float[16]; //[col][row]
-		gl.glGetFloatv(GL2.GL_MODELVIEW_MATRIX, matarray, 0);
+		gl.glGetFloatv(GL.GL_MODELVIEW_MATRIX, matarray, 0);
 		final TextRenderer thisRenderer=renderer;
 		TransparentRender rend=new TransparentRender(){
-		public void render(GL glin)
+		public void render(GL gl)
 			{
-			GL2 gl=glin.getGL2();
-
 			//Save current state. Restore model view matrix as when this function was called.
-			gl.glPushAttrib(GL2.GL_ENABLE_BIT);
+			gl.glPushAttrib(GL.GL_ENABLE_BIT);
 			gl.glPushMatrix();
 			gl.glLoadMatrixf(matarray, 0);
 			
@@ -600,7 +570,7 @@ public class ModelView extends GLJPanel //GLCanvas
 
 			//make global I guess?
 			//TODO when rendering sorted objects, can disable this all the time as default
-			gl.glDisable(GL2.GL_CULL_FACE);
+			gl.glDisable(GL.GL_CULL_FACE);
 			
 			//Note that the defaults for glCullFace and glFrontFace are GL_BACK and GL_CCW, which
 			//match the TextRenderer's definition of front-facing text.
@@ -645,12 +615,11 @@ public class ModelView extends GLJPanel //GLCanvas
 	/**
 	 * Get framebuffer data. Has to hold GL context
 	 */
-	private ByteBuffer getFrameData( GL glin, ByteBuffer pixelsRGB ) 
+	private ByteBuffer getFrameData( GL gl, ByteBuffer pixelsRGB ) 
 		{
-		GL2 gl=glin.getGL2();
-		gl.glReadBuffer( GL2.GL_BACK );
-		gl.glPixelStorei( GL2.GL_PACK_ALIGNMENT, 1 );
-		gl.glReadPixels( 0, 0, getWidth(), getHeight(), GL2.GL_RGB, GL2.GL_UNSIGNED_BYTE, pixelsRGB );
+		gl.glReadBuffer( GL.GL_BACK );
+		gl.glPixelStorei( GL.GL_PACK_ALIGNMENT, 1 );
+		gl.glReadPixels( 0, 0, getWidth(), getHeight(), GL.GL_RGB, GL.GL_UNSIGNED_BYTE, pixelsRGB );
 		return pixelsRGB;
 		}
 
@@ -683,7 +652,7 @@ public class ModelView extends GLJPanel //GLCanvas
 		// Convert RGB bytes to ARGB ints with no transparency. 
 		// Flip image vertically by reading the
 		// rows of pixels in the byte buffer in reverse 
-		// - (0,0) is at bottom left in OpenGL2.
+		// - (0,0) is at bottom left in OpenGL.
 		//
 		// Points to first byte (red) in each row.
 		int p = w*h*3; 
@@ -722,10 +691,8 @@ public class ModelView extends GLJPanel //GLCanvas
 	 * 
 	 * TODO use vertex arrays, precalc arrow polygons. use model matrix to transform. use phong shading.
 	 */
-	public void renderArrowHead(GL glin, Vector3d tip, Vector3d direction, float colR, float colG, float colB)
+	public void renderArrowHead(GL gl, Vector3d tip, Vector3d direction, float colR, float colG, float colB)
 		{
-		GL2 gl=glin.getGL2();
-
 		CoordinateSystem cs=new CoordinateSystem();
 		CoordinateSystem csRot=new CoordinateSystem();
 	
@@ -746,7 +713,7 @@ public class ModelView extends GLJPanel //GLCanvas
 			csRot.setFromTwoVectors(direction, up, 1, 1, 1, new Vector3d());
 			}
 		
-		//gl.glShadeModel(GL2.GL_SMOOTH); //temp
+		//gl.glShadeModel(GL.GL_SMOOTH); //temp
 		
 		int numAngle=10;
 //		double r=representativeScale*0.04;
@@ -760,11 +727,11 @@ public class ModelView extends GLJPanel //GLCanvas
 		Vector3d[] points=new Vector3d[numAngle];
 		Vector3d[] normals=new Vector3d[numAngle];
 		
-//		gl.glEnable(GL2.GL_AUTO_NORMAL);
-		gl.glEnable(GL2.GL_NORMALIZE); //used for normal at tip
+//		gl.glEnable(GL.GL_AUTO_NORMAL);
+		gl.glEnable(GL.GL_NORMALIZE); //used for normal at tip
 		
   	gl.glColor3d(1,1,1);
-  	gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_DIFFUSE, new float[]{colR,colG,colB}, 0);
+  	gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL.GL_DIFFUSE, new float[]{colR,colG,colB}, 0);
 
 		
 		for(int i=0;i<numAngle;i++)
@@ -772,16 +739,16 @@ public class ModelView extends GLJPanel //GLCanvas
 			double angle=2*Math.PI*i/numAngle;
 			double cos=Math.cos(angle);
 			double sin=Math.sin(angle);
-			points[i]=cs.transformToSystem(new Vector3d(-length,r*cos,r*sin));
-			normals[i]=csRot.transformToSystem(new Vector3d(r,length*cos,length*sin)); //Assume later normalization
+			points[i]=cs.transformFromSystem(new Vector3d(-length,r*cos,r*sin));
+			normals[i]=csRot.transformFromSystem(new Vector3d(r,length*cos,length*sin)); //Assume later normalization
 			//normals[i].normalize(); //temp
 			//System.out.println(normals[i]);
 			}
 		
-		Vector3d normalBack=csRot.transformToSystem(new Vector3d(-1,0,0));
+		Vector3d normalBack=csRot.transformFromSystem(new Vector3d(-1,0,0));
 		
 		/*
-		gl.glBegin(GL2.GL_TRIANGLE_FAN);
+		gl.glBegin(GL.GL_TRIANGLE_FAN);
 		gl.glNormal3d(normals[0].x, normals[0].y, normals[0].z);
 		gl.glVertex3d(tip.x, tip.y, tip.z);
 		for(int i=0;i<numAngle;i++)
@@ -796,10 +763,10 @@ public class ModelView extends GLJPanel //GLCanvas
 		
 //		for(int i=0;i<1;i++)
 		/*
-		gl.glBegin(GL2.GL_TRIANGLES);
+		gl.glBegin(GL.GL_TRIANGLES);
 		for(int i=0;i<numAngle;i++)
 			{
-//			gl.glBegin(GL2.GL_LINE_LOOP);
+//			gl.glBegin(GL.GL_LINE_LOOP);
 			int next=(i+1)%numAngle;
 			gl.glNormal3d(normals[i].x+normals[next].x, normals[i].y+normals[next].y, normals[i].z+normals[next].z);
 			gl.glVertex3d(tip.x, tip.y, tip.z);
@@ -812,7 +779,7 @@ public class ModelView extends GLJPanel //GLCanvas
 		gl.glEnd();
 		*/
 		
-		gl.glBegin(GL2.GL_QUADS);
+		gl.glBegin(GL.GL_QUADS);
 		for(int i=0;i<numAngle;i++)
 			{
 			int next=(i+1)%numAngle;
@@ -834,7 +801,7 @@ public class ModelView extends GLJPanel //GLCanvas
 		gl.glEnd();
 		
 		
-		gl.glBegin(GL2.GL_POLYGON);
+		gl.glBegin(GL.GL_POLYGON);
 		gl.glNormal3d(normalBack.x, normalBack.y, normalBack.z);
 		for(int i=numAngle-1;i>=0;i--)
 			gl.glVertex3d(points[i].x, points[i].y, points[i].z);
@@ -849,13 +816,13 @@ public class ModelView extends GLJPanel //GLCanvas
 		 */
 		
 		}
-	public static void setupLight(GL2 gl)
+	public static void setupLight(GL gl)
 		{
 		float lightDiffuse[]=new float[]{1,1,1};
 		float lightAmbient[] = { lightDiffuse[0]*0.3f, lightDiffuse[1]*0.3f, lightDiffuse[2]*0.3f, 0.0f };
-		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, lightAmbient, 0);   
-		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, lightDiffuse, 0);   
-		gl.glEnable(GL2.GL_LIGHT0);
+		gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, lightAmbient, 0);   
+		gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, lightDiffuse, 0);   
+		gl.glEnable(GL.GL_LIGHT0);
 		}
 
 	//http://www.felixgers.de/teaching/jogl/imagingProg.html

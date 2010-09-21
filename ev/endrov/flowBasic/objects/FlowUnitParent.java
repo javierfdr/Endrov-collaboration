@@ -19,7 +19,7 @@ import endrov.flow.FlowUnitBasic;
 import endrov.flow.FlowUnitDeclaration;
 
 /**
- * Get the container that has this flow
+ * get "this", the EvData object
  * @author Johan Henriksson
  *
  */

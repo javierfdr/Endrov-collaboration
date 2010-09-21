@@ -23,7 +23,7 @@ import endrov.imageWindow.*;
 public class ChromaCountKJImageTool implements ImageWindowTool
 	{
 	private final ImageWindow w;
-	//private final ChromaCountKJImageRenderer r;
+	private final ChromaCountKJImageRenderer r;
 
 	private int vicinityR=3;
 
@@ -34,10 +34,10 @@ public class ChromaCountKJImageTool implements ImageWindowTool
 	private int lastMouseX=0;
 	private int lastMouseY;
 	
-	public ChromaCountKJImageTool(ImageWindow w/*, ChromaCountKJImageRenderer r*/)
+	public ChromaCountKJImageTool(ImageWindow w, ChromaCountKJImageRenderer r)
 		{
 		this.w=w;
-		//this.r=r;
+		this.r=r;
 		}
 	
 
@@ -55,7 +55,6 @@ public class ChromaCountKJImageTool implements ImageWindowTool
 	
 	private Collection<ChromaCountKJ> getAnnots()
 		{
-		ChromaCountKJImageRenderer r=w.getRendererClass(ChromaCountKJImageRenderer.class);
 		return r.getVisible();
 		}
 	
@@ -69,7 +68,7 @@ public class ChromaCountKJImageTool implements ImageWindowTool
 		Collection<ChromaCountKJ> ann=getAnnots();
 		ChromaCountKJ closest=null;
 		double cdist=0;
-		Vector2d v=w.transformPointS2W(new Vector2d(x,y));
+		Vector2d v=w.transformS2W(new Vector2d(x,y));
 		for(ChromaCountKJ a:ann)
 			{
 			double dist=(a.pos.x-v.x)*(a.pos.x-v.x) + (a.pos.y-v.y)*(a.pos.y-v.y);
@@ -87,7 +86,7 @@ public class ChromaCountKJImageTool implements ImageWindowTool
 		}
 	
 	
-	public void mouseClicked(MouseEvent e, Component invoker)
+	public void mouseClicked(MouseEvent e)
 		{
 		EvContainer data=w.getRootObject();
 		if(data!=null)
@@ -128,7 +127,7 @@ public class ChromaCountKJImageTool implements ImageWindowTool
 		{
 		if(activeAnnot!=null)
 			{
-			Vector2d v=w.transformPointS2W(new Vector2d(e.getX(),e.getY()));
+			Vector2d v=w.transformS2W(new Vector2d(e.getX(),e.getY()));
 			activeAnnot.pos.x=v.x;
 			activeAnnot.pos.y=v.y;
 			w.updateImagePanel(); //more than this. emit
@@ -157,10 +156,10 @@ public class ChromaCountKJImageTool implements ImageWindowTool
 
 	private void setPos(ChromaCountKJ a, MouseEvent e)
 		{
-		Vector2d v=w.transformPointS2W(new Vector2d(e.getX(),e.getY()));
+		Vector2d v=w.transformS2W(new Vector2d(e.getX(),e.getY()));
 		a.pos.x=v.x;
 		a.pos.y=v.y;
-		a.pos.z=w.getZ().doubleValue();
+		a.pos.z=w.frameControl.getZ().doubleValue();
 		}
 	
 	public void mouseMoved(MouseEvent e, int dx, int dy)

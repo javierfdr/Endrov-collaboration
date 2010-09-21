@@ -5,7 +5,6 @@
  */
 package endrov.basicWindow;
 
-import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -19,7 +18,6 @@ import javax.swing.JFrame;
 
 import endrov.basicWindow.icon.BasicIcon;
 import endrov.ev.EV;
-import endrov.starter.EvSystemUtil;
 
 /**
  * Ev Window Manager: Free-floating windows
@@ -59,7 +57,7 @@ public class EvWindowManagerFree extends JFrame implements WindowListener, EvWin
     //int titleBarHeight = getInsets().top; //can be used to set the right icon
     //20x20 seems good on windows? or more?
 		//16x16 on gnome, but in alt+tab larger. can supply larger image
-		if(!EvSystemUtil.isMac())
+		if(!EV.isMac())
 			setIconImage(BasicIcon.iconEndrov.getImage());
 		
 		java15windowList.put(this,null);
@@ -143,14 +141,4 @@ public class EvWindowManagerFree extends JFrame implements WindowListener, EvWin
 		
 		}
 
-	@Override
-	public void setBounds(Rectangle r)
-		{
-		System.out.println("set bounds for frame "+r);
-		//setVisible(false);
-		super.setBounds(r);
-		//invalidate();
-		//setVisible(true);
-		}
-	
 	}

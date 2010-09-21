@@ -6,7 +6,7 @@
 package endrov.modelWindowImset.slice3d;
 
 import java.awt.*;
-import java.nio.DoubleBuffer;
+import java.awt.image.*;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -25,13 +25,12 @@ import endrov.util.ImVector3d;
  */
 public class Slice3D
 	{	
-	private EvDecimal lastframe; 
+	EvDecimal lastframe; 
 
-	private int w, h;
-	private double resX,resY/*,resZ*/;
-	private Texture tex;      
-	private boolean rebuild;
-	private double worldZ;
+	int w, h;
+	double resX,resY,resZ;
+	Texture tex;      
+	boolean rebuild;
 	
 	
 	/**
@@ -41,7 +40,7 @@ public class Slice3D
 		{
 		if(tex!=null)
 			{
-			tex.destroy(gl);
+			tex.dispose();
 			tex=null;
 			}
 		}
@@ -72,7 +71,7 @@ public class Slice3D
 	/**
 	 * Load stack into memory. Need GL context, forced by parameter.
 	 */
-	public void build(GL gl,EvDecimal frame, Imageset im, EvChannel ch, int zplane)
+	public void build(GL gl,EvDecimal frame, Imageset im, EvChannel ch, EvDecimal zplane)
 		{
 		if(needBuild(frame))
 			{
@@ -81,35 +80,37 @@ public class Slice3D
 			rebuild=false;
 
 			EvDecimal cframe=ch.closestFrame(frame);
-			
+			zplane=ch.closestZ(cframe, zplane);
+
 			lastframe=frame;
 
 			//Load image
 			EvStack stack=ch.imageLoader.get(cframe);
-			if(zplane<0)
-				zplane=0;
-			if(zplane>stack.getDepth())
-				zplane=stack.getDepth();
-			worldZ=zplane*stack.resZ;
-			EvImage evim=stack.getInt(zplane);
+			EvImage evim=stack.get(zplane);
 			EvPixels p=evim.getPixels();
+			BufferedImage bim=p.quickReadOnlyAWT();
 			w=p.getWidth();
 			h=p.getHeight();
-			resX=stack.resX;
-			resY=stack.resY;
+			resX=stack.getResbinX();//stack.resX/stack.binning;//evim.getResX()/evim.getBinning(); //px/um
+			resY=stack.getResbinY();//stack.resY/stack.binning;//evim.getResY()/evim.getBinning();
+			//resZ=im.meta.resZ;
 
-			DoubleBuffer buffer=DoubleBuffer.allocate(w*h);
-			buffer.put(p.convertToDouble(true).getArrayDouble());
-			
-			TextureData tdata=new TextureData(
-					GL2.GL_ALPHA, w,h, 0, GL2.GL_ALPHA, GL2.GL_FLOAT, false, false, false, buffer, null);
-			
-			
+			//Load bitmap, scale down. Not needed, little data.
 			/*
-			BufferedImage bim=p.quickReadOnlyAWT();
+			int bw=suitablePower2(w);
+			resX/=w/(double)bw;
+			w=bw;
+			int bh=suitablePower2(h);
+			resY/=h/(double)bh;
+			h=bh;
+			BufferedImage sim=new BufferedImage(w,h,bim.getType());
+			Graphics2D g=(Graphics2D)sim.getGraphics();
+			g.scale(w/(double)bim.getWidth(), h/(double)bim.getHeight()); //0.5 sec tot maybe
+			g.drawImage(bim,0,0,Color.BLACK,null);
+			bim=sim;
+			 */
+			
 			tex=TextureIO.newTexture(bim,false);
-			*/
-			tex=TextureIO.newTexture(tdata);
 			}
 		}
 	
@@ -134,31 +135,28 @@ public class Slice3D
 	/**
 	 * Render entire stack
 	 */
-	public void render(GL glin, Color color, boolean project)
+	public void render(GL gl, Color color, EvDecimal zplane)
 		{
-		GL2 gl=glin.getGL2();
 		if(isBuilt())
 			{
-			double z=worldZ;
-			if(project)
-				z=0;
-			gl.glPushAttrib(GL2.GL_ALL_ATTRIB_BITS); //bother to refine?
+			double z=zplane.doubleValue();
+			gl.glPushAttrib(GL.GL_ALL_ATTRIB_BITS); //bother to refine?
 			
-			gl.glDisable(GL2.GL_CULL_FACE);
+			gl.glDisable(GL.GL_CULL_FACE);
 
 			//Select texture
 			tex.enable();
 			tex.bind();
 			
 			//Find size and position
-			double w=this.w*resX;
-			double h=this.h*resY;
+			double w=this.w/resX;
+			double h=this.h/resY;
 			TextureCoords tc=tex.getImageTexCoords();
 			
-			gl.glBegin(GL2.GL_QUADS);
+			gl.glBegin(GL.GL_QUADS);
 			gl.glColor3d(color.getRed()/255.0, color.getGreen()/255.0, color.getBlue()/255.0);
 			
-			gl.glTexCoord2f(tc.left(), tc.top());	   gl.glVertex3d(0, 0, z);
+			gl.glTexCoord2f(tc.left(), tc.top());	   gl.glVertex3d(0, 0, z); //check
 			gl.glTexCoord2f(tc.right(),tc.top());    gl.glVertex3d(w, 0, z);
 			gl.glTexCoord2f(tc.right(),tc.bottom()); gl.glVertex3d(w, h, z);
 			gl.glTexCoord2f(tc.left(), tc.bottom()); gl.glVertex3d(0, h, z);
@@ -199,7 +197,7 @@ public class Slice3D
 	/**
 	 * Given a middle position, figure out radius required to fit objects
 	 */
-	public double autoCenterRadius(Vector3d mid)
+	public Collection<Double> autoCenterRadius(Vector3d mid, double FOV)
 		{
 		if(tex!=null)
 			{
@@ -212,10 +210,13 @@ public class Slice3D
 			for(double d:list)
 				if(d>max)
 					max=d;
-			return max;
+			
+			//Find how far away the camera has to be. really have FOV in here?
+			return Collections.singleton(max/Math.sin(FOV));
 			}
 		else
-			return 0;
+			return Collections.emptySet();
+///			return null;
 		}
 	
 	

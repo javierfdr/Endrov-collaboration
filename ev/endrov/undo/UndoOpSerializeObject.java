@@ -12,10 +12,8 @@ import endrov.data.EvData;
 /**
  * Undo operation: quick implementation by serializing the entire object.
  * It is a good tradeoff of speed vs implementation efficiency if the object is small.
- * Serializing operations never commutate.
- * Only need to implement redo
- * 
- * Only one problem: cannot deal with special listeners, and will break all pointers! 
+ * Serializing ops never commutate.
+ * Implement redo only.
  * 
  * @author Johan Henriksson
  */
@@ -35,7 +33,7 @@ public abstract class UndoOpSerializeObject implements UndoOp
 	public void undo()
 		{
 		}
-	public String getOpName()
+	public String undoName()
 		{
 		return name;
 		}

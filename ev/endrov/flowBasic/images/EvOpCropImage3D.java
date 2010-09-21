@@ -5,8 +5,6 @@
  */
 package endrov.flowBasic.images;
 
-import javax.vecmath.Vector3d;
-
 import endrov.flow.EvOpStack1;
 import endrov.imageset.EvIOImage;
 import endrov.imageset.EvImage;
@@ -18,9 +16,6 @@ import endrov.util.Memoize;
 
 /**
  * Crop image to fit within limits
- * 
- * TODO a resampling is equivalent to a crop, but more general and does not suffer from rotation problems!!!!
- * 
  * 
  * @author Johan Henriksson
  *
@@ -53,9 +48,9 @@ public class EvOpCropImage3D extends EvOpStack1
 		{
 		int fromX=0;
 		int fromY=0;
-		int fromZ=0;
 		int toX=stack.getWidth();
 		int toY=stack.getHeight();
+		int fromZ=0;
 		int toZ=stack.getDepth();
 	
 		if(!roi.regionX.all)
@@ -80,6 +75,8 @@ public class EvOpCropImage3D extends EvOpStack1
 			if(toZ>rEnd) toZ=rEnd;
 			}
 
+
+//		System.out.println("zzzzzzz "+fromX+"  "+toX+"      "+fromY+"  "+toY+"  "+fromZ+"  "+toZ);
 		return crop(stack, fromX,toX,  fromY,toY, fromZ,toZ);
 		}
 	
@@ -93,18 +90,12 @@ public class EvOpCropImage3D extends EvOpStack1
 
 		//Add offset
 		stackOut.getMetaFrom(stack);
-		
-		Vector3d disp=stack.getDisplacement();
-		disp.add(new Vector3d(
-				fromX*stack.resX,
-				fromY*stack.resY,   //TODO this is wrong. will not work if stack is rotated!
-				fromZ*stack.resZ
-				));
-		stackOut.setDisplacement(disp);
+		stackOut.dispX+=fromX;
+		stackOut.dispY+=fromY;
+		stackOut.dispZ=stackOut.dispZ.add(stackOut.resZ.multiply(fromZ));
 		
 		//Crop images
 		for(int az=fromZ;az<toZ;az++)
-			//if(stack.hasInt(az))  //TODO should not be needed
 			{
 			EvImage newim=new EvImage();
 			final int inZ=az; 

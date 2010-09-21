@@ -26,18 +26,15 @@ public class ImageRendererROI implements ImageWindowRenderer
 	{
 	public static final int HANDLESIZE=3;
 
-	private final ImageWindowInterface w;
+	private final ImageWindow w;
 	public Map<ROI, Map<String,ROI.Handle>> handleList=new HashMap<ROI, Map<String,ROI.Handle>>();
 	
 	SimpleObserver.Listener listenSelelection=new SimpleObserver.Listener()
-		{public void observerEvent(Object src)
-			{
-			w.updateImagePanel();
-			}};
+		{public void observerEvent(Object src){w.updateImagePanel();}};
 	
-	public ROI alsoDrawROI=null;
+	public ROI drawROI=null;
 		
-	public ImageRendererROI(final ImageWindowInterface w)
+	public ImageRendererROI(final ImageWindow w)
 		{
 		this.w=w;
 		
@@ -52,32 +49,18 @@ public class ImageRendererROI implements ImageWindowRenderer
 	 */
 	public void draw(Graphics g)
 		{
-		EvDecimal frame=w.getFrame();
-		EvDecimal z=w.getZ();
+		EvDecimal frame=w.frameControl.getFrame();
+		EvDecimal z=w.frameControl.getZ();
 		String channel=w.getCurrentChannelName();
 		
 		handleList.clear();
-		/*
 		for(EvObject ob:w.getRootObject().metaObject.values())
 			if(ob instanceof ROI)
-				drawROI(w, g, (ROI)ob, frame, z, channel);*/
-		
-		recursiveDraw(g, frame, z.doubleValue(), channel, w.getRootObject());
-		
-		if(alsoDrawROI!=null)
-			drawROI(w, g, alsoDrawROI, "", frame, z.doubleValue(), channel);
+				drawROI(w, g, (ROI)ob, frame, z, channel);
+		if(drawROI!=null)
+			drawROI(w, g, drawROI, frame, z, channel);
 		}
 	
-	
-	private void recursiveDraw(Graphics g, EvDecimal frame, double z, String channel, EvContainer con)
-		{
-		for(Map.Entry<String, EvObject> e:con.metaObject.entrySet())
-			{
-			if(e.getValue() instanceof ROI)
-				drawROI(w, g, (ROI)e.getValue(), e.getKey(), frame, z, channel);
-			recursiveDraw(g, frame, z, channel, e.getValue());
-			}
-		}
 	
 	public void dataChangedEvent()
 		{
@@ -86,7 +69,8 @@ public class ImageRendererROI implements ImageWindowRenderer
 
 	
 	
-	private void drawROI(WSTransformer w, Graphics g, ROI roiUncast, String roiName, EvDecimal frame, double z, String channel)
+	private void drawROI(WSTransformer w, Graphics g, ROI roiUncast,
+			EvDecimal frame, EvDecimal z, String channel)
 		{
 		if(roiUncast.imageInRange(channel, frame, z))
 			{
@@ -94,7 +78,6 @@ public class ImageRendererROI implements ImageWindowRenderer
 				g.setColor(Color.MAGENTA);
 			else
 				g.setColor(Color.WHITE);
-			
 			if(roiUncast instanceof BoxROI)
 				{
 				BoxROI roi=(BoxROI)roiUncast;
@@ -109,10 +92,10 @@ public class ImageRendererROI implements ImageWindowRenderer
 					y1=roi.regionY.start.doubleValue();
 					y2=roi.regionY.end.doubleValue();
 					}
-				Vector2d ul=w.transformPointW2S(new Vector2d(x1,y1));
-				Vector2d ll=w.transformPointW2S(new Vector2d(x1,y2));
-				Vector2d ur=w.transformPointW2S(new Vector2d(x2,y1));
-				Vector2d lr=w.transformPointW2S(new Vector2d(x2,y2));
+				Vector2d ul=w.transformW2S(new Vector2d(x1,y1));
+				Vector2d ll=w.transformW2S(new Vector2d(x1,y2));
+				Vector2d ur=w.transformW2S(new Vector2d(x2,y1));
+				Vector2d lr=w.transformW2S(new Vector2d(x2,y2));
 				
 				g.drawLine((int)ul.x, (int)ul.y, (int)ll.x, (int)ll.y);
 				g.drawLine((int)ur.x, (int)ur.y, (int)lr.x, (int)lr.y);
@@ -123,66 +106,29 @@ public class ImageRendererROI implements ImageWindowRenderer
 				{
 				EllipseROI roi=(EllipseROI)roiUncast;
 				
-				Vector2d ul=w.transformPointW2S(new Vector2d(roi.regionX.start.doubleValue(),roi.regionY.start.doubleValue()));
-				Vector2d lr=w.transformPointW2S(new Vector2d(roi.regionX.end.doubleValue(),roi.regionY.end.doubleValue()));
+				Vector2d ul=w.transformW2S(new Vector2d(roi.regionX.start.doubleValue(),roi.regionY.start.doubleValue()));
+				Vector2d lr=w.transformW2S(new Vector2d(roi.regionX.end.doubleValue(),roi.regionY.end.doubleValue()));
 				
-				int x1=(int)ul.x;
-				int x2=(int)lr.x;
-				int y1=(int)ul.y;
-				int y2=(int)lr.y;
-				
-				if(x2<x1)
-					{
-					int temp=x1;
-					x1=x2;
-					x2=temp;
-					}
-				if(y2<y1)
-					{
-					int temp=y1;
-					y1=y2;
-					y2=temp;
-					}
-				
-				//g.drawOval((int)ul.x, (int)ul.y, (int)(lr.x-ul.x), (int)(lr.y-ul.y));
-				g.drawOval(x1, y1, x2-x1, y2-y1);
+				g.drawOval((int)ul.x, (int)ul.y, (int)(lr.x-ul.x), (int)(lr.y-ul.y));
 				}
-			/*
 			else if(roiUncast instanceof CompoundROI)
 				{
 				for(ROI subroi:((CompoundROI)roiUncast).getSubRoi())
-					{
 					drawROI(w, g,subroi, frame, z, channel);
-					}
-				}*/
-			
+				}
 			}
 		
 		
-		
-		int numHandle=0;
-		Vector2d handleMid=new Vector2d();
 		
 		//Draw handles
 		HashMap<String,ROI.Handle> roimap=new HashMap<String,ROI.Handle>();
 		handleList.put(roiUncast,roimap);
-		g.setColor(Color.BLUE);
 		for(ROI.Handle h:roiUncast.getHandles())
 			{
 			roimap.put(h.getID(),h);
-			Vector2d xy=w.transformPointW2S(new Vector2d(h.getX(), h.getY()));
+			Vector2d xy=w.transformW2S(new Vector2d(h.getX(), h.getY()));
+			g.setColor(Color.CYAN);
 			g.drawRect((int)xy.x-HANDLESIZE, (int)xy.y-HANDLESIZE, HANDLESIZE*2, HANDLESIZE*2);
-			
-			handleMid.add(xy);
-			numHandle++;
-			}
-		
-		//Draw name
-		if(numHandle!=0)
-			{
-			handleMid.scale(1.0/numHandle);
-			int sw=g.getFontMetrics().stringWidth(roiName);
-			g.drawString(roiName, (int)handleMid.x-sw/2, (int)handleMid.y);
 			}
 		
 		

@@ -12,98 +12,23 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import endrov.util.EvDecimal;
 
+
 /**
- * Editor for EvDecimal spinners
- * 
+ * Editor for EvDecimal spinners 
  * @author Johan Henriksson
- */
+ */	
 public class EvDecimalEditor extends JTextField
 	{
-	static final long serialVersionUID = 0;
-
+	static final long serialVersionUID=0;
 	public EvDecimalEditor(final JSpinner sp)
 		{
-		setText(""+(EvDecimal) sp.getModel().getValue());
 		addActionListener(new ActionListener()
-			{
-			public void actionPerformed(ActionEvent e)
-				{
-				setFreeze(1);
-				try
-					{
-					sp.getModel().setValue(new EvDecimal(getText()));
-					}
-				catch (Exception e1)
-					{
-					}
-				setFreeze(-1);
-				}
-			});
-		getDocument().addDocumentListener(new DocumentListener()
-			{
-			public void removeUpdate(DocumentEvent arg0)
-				{
-				setFreeze(1);
-				try
-					{
-					sp.getModel().setValue(new EvDecimal(getText()));
-					}
-				catch (Exception e1)
-					{
-					}
-				setFreeze(-1);
-				}
-			public void insertUpdate(DocumentEvent arg0)
-				{
-				setFreeze(1);
-				try
-					{
-					sp.getModel().setValue(new EvDecimal(getText()));
-					}
-				catch (Exception e1)
-					{
-					}
-				setFreeze(-1);
-				}
-			public void changedUpdate(DocumentEvent arg0)
-				{
-				setFreeze(1);
-				try
-					{
-					sp.getModel().setValue(new EvDecimal(getText()));
-					}
-				catch (Exception e1)
-					{
-					}
-				setFreeze(-1);
-				}
-			});
+			{public void actionPerformed(ActionEvent e){sp.getModel().setValue(Integer.parseInt(getText()));}});
 		sp.getModel().addChangeListener(new ChangeListener()
-			{
-			public void stateChanged(ChangeEvent e)
-				{
-				if(!getLock())
-					{
-					setFreeze(1);
-					setText(""+(EvDecimal) sp.getModel().getValue());
-					setFreeze(-1);
-					}
-				}
-			});
-		}
-	
-	int lock=0;
-	private void setFreeze(int v)
-		{
-		lock+=v;
-		}
-	private boolean getLock()
-		{
-		return lock!=0;
+			{public void stateChanged(ChangeEvent e){setText(""+(EvDecimal)sp.getModel().getValue());}});
+		setText(""+(EvDecimal)sp.getModel().getValue());
 		}
 	}

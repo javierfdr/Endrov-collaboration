@@ -91,16 +91,19 @@ public class ModelWindowScreenshot implements ModelWindowExtension
 			}
 		
 		
+		
+		/**
+		 * View setting: display grid?
+		 */
+		public void setShowGrid(boolean b)
+			{
+			miScreenshot.setSelected(b);
+			}
 			
-		public Collection<Double> adjustScale()
-			{
-			return Collections.emptySet();
-			}
+			
+		public Collection<Double> adjustScale(){return Collections.emptySet();}
 		public Collection<Vector3d> autoCenterMid(){return Collections.emptySet();}
-		public double autoCenterRadius(Vector3d mid)
-			{
-			return 0;	
-			}
+		public Collection<Double> autoCenterRadius(Vector3d mid, double FOV){return Collections.emptySet();}
 		public boolean canRender(EvObject ob){return false;}
 		public void displayInit(GL gl){}
 		public void displaySelect(GL gl){}

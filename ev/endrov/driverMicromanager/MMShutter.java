@@ -25,33 +25,6 @@ public class MMShutter extends MMState implements HWShutter
 		super(mm,mmDeviceName);
 		}
 
-	public boolean isOpen()
-		{
-		try
-			{
-			mm.core.setShutterDevice(mmDeviceName);
-			return mm.core.getShutterOpen();
-			}
-		catch (Exception e)
-			{
-			e.printStackTrace();
-			return false;
-			}
-		}
-
-	public void setOpen(boolean b)
-		{
-		try
-			{
-			mm.core.setShutterDevice(mmDeviceName);
-			mm.core.setShutterOpen(b);
-			}
-		catch (Exception e)
-			{
-			e.printStackTrace();
-			}
-		}
-
 	
 	
 	

@@ -5,7 +5,6 @@
  */
 package endrov.imageWindow.tools;
 
-import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -53,27 +52,27 @@ public class ImageWindowToolPixelInfo implements ImageWindowTool
 		{
 		}
 	
-	public void mouseClicked(MouseEvent e, Component invoker)
+	public void mouseClicked(MouseEvent e)
 		{
 		EvChannel c=w.getSelectedChannel();
 		if(c!=null)
 			{
 
 			
-			EvDecimal frame=w.getFrame();
-			EvDecimal slice=w.getZ();
+			EvDecimal frame=w.frameControl.getFrame();
+			EvDecimal slice=w.frameControl.getModelZ();
 			frame=c.closestFrame(frame);
 			EvStack stack=c.imageLoader.get(frame);
-			int closestZ=stack.closestZint(slice.doubleValue());
+			slice=stack.closestZ(slice);
 			
-			Vector2d mpos=w.transformPointS2W(new Vector2d(e.getX(),e.getY()));
+			Vector2d mpos=w.transformS2W(new Vector2d(e.getX(),e.getY()));
 			Vector2d ppos=stack.transformWorldImage(mpos);
 			int px=(int)ppos.x;
 			int py=(int)ppos.y;
 			
 			ConsoleWindow.openConsole();
 			
-			EvImage image=stack.getInt(closestZ);
+			EvImage image=stack.get(slice);
 			if(image!=null)
 				{
 				if(px<stack.getWidth() && py<stack.getHeight() && px>=0 && py>=0)

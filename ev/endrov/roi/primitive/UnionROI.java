@@ -62,7 +62,7 @@ public class UnionROI extends CompoundROI
 				}
 			}
 		
-		public ThisLineIterator(EvImage im, LineIterator ita, LineIterator itb, String channel, EvDecimal frame, double z)
+		public ThisLineIterator(EvImage im, LineIterator ita, LineIterator itb, String channel, EvDecimal frame, EvDecimal z)
 			{
 			this.z=z;
 			this.ita=new OneIt(ita);
@@ -206,18 +206,17 @@ public class UnionROI extends CompoundROI
 	/**
 	 * Get slices that at least are partially selected
 	 */
-	/*
 	public Set<EvDecimal> getSlice(Imageset rec, String channel, EvDecimal frame)
 		{
 		TreeSet<EvDecimal> c=new TreeSet<EvDecimal>();
 		for(ROI roi:getSubRoi())
 			c.addAll(roi.getSlice(rec, channel, frame));
 		return c;
-		}*/
+		}
 	
 	
 
-	public boolean imageInRange(String channel, EvDecimal frame, double z)
+	public boolean imageInRange(String channel, EvDecimal frame, EvDecimal z)
 		{
 		for(ROI roi:getSubRoi())
 			if(roi.imageInRange(channel, frame, z))
@@ -228,7 +227,7 @@ public class UnionROI extends CompoundROI
 	/**
 	 * Get iterator over one image
 	 */
-	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final double z)
+	public LineIterator getLineIterator(EvStack stack, EvImage im, final String channel, final EvDecimal frame, final EvDecimal z)
 		{
 		List<ROI> subRoi=getSubRoi();
 		if(imageInRange(channel, frame, z) && !subRoi.isEmpty())
@@ -242,22 +241,6 @@ public class UnionROI extends CompoundROI
 			return new EmptyLineIterator();
 		}
 	
-
-	@Override
-	public boolean pointInRange(String channel, EvDecimal frame, double x, double y, double z)
-		{
-		List<ROI> subRoi=getSubRoi();
-		if(!subRoi.isEmpty())
-			{
-			for(ROI roi:subRoi)
-				if(!roi.pointInRange(channel, frame, x, y, z))
-					return false;
-			return true;
-			}
-		else
-			return false;
-		}	
-
 	
 	public String saveMetadata(Element e)
 		{
@@ -298,6 +281,6 @@ public class UnionROI extends CompoundROI
 		EvData.supportedMetadataFormats.put(metaType,UnionROI.class);
 		
 		ROI.addType(new ROIType(icon, UnionROI.class, false,true,metaDesc));
-		}
+		}	
 	
 	}

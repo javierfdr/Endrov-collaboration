@@ -19,10 +19,10 @@ import endrov.hardware.*;
  * @author Johan Henriksson
  *
  */
-public class MMDeviceAdapter implements EvDevice
+public class MMDeviceAdapter implements Device
 	{
-	protected MicroManager mm;
-	protected String mmDeviceName;
+	MicroManager mm;
+	String mmDeviceName;
 
 		
 	public MMDeviceAdapter(MicroManager mm, String mmDeviceName)
@@ -61,14 +61,14 @@ public class MMDeviceAdapter implements EvDevice
 
 	
 	
-	public SortedMap<String, DevicePropertyType> getPropertyTypes()
+	public SortedMap<String, PropertyType> getPropertyTypes()
 		{
-		TreeMap<String, DevicePropertyType> map=new TreeMap<String, DevicePropertyType>();
+		TreeMap<String, PropertyType> map=new TreeMap<String, PropertyType>();
 		try
 			{
 			for(String propName:MMutil.convVector(mm.core.getDevicePropertyNames(mmDeviceName)))
 				{
-				DevicePropertyType p=new DevicePropertyType();
+				PropertyType p=new PropertyType();
 				List<String> allowedValues=MMutil.convVector(mm.core.getAllowedPropertyValues(mmDeviceName, propName));
 				for(int i=0;i<allowedValues.size();i++)
 					p.categories.add(allowedValues.get(i));
@@ -85,11 +85,14 @@ public class MMDeviceAdapter implements EvDevice
 				map.put(propName,p);
 				}
 			
+			
+			
+			
 			return map;
 			}
 		catch (Exception e)
 			{
-			return new TreeMap<String, DevicePropertyType>();
+			return new TreeMap<String, PropertyType>();
 			}
 		}
 
@@ -117,7 +120,6 @@ public class MMDeviceAdapter implements EvDevice
 		try
 			{
 			mm.core.setProperty(mmDeviceName, prop, value);
-			event.emit(null, this);
 			}
 		catch (Exception e)
 			{
@@ -136,16 +138,5 @@ public class MMDeviceAdapter implements EvDevice
 		}
 	
 	public void openConfigureDialog(){}
-
-	
-	public EvDeviceObserver event=new EvDeviceObserver();
-	public void addListener(EvDeviceObserver.Listener listener)
-		{
-		event.addWeakListener(listener);
-		}
-	public void removeListener(EvDeviceObserver.Listener listener)
-		{
-		event.remove(listener);
-		}
 
 	}

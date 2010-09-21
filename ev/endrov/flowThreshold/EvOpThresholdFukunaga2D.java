@@ -25,9 +25,9 @@ public class EvOpThresholdFukunaga2D extends Threshold2D
 	{
 	private final int numClasses;
 	
-	public EvOpThresholdFukunaga2D(int numClasses)
+	public EvOpThresholdFukunaga2D(int mode, int numClasses)
 		{
-		super(MASK);
+		super(mode);
 		this.numClasses=numClasses;
 		}
 
@@ -38,11 +38,8 @@ public class EvOpThresholdFukunaga2D extends Threshold2D
 	
 	public static double[] findThreshold(EvPixels in, int numClasses)
 		{
-		
 		in=in.getReadOnly(EvPixelsType.DOUBLE);
 		int numPixels=in.getWidth()*in.getHeight();
-
-		System.out.println("starting calc "+numPixels);
 
 		//TODO this is slow. use a specialized counting map!
 		in=in.getReadOnly(EvPixelsType.DOUBLE);
@@ -88,8 +85,6 @@ public class EvOpThresholdFukunaga2D extends Threshold2D
 
 		/** thresholds are >= */
 
-		System.out.println("starting "+cumsumKey.length);
-		
 		if(numClasses<2)
 			return new double[]{cumsumKey[0]};
 		else

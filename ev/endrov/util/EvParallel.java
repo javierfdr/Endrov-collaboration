@@ -46,156 +46,43 @@ public class EvParallel
 		return map(numThread, in,func);
 		}
 	
-	
 	/**
 	 * Map :: [A] -> (A->B) -> [B]
 	 */
-	/*
-	public static <A,B> List<B> map(final int numThread, Collection<A> in, final FuncAB<A,B> func)
+	public static <A,B> List<B> map(int numThread, List<A> in, final FuncAB<A,B> func)
 		{
-		final Semaphore putsem=new Semaphore(numThread);
-		final LinkedList<RuntimeException> ex=new LinkedList<RuntimeException>();
 		final LinkedList<B> out=new LinkedList<B>();
 		try
 			{
 //			System.out.println("#CPU "+numThread);
+			final Semaphore putsem=new Semaphore(numThread);
 			for(final A e:in)
 				{
-				synchronized (ex)
-					{
-					if(!ex.isEmpty())
-						break;
-					}
 				putsem.acquire();
 				new Thread(new Runnable(){
-					public void run()
-						{
-						B b;
-						try
-							{
-							b = func.func(e);
-							synchronized (out){out.add(b);}
-							}
-						catch (RuntimeException e)
-							{
-							synchronized (ex)
-								{
-								ex.add(e);
-								}
-							}
-						putsem.release();
-						}
-					}).start();
-				}
-			putsem.acquire(numThread);
-			}
-		catch (InterruptedException e)
-			{
-			e.printStackTrace();
-			}
-		synchronized (ex)
-			{
-			//All threads have stopped executing, well-defined state. Did any of them fail?
-			if(!ex.isEmpty())
-				throw ex.getFirst();
-			}
-		return out;
-		}*/
-
-	//Version that spawns fewer threads
-	
-	/**
-	 * Map :: [A] -> (A->B) -> [B]
-	 */
-	public static <A,B> List<B> map(final int numThread, Collection<A> in, final FuncAB<A,B> func)
-		{
-		//final LinkedList<B> out = new LinkedList<B>();
-		final ArrayList<B> out = new ArrayList<B>(in.size());
-		for(int i=0;i<in.size();i++)
-			out.add(null);
-		final LinkedList<RuntimeException> ex = new LinkedList<RuntimeException>();
-		final StrongReference<Integer> jobcounter = new StrongReference<Integer>(0);
-		try
-			{
-			final Iterator<A> inIterator=in.iterator();
-			final Semaphore putsem=new Semaphore(0);
-			for(int curThread=0;curThread<numThread;curThread++)
-				{
-				final int fcurThread=curThread;
-				new Thread()
+				public void run()
 					{
-					public void run()
-						{
-						A a;
-						for(;;)
-							{
-							long startTime=System.currentTimeMillis();
-							System.out.println("-------- Starting job in thread #"+fcurThread);
-							int jobnum;
-							//Get a job
-							synchronized (inIterator)
-								{
-								if(inIterator.hasNext())
-									{
-									a=inIterator.next();
-									jobnum=jobcounter.get();
-									jobcounter.set(jobnum+1);
-									}
-								else
-									break;
-								}
-							//Execute function, handle potential error
-							try
-								{
-								B b=func.func(a);
-								synchronized (out)
-									{
-									out.set(jobnum,b);
-									}
-								}
-							catch (RuntimeException e)
-								{
-								//Finish off all elements
-								synchronized (inIterator)
-									{
-									while(inIterator.hasNext())
-										inIterator.next();
-									}
-								//Store the error
-								synchronized (ex)
-									{
-									ex.add(e);
-									break;
-									}
-								}
-							long endTime=System.currentTimeMillis();
-							System.out.println("-------- Finished job in thread #"+fcurThread+"  time "+(endTime-startTime));
-							}
-						putsem.release();
-						}
-					}.start();
+					B b=func.func(e);
+					synchronized (out){out.add(b);}
+					putsem.release();
+					}
+				}).start();
 				}
-				
 			putsem.acquire(numThread);
 			}
 		catch (InterruptedException e)
 			{
 			e.printStackTrace();
 			}
-		
-		//All threads have stopped executing, well-defined state. Did any of them fail?
-		if(!ex.isEmpty())
-			throw ex.getFirst();
 		return out;
 		}
 
-	
 	/**
 	 * Map_ :: [A] -> (A->_) -> []
 	 */
 	public static <A> void map_(Collection<A> in, final FuncAB<A,Object> func)
 		{
-		map(numThread, in, func);
+		map_(numThread, in, func);
 		}
 	
 	/**
@@ -203,10 +90,31 @@ public class EvParallel
 	 */
 	public static <A> void map_(int numThread, Collection<A> in, final FuncAB<A,Object> func)
 		{
-		map(numThread, in, func);
+		try
+			{
+//			System.out.println("#CPU "+numThread);
+			final Semaphore putsem=new Semaphore(numThread);
+			for(final A e:in)
+				{
+				putsem.acquire();
+				new Thread(new Runnable(){
+				public void run()
+					{
+					func.func(e);
+					putsem.release();
+					}
+				}).start();
+				}
+			putsem.acquire(numThread);
+			}
+		catch (InterruptedException e)
+			{
+			e.printStackTrace();
+			}
 		}
 	
-		
+	
+	
 	/**
 	 * Map :: SortedMap A,B -> (B->C) -> SortedMap A,C
 	 */

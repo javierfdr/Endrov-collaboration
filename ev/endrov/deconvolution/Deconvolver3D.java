@@ -16,10 +16,13 @@
  */
 package endrov.deconvolution;
 
+import java.util.Iterator;
+
 import endrov.ev.EvLog;
 import endrov.flow.EvOpStack1;
 import endrov.imageset.EvImage;
 import endrov.imageset.EvStack;
+import endrov.util.EvDecimal;
 
 /**
  * Deconvolver 2D.
@@ -52,13 +55,13 @@ public abstract class Deconvolver3D extends EvOpStack1
    	
    	EvStack s=new EvStack();
    	s.getMetaFrom(imB);
-   	//Iterator<EvDecimal> itz=imB.keySet().iterator();
+   	Iterator<EvDecimal> itz=imB.keySet().iterator();
    	for(int i=0;i<d.p.size();i++)
    		{
    		EvImage im=new EvImage();
    		im.setPixelsReference(d.p.get(i));
-   		//EvDecimal z=itz.next();
-   		s.putInt(i, im);
+   		EvDecimal z=itz.next();
+   		s.put(z, im);
    		}
    	
    	return s;

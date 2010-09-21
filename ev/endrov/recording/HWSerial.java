@@ -5,9 +5,9 @@
  */
 package endrov.recording;
 
-import endrov.hardware.EvDevice;
+import endrov.hardware.Device;
 
-public interface HWSerial extends EvDevice
+public interface HWSerial extends Device
 	{
 
 	/**

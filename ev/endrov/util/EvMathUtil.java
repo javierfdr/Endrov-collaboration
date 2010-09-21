@@ -249,14 +249,14 @@ public class EvMathUtil
 	/**
 	 * Clamp value within limits i.e. return value, changed to closest limit if outside
 	 */
-	public static double clamp(double value, double min, double max)
+	public static double clamp(double percentile, double min, double max)
 		{
-		if(value<min)
+		if(percentile<min)
 			return min;
-		else if(value>max)
+		else if(percentile>max)
 			return max;
 		else
-			return value;
+			return percentile;
 		}
 	
 	
@@ -308,19 +308,19 @@ public class EvMathUtil
 		}
 
 	public static int nextPoisson(Random r, double lambda) 
+	{
+	double elambda = Math.exp(-1*lambda);
+	double product = 1;
+	int count =  0;
+	int result=0;
+	while (product >= elambda)
 		{
-		double elambda = Math.exp(-1*lambda);
-		double product = 1;
-		int count =  0;
-		int result=0;
-		while (product >= elambda)
-			{
-			product *= r.nextDouble();
-			result = count;
-			count++; // keep result one behind
-			}
-		return result;
+		product *= r.nextDouble();
+		result = count;
+		count++; // keep result one behind
 		}
+	return result;
+	}
 
 
 	/**
@@ -330,32 +330,9 @@ public class EvMathUtil
 		{
 		int r=v[0];
 		for(int i=1;i<v.length;i++)
-			if(v[i]>r)
-				r=v[i];
-		return r;
-		}
-
-	/**
-	 * Get the minimum of a list
-	 */
-	public static int minAllInt(int... v)
-		{
-		int r=v[0];
-		for(int i=1;i<v.length;i++)
 			if(v[i]<r)
 				r=v[i];
 		return r;
 		}
-
-	/**
-	 * Get the minimum of a list
-	 */
-	public static double minAll(double... v)
-		{
-		double r=v[0];
-		for(int i=1;i<v.length;i++)
-			if(v[i]<r)
-				r=v[i];
-		return r;
-		}
+	
 	}

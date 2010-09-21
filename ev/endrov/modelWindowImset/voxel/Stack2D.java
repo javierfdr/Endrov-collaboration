@@ -13,7 +13,7 @@ import java.util.List;
 import javax.media.opengl.*;
 import javax.vecmath.Vector3d;
 
-import com.sun.opengl.util.awt.TextureRenderer;
+import com.sun.opengl.util.j2d.TextureRenderer;
 import com.sun.opengl.util.texture.*;
 
 import endrov.imageset.*;
@@ -94,7 +94,7 @@ public class Stack2D extends StackInterface
 			for(Vector<OneSlice> osv:texSlices.values())
 				for(OneSlice os:osv)
 					{
-					os.tex.destroy(gl);
+					os.tex.dispose();
 					if(os.rend!=null)
 						os.rend.dispose();
 					}
@@ -104,6 +104,19 @@ public class Stack2D extends StackInterface
 		texSlices=null;
 		}
 	
+	/*
+	public void setLastFrame(EvDecimal frame)
+		{
+		lastframe=frame;
+		}
+
+	
+	public boolean needSettings(EvDecimal frame)
+		{
+		return lastframe==null || !frame.equals(lastframe);// || !isBuilt();
+		}
+	
+	*/
 	
 	public boolean newCreate(ProgressMeter pm, EvDecimal frame, HashMap<EvChannel, VoxelExtension.ChannelSelection> chsel2, ModelWindow w)
 		{
@@ -114,25 +127,29 @@ public class Stack2D extends StackInterface
 		for(VoxelExtension.ChannelSelection chsel:channels)
 			{
 			EvDecimal cframe=chsel.ch.closestFrame(frame);
+			//Common resolution for all channels
+			//resZ=chsel.im.meta.resZ;
 
 			//For every Z
 			EvStack stack=chsel.ch.imageLoader.get(cframe);
 			int skipcount=0;
 			if(stack!=null)
-				for(int az=0;az<stack.getDepth();az++)
+				for(EvDecimal i:stack.keySet())
 					{
 					if(stopBuildThread)
 						return false;
 					skipcount++;
 					if(skipcount>=skipForward)
 						{
-						final int progressSlices=(az*1000/(channels.size()*stack.getDepth()));//az.multiply(1000).intValue()/(channels.size()*stack.getDepth());
+						final int progressSlices=i.multiply(1000).intValue()/(channels.size()*stack.getDepth());
 						final int progressChan=1000*curchannum/channels.size();
 						pm.set(progressSlices+progressChan);
 
 						skipcount=0;
-						EvImage evim=stack.getInt(az);
-						Tuple<TextureRenderer,OneSlice> proc=processImage(stack, evim, az, chsel);
+						EvImage evim=stack.get(i);
+						//if(!chsel.filterSeq.isIdentity())
+						//	evim=chsel.filterSeq.applyReturnImage(stack, evim);
+						Tuple<TextureRenderer,OneSlice> proc=processImage(stack, evim, i, chsel);
 						procList.add(proc);
 						}
 					}
@@ -145,7 +162,7 @@ public class Stack2D extends StackInterface
 	
 	
 
-	public Tuple<TextureRenderer,OneSlice> processImage(EvStack stack, EvImage evim, int az, VoxelExtension.ChannelSelection chsel)
+	public Tuple<TextureRenderer,OneSlice> processImage(EvStack stack, EvImage evim, EvDecimal z, VoxelExtension.ChannelSelection chsel)
 		{
 		EvPixels p=evim.getPixels();
 		BufferedImage bim=p.quickReadOnlyAWT();
@@ -153,16 +170,16 @@ public class Stack2D extends StackInterface
 		
 		os.w=p.getWidth();
 		os.h=p.getHeight();
-		os.resX=stack.resX;
-		os.resY=stack.resY;
-		os.z=stack.resZ*az;
+		os.resX=stack.getResbinX();//stack.resX/stack.binning;//evim.getResX()/evim.getBinning(); //px/um
+		os.resY=stack.getResbinY();//stack.resY/stack.binning;//evim.getResY()/evim.getBinning();
+		os.z=z/*.divide(resZ)*/.doubleValue();
 		os.color=chsel.color;
 
 		int bw=suitablePower2(os.w);
-		os.resX*=os.w/(double)bw;
+		os.resX/=os.w/(double)bw;
 		os.w=bw;
 		int bh=suitablePower2(os.h);
-		os.resY*=os.h/(double)bh;
+		os.resY/=os.h/(double)bh;
 		os.h=bh;
 
 		//Load bitmap, scale down
@@ -227,9 +244,8 @@ public class Stack2D extends StackInterface
 	/**
 	 * Render entire stack
 	 */
-	public void render(GL glin,List<TransparentRender> transparentRenderers, Camera cam, final boolean solidColor, final boolean drawEdges, final boolean mixColors)
+	public void render(GL gl,List<TransparentRender> transparentRenderers, Camera cam, final boolean solidColor, final boolean drawEdges, final boolean mixColors)
 		{
-		GL2 gl=glin.getGL2();
 		if(isBuilt())
 			{
 			//Load shader
@@ -240,8 +256,8 @@ public class Stack2D extends StackInterface
 			if(drawEdges && !texSlices.isEmpty())
 				{
 				OneSlice os=texSlices.get(texSlices.lastKey()).lastElement();
-				double w=os.w*os.resX;
-				double h=os.h*os.resY;
+				double w=os.w/os.resX;
+				double h=os.h/os.resY;
 				double d=os.z;
 				renderEdge(gl, w, h, d);
 				}
@@ -250,14 +266,14 @@ public class Stack2D extends StackInterface
 			TransparentRender.RenderState renderstate=new TransparentRender.RenderState(){
 			public void activate(GL gl)
 				{
-				gl.glDisable(GL2.GL_CULL_FACE);
+				gl.glDisable(GL.GL_CULL_FACE);
 				if(!solidColor)
 					{
 					if(mixColors)
-						gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+						gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 					else
-						gl.glBlendFunc(GL2.GL_SRC_COLOR, GL2.GL_ONE_MINUS_SRC_COLOR);
-					gl.glEnable(GL2.GL_BLEND);
+						gl.glBlendFunc(GL.GL_SRC_COLOR, GL.GL_ONE_MINUS_SRC_COLOR);
+					gl.glEnable(GL.GL_BLEND);
 					gl.glDepthMask(false);
 					//shader2d.use(gl); //currently not needed
 					}
@@ -265,9 +281,9 @@ public class Stack2D extends StackInterface
 			public boolean optimizedSwitch(GL gl, TransparentRender.RenderState currentState){return false;}
 			public void deactivate(GL gl)
 				{
-				gl.glDisable(GL2.GL_BLEND);
+				gl.glDisable(GL.GL_BLEND);
 				gl.glDepthMask(true);
-				gl.glEnable(GL2.GL_CULL_FACE);
+				gl.glEnable(GL.GL_CULL_FACE);
 				//shader2d.stopUse(gl);
 				}
 			}; 
@@ -308,7 +324,7 @@ public class Stack2D extends StackInterface
 	/**
 	 * Render list of slices
 	 */
-	public void render(GL glin,List<TransparentRender> transparentRenderers, Camera cam, TransparentRender.RenderState renderstate, LinkedList<Vector<OneSlice>> list)
+	public void render(GL gl,List<TransparentRender> transparentRenderers, Camera cam, TransparentRender.RenderState renderstate, LinkedList<Vector<OneSlice>> list)
 		{
 		//Get direction of camera as vector, and z-position
 		Vector3d camv=cam.transformedVector(0, 0, 1);
@@ -320,12 +336,11 @@ public class Stack2D extends StackInterface
 			//For all planes
 			for(final OneSlice os:osv)
 				{
-				final double w=os.w*os.resX;
-				final double h=os.h*os.resY;
+				final double w=os.w/os.resX;
+				final double h=os.h/os.resY;
 				
-				TransparentRender renderer=new TransparentRender(){public void render(GL glin)
+				TransparentRender renderer=new TransparentRender(){public void render(GL gl)
 					{
-					GL2 gl=glin.getGL2();
 					//Select texture
 					os.tex.enable();
 					os.tex.bind();
@@ -333,7 +348,7 @@ public class Stack2D extends StackInterface
 					//Find size and position
 					TextureCoords tc=os.tex.getImageTexCoords();
 
-					gl.glBegin(GL2.GL_QUADS);
+					gl.glBegin(GL.GL_QUADS);
 					gl.glColor3d(os.color.getRed()/255.0, os.color.getGreen()/255.0, os.color.getBlue()/255.0);
 					gl.glTexCoord2f(tc.left(), tc.top());	   gl.glVertex3d(0, 0, os.z);
 					gl.glTexCoord2f(tc.right(),tc.top());    gl.glVertex3d(w, 0, os.z);
@@ -358,7 +373,7 @@ public class Stack2D extends StackInterface
 		if(texSlices!=null && !texSlices.isEmpty())
 			{
 			OneSlice os=texSlices.get(texSlices.firstKey()).get(0);
-			double width=os.w*os.resX;
+			double width=os.w/os.resX;
 			
 			return Collections.singleton(width);
 			}
@@ -387,7 +402,7 @@ public class Stack2D extends StackInterface
 	/**
 	 * Given a middle position, figure out radius required to fit objects
 	 */
-	public double autoCenterRadius(Vector3d mid)
+	public Double autoCenterRadius(Vector3d mid, double FOV)
 		{
 		if(texSlices!=null && !texSlices.isEmpty())
 			{
@@ -400,10 +415,12 @@ public class Stack2D extends StackInterface
 			double dy=Math.max(Math.abs(0-mid.y), Math.abs(height-mid.y));
 			double dz=Math.max(Math.abs(0-mid.z), Math.abs(depth-mid.z));
 			double d=Math.sqrt(dx*dx+dy*dy+dz*dz);
-			return d;
+			
+			//Find how far away the camera has to be. really have FOV in here?
+			return d/Math.sin(FOV);
 			}
 		else
-			return 0;
+			return null;
 		}
 	
 	

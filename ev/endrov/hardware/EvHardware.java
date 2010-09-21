@@ -14,8 +14,7 @@ import org.jdom.Element;
 //one dirty solution is to keep class name in config and use reflection.
 
 /**
- * Manager of all existing hardware
- * 
+ * Manager of all existing hardware.  
  * @author Johan Henriksson
  *
  */
@@ -23,20 +22,20 @@ public class EvHardware
 	{
 	
 	
-	public static EvDeviceRoot root=new EvDeviceRoot();
+	public static DeviceRoot root=new DeviceRoot();
 	
 	
 	/**
 	 * Get device or null if it does not exist
 	 */
-	public static EvDevice getDevice(EvDevicePath name)
+	public static Device getDevice(DevicePath name)
 		{
-		EvDevice next=root;
+		Device next=root;
 		for(String s:name.path)
 			{
-			if(next instanceof EvDeviceProvider)
+			if(next instanceof DeviceProvider)
 				{
-				next=((EvDeviceProvider)next).hw.get(s);
+				next=((DeviceProvider)next).hw.get(s);
 				}
 			else
 				return null;
@@ -48,7 +47,7 @@ public class EvHardware
 	/**
 	 * Get list of all installed hardware
 	 */
-	public static Set<EvDevicePath> getDeviceList()
+	public static Set<DevicePath> getDeviceList()
 		{
 		return getDeviceMap().keySet();
 		}
@@ -58,26 +57,26 @@ public class EvHardware
 	/**
 	 * Get map of all installed hardware
 	 */
-	public static TreeMap<EvDevicePath,EvDevice> getDeviceMap()
+	public static TreeMap<DevicePath,Device> getDeviceMap()
 		{
-		TreeMap<EvDevicePath,EvDevice> map=new TreeMap<EvDevicePath,EvDevice>();
+		TreeMap<DevicePath,Device> map=new TreeMap<DevicePath,Device>();
 		getDeviceMap(root, new LinkedList<String>(), map);
 		return map;
 		}
-	private static void getDeviceMap(EvDevice root, List<String> path,TreeMap<EvDevicePath,EvDevice> map)
+	private static void getDeviceMap(Device root, List<String> path,TreeMap<DevicePath,Device> map)
 		{
-		if(root instanceof EvDeviceProvider)
+		if(root instanceof DeviceProvider)
 			{
-			EvDeviceProvider p=(EvDeviceProvider)root;
-			for(Map.Entry<String, EvDevice> e:p.hw.entrySet())
+			DeviceProvider p=(DeviceProvider)root;
+			for(Map.Entry<String, Device> e:p.hw.entrySet())
 				{
 				LinkedList<String> npath=new LinkedList<String>(path);
 				npath.add(e.getKey());
 				getDeviceMap(e.getValue(), npath, map);
 				}
 			}
-		if(!(root instanceof EvDeviceRoot))
-			map.put(new EvDevicePath(path.toArray(new String[]{})), root);
+		if(!(root instanceof DeviceRoot))
+			map.put(new DevicePath(path.toArray(new String[]{})), root);
 		}
 
 
@@ -85,29 +84,25 @@ public class EvHardware
 	/**
 	 * Get list of all installed hardware of a specific type
 	 */
-	public static Map<EvDevicePath,EvDevice> getDeviceMap(Class<?> hw)
+	public static Map<DevicePath,Device> getDeviceMap(Class<?> hw)
 		{
-		TreeMap<EvDevicePath,EvDevice> hwlist2=new TreeMap<EvDevicePath,EvDevice>();
-		for(Map.Entry<EvDevicePath, EvDevice> hwe:getDeviceMap().entrySet())
+		TreeMap<DevicePath,Device> hwlist2=new TreeMap<DevicePath,Device>();
+		for(Map.Entry<DevicePath, Device> hwe:getDeviceMap().entrySet())
 			{
-			
-			/*
 			boolean is=false;
 			for(Class<?> intf:hwe.getValue().getClass().getInterfaces())
 				if(intf==hw)
 					is=true;
 			if(is)
-				hwlist2.put(hwe.getKey(),hwe.getValue());*/
-			if(hw.isInstance(hwe.getValue()))
 				hwlist2.put(hwe.getKey(),hwe.getValue());
 			}
 		return hwlist2;
 		}
 
 	@SuppressWarnings("unchecked")
-	public static <E> Map<EvDevicePath,E> getDeviceMapCast(Class<E> hw)
+	public static <E> Map<DevicePath,E> getDeviceMapCast(Class<E> hw)
 		{
-		return (Map<EvDevicePath, E>) getDeviceMap(hw);
+		return (Map<DevicePath, E>) getDeviceMap(hw);
 		}
 	
 	/**

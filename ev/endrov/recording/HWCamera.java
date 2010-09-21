@@ -11,16 +11,7 @@ import endrov.hardware.*;
  * Hardware with recording capabilities
  * @author Johan Henriksson
  */
-public interface HWCamera extends EvDevice, HWMagnifier
+public interface HWCamera extends Device, HWMagnifier
 	{
 	public CameraImage snap();
-	
-
-	public void startSequenceAcq(/*Integer numImages, */double interval) throws Exception;
-	public void stopSequenceAcq();
-	public boolean isDoingSequenceAcq();
-	public CameraImage snapSequence() throws Exception;
-	//public int numSequenceLeft();
-	public double getSequenceCapacityFree();
-	
 	}

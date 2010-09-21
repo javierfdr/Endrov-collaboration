@@ -25,15 +25,17 @@ import endrov.keyBinding.KeyBinding;
 public class ShellImageTool implements ImageWindowTool
 	{
 	private final ImageWindow w;
+	private final ShellImageRenderer r;
 	
 	private boolean holdTranslate=false;
 	private boolean holdRotate=false;
 
+	public void deselected() {}
 	
-	
-	public ShellImageTool(ImageWindow w)
+	public ShellImageTool(ImageWindow w, ShellImageRenderer r)
 		{
 		this.w=w;
+		this.r=r;
 		}
 
 	public JMenuItem getMenuItem()
@@ -47,20 +49,13 @@ public class ShellImageTool implements ImageWindowTool
 		return mi;
 		}
 
-	public void deselected() {}
 	
-	
-	private ShellImageRenderer getRenderer(ImageWindow w)
+	private Shell getCurrentShell()
 		{
-		return w.getRendererClass(ShellImageRenderer.class); 
+		return r.currentShell;
 		}
 	
-	private Shell getCurrentShell(ImageWindow w)
-		{		
-		return getRenderer(w).hoverShell;
-		}
-	
-	private static double square(double x)
+	private double square(double x)
 		{
 		return x*x;
 		}
@@ -70,13 +65,17 @@ public class ShellImageTool implements ImageWindowTool
 	 */
 	private void updateCurrentShell(int mx, int my, boolean acceptNull)
 		{
-		Vector2d v=w.transformPointS2W(new Vector2d(mx,my));
+		Vector2d v=w.transformS2W(new Vector2d(mx,my));
 
-		ShellImageRenderer r=getRenderer(w);
 		
 		double wx=v.x;
 		double wy=v.y;
-		double wz=w.getZ().doubleValue();
+//		double wx=w.s2wx(mx);
+	//	double wy=w.s2wy(my);
+		
+		
+		double wz=w.frameControl.getModelZ().doubleValue();
+		//w.s2wz(w.frameControl.getZ());
 		
 		for(EvObject ob:w.getRootObject().metaObject.values())
 			if(ob instanceof Shell)
@@ -84,22 +83,23 @@ public class ShellImageTool implements ImageWindowTool
 				Shell shell=(Shell)ob;
 				if(square(wx-shell.midx)+square(wy-shell.midy)+square(wz-shell.midz)<square((shell.major+shell.minor)/2.0))
 					{
-					r.hoverShell=shell;
+					r.currentShell=shell;
+//					System.out.println("found shell");
 					return;
 					}
 				}
 		if(acceptNull)
-			r.hoverShell=null;
+			r.currentShell=null;
 		}
 
 	
-	public void mouseClicked(final  MouseEvent e, Component invoker)
+	public void mouseClicked(MouseEvent e)
 		{
 		}
 	
-	public void mouseDragged(final  MouseEvent e, int dx, int dy)
+	public void mouseDragged(MouseEvent e, int dx, int dy)
 		{
-		Shell shell=getCurrentShell(w);
+		Shell shell=getCurrentShell();
 		if(SwingUtilities.isLeftMouseButton(e))
 			{
 			if(shell!=null)
@@ -116,6 +116,8 @@ public class ShellImageTool implements ImageWindowTool
 				shell.major+=dv.dot(majora);
 				shell.minor+=dv.dot(minora);
 				
+//				shell.major+=w.scaleS2w(dx);
+	//			shell.minor+=w.scaleS2w(dy);
 				if(shell.major<0) shell.major=0;
 				if(shell.minor<0) shell.minor=0;
 				w.updateImagePanel();
@@ -126,9 +128,8 @@ public class ShellImageTool implements ImageWindowTool
 	
 	public void mousePressed(MouseEvent e)
 		{
-		ShellImageRenderer r=getRenderer(w);
 		updateCurrentShell(e.getX(), e.getY(),true);
-		Shell shell=getCurrentShell(w);
+		Shell shell=getCurrentShell();
 		if(SwingUtilities.isLeftMouseButton(e))
 			{
 			if(shell==null)
@@ -139,15 +140,18 @@ public class ShellImageTool implements ImageWindowTool
 					//Create new shell
 					shell=new Shell();
 					
-					Vector2d v=w.transformPointS2W(new Vector2d(e.getX(),e.getY()));
+					Vector2d v=w.transformS2W(new Vector2d(e.getX(),e.getY()));
 
 					shell.midx=v.x;
 					shell.midy=v.y;
-					shell.midz=w.getZ().doubleValue();
+//					shell.midx=w.s2wx(e.getX());
+	//				shell.midy=w.s2wy(e.getY());
+					shell.midz=w.frameControl.getModelZ().doubleValue();
+					//w.s2wz(w.frameControl.getZ());
 					shell.major=w.scaleS2w(80);
 					shell.minor=w.scaleS2w(50);
 					w.getRootObject().addMetaObject(shell);
-					r.hoverShell=shell;
+					r.currentShell=shell;
 					w.updateImagePanel();
 					}
 				}
@@ -163,7 +167,7 @@ public class ShellImageTool implements ImageWindowTool
 	public void mouseMoved(MouseEvent e, int dx, int dy)
 		{
 		updateCurrentShell(e.getX(), e.getY(),false);
-		Shell shell=getCurrentShell(w);
+		Shell shell=getCurrentShell();
 		if(shell!=null)
 			{
 			if(holdRotate)
@@ -174,28 +178,28 @@ public class ShellImageTool implements ImageWindowTool
 			else if(holdTranslate)
 				{
 				//Translate
-				Vector2d diff=w.transformVectorS2W(new Vector2d(dx,dy));
-				shell.midx+=diff.x;
-				shell.midy+=diff.y;
+				shell.midx+=w.scaleS2w(dx);
+				shell.midy+=w.scaleS2w(dy);
 				}
 			BasicWindow.updateWindows();
 			}
 		}
 	
-	public void mouseExited(final  MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
 	
-	public void keyPressed(final  KeyEvent e)
+	public void keyPressed(KeyEvent e)
 		{
 		if(KeyBinding.get(Shell.KEY_TRANSLATE).typed(e))
 			holdTranslate=true;
 		if(KeyBinding.get(Shell.KEY_ROTATE).typed(e))
 			holdRotate=true;
 
-		Shell shell=getCurrentShell(w);
+		Shell shell=getCurrentShell();
 		if(KeyBinding.get(Shell.KEY_SETZ).typed(e) && shell!=null)
 			{
 			//Bring shell to this Z
-			shell.midz=w.getZ().doubleValue();
+			shell.midz=w.frameControl.getModelZ().doubleValue();
+			//w.s2wz(w.frameControl.getZ());
 			BasicWindow.updateWindows();
 			}
 		}
@@ -216,3 +220,13 @@ public class ShellImageTool implements ImageWindowTool
 
 	}
 
+
+//TODO: run when tool selected?
+/*
+if(shell!=null && shell.exists())
+	{
+	shell.midx=s2wx(getWidth()/2);
+	shell.midy=s2wy(getHeight()/2);
+	shell.midz=s2wz(frameControl.getZ());
+	}
+	*/
