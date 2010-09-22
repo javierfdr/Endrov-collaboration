@@ -31,15 +31,17 @@ import endrov.flowBasic.logic.FlowUnitXor;
 import endrov.flowBasic.math.*;
 import endrov.flowBasic.misc.FlowUnitComments;
 import endrov.flowBasic.objects.*;
+/*
 import endrov.flowBasic.rasterizer.FlowUnitTriangleRasterization;
 import endrov.flowBasic.testing.FlowUnitImageTester;
 import endrov.flowBasic.testing.FlowUnitImageTester2;
 import endrov.flowBasic.testing.FlowUnitImageTester3;
-import endrov.flowBasic.testing.FlowUnitImageTester4;
-import endrov.flowBasic.testing.FlowUnitImageTester5;
+import endrov.flowBasic.testing.FlowUnitImageTester4;*/
+//import endrov.flowBasic.testing.FlowUnitImageTester5;
+/*
 import endrov.flowBasic.testing.FlowUnitImageTester6;
 import endrov.flowBasic.testing.FlowUnitImageTester7;
-
+*/
 public class PLUGIN extends PluginDef
 	{
 	public String getPluginName()
@@ -117,18 +119,18 @@ public class PLUGIN extends PluginDef
 				//Objects
 				FlowUnitGetObject.class,FlowUnitParent.class,FlowUnitObjectIO.class,FlowUnitThisData.class,FlowUnitThisFlow.class,
 				FlowUnitWrapInChannel.class,
-				
+			
         //Rasterizer
-				FlowUnitTriangleRasterization.class,
+				//FlowUnitTriangleRasterization.class,
 				
 				//Tester
-				FlowUnitImageTester.class,
-				FlowUnitImageTester2.class,
-				FlowUnitImageTester3.class,				
-				FlowUnitImageTester4.class,
-				FlowUnitImageTester5.class,
-				FlowUnitImageTester6.class,
-				FlowUnitImageTester7.class				
+//				FlowUnitImageTester.class,
+//				FlowUnitImageTester2.class,
+//				FlowUnitImageTester3.class,				
+//				FlowUnitImageTester4.class,
+//				FlowUnitImageTester5.class
+//				FlowUnitImageTester6.class,
+//				FlowUnitImageTester7.class				
 		};
 		
 		
